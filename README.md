@@ -34,11 +34,12 @@ snapshot thereof.
   * add histogram support
   * add push support to a vanilla prometheus exporter
   * package as gem
-  * setup Travis CI
   * add tests for Rack middlewares
   * use a more performant JSON library
 
 ## Tests
+
+[![Build Status][1]](http://travis-ci.org/prometheus/client_ruby)
 
 Install necessary development gems with `bundle install` and run tests with
 rspec:
@@ -46,3 +47,5 @@ rspec:
 ```bash
 rspec
 ```
+
+[1]: https://secure.travis-ci.org/prometheus/client_ruby.png?branch=master
