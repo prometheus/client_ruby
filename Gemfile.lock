@@ -1,3 +1,8 @@
+PATH
+  remote: .
+  specs:
+    prometheus-client (0.1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -17,5 +22,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  prometheus-client!
   rake
   rspec
