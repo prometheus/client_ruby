@@ -33,7 +33,6 @@ snapshot thereof.
 
   * add histogram support
   * add push support to a vanilla prometheus exporter
-  * package as gem
   * add tests for Rack middlewares
   * use a more performant JSON library
 
