@@ -70,6 +70,14 @@ module Prometheus::Client
       end
     end
 
+    describe '#summary' do
+      it 'registers a new summary metric container and returns the summary' do
+        metric = registry.summary(:test, 'test docstring')
+
+        metric.should be_a(Summary)
+      end
+    end
+
     describe '#exist?' do
       it 'returns true if a metric name has been registered' do
         registry.register(:test, 'test docstring', double)

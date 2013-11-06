@@ -1,12 +1,12 @@
 require 'prometheus/client/counter'
-require 'prometheus/client/metric_example'
+require 'examples/metric_example'
 
 module Prometheus::Client
   describe Counter do
     let(:counter) { Counter.new }
 
     it_behaves_like Metric do
-      let(:default) { 0 }
+      let(:type) { Fixnum }
     end
 
     describe '#increment' do
