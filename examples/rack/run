@@ -1,0 +1,42 @@
+#!/bin/bash -e
+
+trap 'kill $(jobs -p)' EXIT
+
+installed() {
+	which $1 > /dev/null
+}
+
+pretty_json() {
+	ruby -e "require 'json'; puts JSON.pretty_generate(JSON.load(STDIN))"
+}
+
+fatal() {
+	echo >&2 $1
+	exit 1
+}
+
+# check dependencies
+if ! installed vegeta; then
+	if ! installed go; then
+		fatal "Could not find go. Either run the examples manually or install"
+	fi
+
+	go get github.com/tsenart/vegeta
+	go install github.com/tsenart/vegeta
+fi
+
+PORT=5000
+URL=http://127.0.0.1:${PORT}/
+
+# start example server
+bundle install --quiet
+bundle exec unicorn -p ${PORT} -c unicorn.conf &>> /dev/null &
+
+# wait until unicorn is available
+sleep 1
+
+# do requests
+printf "GET ${URL}\nPOST ${URL}\nDELETE ${URL}" | vegeta attack &>> /dev/null
+
+# output the result
+curl "${URL}metrics.json" | pretty_json
