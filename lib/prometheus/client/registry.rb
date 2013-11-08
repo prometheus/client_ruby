@@ -3,6 +3,7 @@ require 'thread'
 
 require 'prometheus/client/container'
 require 'prometheus/client/counter'
+require 'prometheus/client/summary'
 require 'prometheus/client/gauge'
 
 module Prometheus
@@ -34,6 +35,10 @@ module Prometheus
 
       def counter(name, docstring, base_labels = {})
         register(name, docstring, Counter.new, base_labels).metric
+      end
+
+      def summary(name, docstring, base_labels = {})
+        register(name, docstring, Summary.new, base_labels).metric
       end
 
       def gauge(name, docstring, base_labels = {})

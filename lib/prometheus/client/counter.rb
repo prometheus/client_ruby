@@ -3,10 +3,6 @@ require 'prometheus/client/metric'
 module Prometheus
   module Client
     class Counter < Metric
-      def default
-        0
-      end
-
       def type
         :counter
       end
@@ -19,6 +15,13 @@ module Prometheus
       def decrement(labels = {}, by = 1)
         increment(labels, -by)
       end
+
+    private
+
+      def default
+        0
+      end
+
     end
   end
 end

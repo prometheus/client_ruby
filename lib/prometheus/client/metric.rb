@@ -7,12 +7,7 @@ module Prometheus
     class Metric
       def initialize
         @mutex = Mutex.new
-        @values = Hash.new(default)
-      end
-
-      # Default value
-      def default
-        nil
+        @values = Hash.new { |hash, key| hash[key] = default }
       end
 
       # Returns the metric type
@@ -20,21 +15,9 @@ module Prometheus
         raise NotImplementedError
       end
 
-      # Returns all values
-      def value
-        @values.map do |labels, value|
-          { :labels => labels, :value => value }
-        end
-      end
-
       # Returns the value for the given label set
       def get(labels = {})
         @values[label_set_for(labels)]
-      end
-
-      # Sets the value for the given label set
-      def set(labels, value)
-        @values[label_set_for(labels)] = value
       end
 
       # Generates JSON representation
@@ -45,7 +28,17 @@ module Prometheus
         }.to_json(*json)
       end
 
-    protected
+    private
+
+      def default
+        nil
+      end
+
+      def value
+        @values.map do |labels, value|
+          { :labels => labels, :value => get(labels) }
+        end
+      end
 
       def label_set_for(labels)
         LabelSet.new(labels)
