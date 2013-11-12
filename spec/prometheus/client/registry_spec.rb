@@ -7,7 +7,7 @@ module Prometheus::Client
 
     describe '.new' do
       it 'returns a new registry instance' do
-        registry.should be_a(Registry)
+        expect(registry).to be_a(Registry)
       end
     end
 
@@ -15,7 +15,7 @@ module Prometheus::Client
       it 'registers a new metric container and returns it' do
         container = registry.register(:test, 'test docstring', double)
 
-        registry.get(:test).should eql(container)
+        expect(registry.get(:test)).to eql(container)
       end
 
       it 'raises an exception if a reserved base label is used' do
@@ -50,7 +50,7 @@ module Prometheus::Client
           end
         end.each(&:join)
 
-        containers.compact.should have(1).entry
+        expect(containers.compact).to have(1).entry
       end
     end
 
@@ -58,7 +58,7 @@ module Prometheus::Client
       it 'registers a new counter metric container and returns the counter' do
         metric = registry.counter(:test, 'test docstring')
 
-        metric.should be_a(Counter)
+        expect(metric).to be_a(Counter)
       end
     end
 
@@ -66,7 +66,7 @@ module Prometheus::Client
       it 'registers a new gauge metric container and returns the gauge' do
         metric = registry.gauge(:test, 'test docstring')
 
-        metric.should be_a(Gauge)
+        expect(metric).to be_a(Gauge)
       end
     end
 
@@ -74,7 +74,7 @@ module Prometheus::Client
       it 'registers a new summary metric container and returns the summary' do
         metric = registry.summary(:test, 'test docstring')
 
-        metric.should be_a(Summary)
+        expect(metric).to be_a(Summary)
       end
     end
 
@@ -82,11 +82,11 @@ module Prometheus::Client
       it 'returns true if a metric name has been registered' do
         registry.register(:test, 'test docstring', double)
 
-        registry.exist?(:test).should eql(true)
+        expect(registry.exist?(:test)).to eql(true)
       end
 
       it 'returns false if a metric name has not been registered yet' do
-        registry.exist?(:test).should eql(false)
+        expect(registry.exist?(:test)).to eql(false)
       end
     end
 
@@ -94,11 +94,11 @@ module Prometheus::Client
       it 'returns a previously registered metric container' do
         registry.register(:test, 'test docstring', double)
 
-        registry.get(:test).should be
+        expect(registry.get(:test)).to be
       end
 
       it 'returns nil if the metric has not been registered yet' do
-        registry.get(:test).should eql(nil)
+        expect(registry.get(:test)).to eql(nil)
       end
     end
   end

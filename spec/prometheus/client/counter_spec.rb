@@ -31,7 +31,7 @@ module Prometheus::Client
       end
 
       it 'returns the new counter value' do
-        counter.increment.should eql(1)
+        expect(counter.increment).to eql(1)
       end
 
       it 'is thread safe' do

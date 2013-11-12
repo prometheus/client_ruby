@@ -24,11 +24,11 @@ module Prometheus::Client
         summary.add({ :foo => 'bar' }, 13)
         summary.add({ :foo => 'bar' }, 4)
 
-        summary.get({ :foo => 'bar' }).should == { 0.5 => 4, 0.9 => 5.2, 0.99 => 5.2 }
+        expect(summary.get({ :foo => 'bar' })).to eql({ 0.5 => 4, 0.9 => 5.2, 0.99 => 5.2 })
       end
 
       it 'uses nil as default value' do
-        summary.get({}).should == { 0.5 => nil, 0.9 => nil, 0.99 => nil }
+        expect(summary.get({})).to eql({ 0.5 => nil, 0.9 => nil, 0.99 => nil })
       end
     end
 

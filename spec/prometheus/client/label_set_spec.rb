@@ -4,7 +4,9 @@ module Prometheus::Client
   describe LabelSet do
     describe '.new' do
       it 'returns a valid label set' do
-        LabelSet.new({ :version => 'alpha' }).should eql({ :version => 'alpha' })
+        hash = { :version => 'alpha' }
+
+        expect(LabelSet.new(hash)).to eql(hash)
       end
 
       it 'raises InvalidLabelSetError if a label set is not a hash' do
