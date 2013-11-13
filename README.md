@@ -1,6 +1,12 @@
 # Prometheus Ruby Client
 
+A suite of instrumentation metric primitives for Ruby that can be exposed
+through a JSON web services interface. Intended to be used together with a
+[Prometheus server][1].
+
 ## Usage
+
+### Library
 
 ```ruby
 require 'prometheus/client'
@@ -10,13 +16,39 @@ prometheus = Prometheus::Client.registry
 
 # create a new counter metric
 http_requests = Prometheus::Client::Counter.new
-
 # register the metric
-prometheus.register(:http_requests, 'A counter of the total number of HTTP requests made', http_requests)
+prometheus.register(:http_requests, 'A counter of HTTP requests made', http_requests)
+
+# equivalent helper function
+http_requests = prometheus.counter(:http_requests, 'A counter of HTTP requests made')
 
 # start using the counter
 http_requests.increment
 ```
+
+### Rack middleware
+
+There are two [Rack][2] middlewares available, one to expose a metrics HTTP
+endpoint to be scraped by a prometheus server and one to trace all HTTP
+requests.
+
+```ruby
+# config.ru
+
+require 'rack'
+require 'prometheus/client/rack/collector'
+require 'prometheus/client/rack/exporter'
+
+use Prometheus::Client::Rack::Collector
+use Prometheus::Client::Rack::Exporter
+run lambda { |env| [200, {'Content-Type' => 'text/html'}, ['OK']] }
+```
+
+Start the server and have a look at the metrics endpoint:
+[http://localhost:5000/metrics](http://localhost:5000/metrics).
+
+For further instructions and other scripts to get started, have a look at the
+integrated [example application](examples/rack/README.md).
 
 ## Metrics
 
@@ -83,7 +115,7 @@ summary.get({ service: 'database' })
 
 ## Tests
 
-[![Build Status][1]](http://travis-ci.org/prometheus/client_ruby)
+[![Build Status][3]](http://travis-ci.org/prometheus/client_ruby)
 
 Install necessary development gems with `bundle install` and run tests with
 rspec:
@@ -92,4 +124,6 @@ rspec:
 rspec
 ```
 
-[1]: https://secure.travis-ci.org/prometheus/client_ruby.png?branch=master
+[1]: https://github.com/prometheus/prometheus
+[2]: http://rack.github.io/
+[3]: https://secure.travis-ci.org/prometheus/client_ruby.png?branch=master
