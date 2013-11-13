@@ -5,7 +5,7 @@ module Prometheus
   module Client
     class Summary < Metric
       def type
-        :summary
+        :histogram
       end
 
       # Records a given value.

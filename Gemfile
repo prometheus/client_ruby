@@ -2,5 +2,8 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'rake'
-gem 'rspec'
+group :test do
+  gem 'rack-test'
+  gem 'rake'
+  gem 'rspec'
+end

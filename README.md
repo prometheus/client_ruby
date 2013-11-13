@@ -78,10 +78,8 @@ summary.get({ service: 'database' })
 ## Todo
 
   * add push support to a vanilla prometheus exporter
-  * add tests for Rack middlewares
   * use a more performant JSON library
   * add protobuf support
-  * update to recent json format
 
 ## Tests
 

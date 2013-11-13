@@ -6,10 +6,14 @@ module Prometheus
       class Exporter
         attr_reader :app, :registry, :path
 
+        API_VERSION  = '0.0.2'
+        CONTENT_TYPE = 'application/json; schema="prometheus/telemetry"; version=' + API_VERSION
+        HEADERS      = { 'Content-Type' => CONTENT_TYPE }
+
         def initialize(app, options = {})
           @app = app
           @registry = options[:registry] || Client.registry
-          @path = options[:path] || '/metrics.json'
+          @path = options[:path] || '/metrics'
         end
 
         def call(env)
@@ -23,13 +27,7 @@ module Prometheus
       protected
 
         def metrics_response
-          json = @registry.to_json
-          headers = {
-            'Content-Type' => 'application/json',
-            'Content-Length' => json.size.to_s
-          }
-
-          [200, headers, [json]]
+          [200, HEADERS, [@registry.to_json]]
         end
 
       end
