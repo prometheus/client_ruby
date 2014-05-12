@@ -8,9 +8,12 @@ describe Prometheus::Client::Rack::Collector do
     Prometheus::Client::Registry.new
   end
 
+  let(:original_app) do
+    lambda { |env| [200, {'Content-Type' => 'text/html'}, ['OK']] }
+  end
+
   let(:app) do
-    app = lambda { |env| [200, {'Content-Type' => 'text/html'}, ['OK']] }
-    Prometheus::Client::Rack::Collector.new(app, registry: registry)
+    Prometheus::Client::Rack::Collector.new(original_app, registry: registry)
   end
 
   it 'returns the app response' do
@@ -43,4 +46,21 @@ describe Prometheus::Client::Rack::Collector do
       expect(registry.get(metric).get(expected_labels)).to eql(result)
     end
   end
+
+  context 'setting up with a block' do
+    let(:app) do
+      Prometheus::Client::Rack::Collector.new(original_app, registry: registry) do |env|
+        { method: env['REQUEST_METHOD'].downcase } # and ignore the path
+      end
+    end
+
+    it 'allows labels configuration' do
+      get '/foo/bar'
+
+      expected_labels = { method: 'get', code: '200' }
+
+      expect(registry.get(:http_requests_total).get(expected_labels)).to eql(1)
+    end
+  end
+
 end
