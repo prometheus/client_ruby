@@ -1,8 +1,28 @@
 module Prometheus::Client
   shared_examples_for Metric do
+    subject { described_class.new(:foo, 'foo description') }
+
     describe '.new' do
       it 'returns a new metric' do
-        expect(described_class.new).to be
+        expect(subject).to be
+      end
+
+      it 'raises an exception if a reserved base label is used' do
+        expect do
+          described_class.new(:foo, 'foo docstring', { :name => 'reserved' })
+        end.to raise_exception LabelSet::ReservedLabelError
+      end
+
+      it 'raises an exception if the given name is blank' do
+        expect do
+          described_class.new(nil, 'foo')
+        end.to raise_exception ArgumentError
+      end
+
+      it 'raises an exception if docstring is missing' do
+        expect do
+          described_class.new(:foo, '')
+        end.to raise_exception ArgumentError
       end
     end
 

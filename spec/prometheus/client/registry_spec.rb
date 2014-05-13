@@ -13,23 +13,19 @@ module Prometheus::Client
 
     describe '#register' do
       it 'registers a new metric container and returns it' do
-        container = registry.register(:test, 'test docstring', double)
+        metric = double(name: :test)
 
-        expect(registry.get(:test)).to eql(container)
-      end
-
-      it 'raises an exception if a reserved base label is used' do
-        expect do
-          registry.register(:test, 'test docstring', double, { :name => 'reserved' })
-        end.to raise_exception
+        expect(registry.register(metric)).to eql(metric)
       end
 
       it 'raises an exception if a metric name gets registered twice' do
-        registry.register(:test, 'test docstring', double)
+        metric = double(name: :test)
+
+        registry.register(metric)
 
         expect do
-          registry.register(:test, 'test docstring', double)
-        end.to raise_exception
+          registry.register(metric)
+        end.to raise_exception Registry::AlreadyRegisteredError
       end
 
       it 'is thread safe' do
@@ -43,7 +39,7 @@ module Prometheus::Client
         5.times.map do
           Thread.new do
             result = begin
-              registry.register(:test, 'test docstring', double)
+              registry.register(double(name: :test))
             rescue Registry::AlreadyRegisteredError
             end
             mutex.synchronize { containers << result }
@@ -80,7 +76,7 @@ module Prometheus::Client
 
     describe '#exist?' do
       it 'returns true if a metric name has been registered' do
-        registry.register(:test, 'test docstring', double)
+        registry.register(double(name: :test))
 
         expect(registry.exist?(:test)).to eql(true)
       end
@@ -92,7 +88,7 @@ module Prometheus::Client
 
     describe '#get' do
       it 'returns a previously registered metric container' do
-        registry.register(:test, 'test docstring', double)
+        registry.register(double(name: :test))
 
         expect(registry.get(:test)).to be
       end

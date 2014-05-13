@@ -15,9 +15,9 @@ require 'prometheus/client'
 prometheus = Prometheus::Client.registry
 
 # create a new counter metric
-http_requests = Prometheus::Client::Counter.new
+http_requests = Prometheus::Client::Counter.new(:http_requests, 'A counter of HTTP requests made')
 # register the metric
-prometheus.register(:http_requests, 'A counter of HTTP requests made', http_requests)
+prometheus.register(http_requests)
 
 # equivalent helper function
 http_requests = prometheus.counter(:http_requests, 'A counter of HTTP requests made')
@@ -59,7 +59,7 @@ The following metric types are currently supported.
 A Counter is a metric that exposes merely a sum or tally of things.
 
 ```ruby
-counter = Prometheus::Client::Counter.new
+counter = Prometheus::Client::Counter.new(:foo, '...')
 
 # increment the counter for a given label set
 counter.increment(service: 'foo')
@@ -81,7 +81,7 @@ A Gauge is a metric that exposes merely an instantaneous value or some
 snapshot thereof.
 
 ```ruby
-gauge = Prometheus::Client::Gauge.new
+gauge = Prometheus::Client::Gauge.new(:bar, '...')
 
 # set a value
 gauge.set({ role: 'base' }, 'up')
@@ -97,7 +97,7 @@ The Summary is an accumulator for samples. It captures Numeric data and provides
 an efficient percentile calculation mechanism.
 
 ```ruby
-summary = Prometheus::Client::Summary.new
+summary = Prometheus::Client::Summary.new(:baz, '...')
 
 # record a value
 summary.add({ service: 'slow' }, Benchmark.realtime { service.call(arg) })

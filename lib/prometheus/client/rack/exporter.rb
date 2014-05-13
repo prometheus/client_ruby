@@ -1,14 +1,11 @@
 require 'prometheus/client'
+require 'prometheus/client/formats/json'
 
 module Prometheus
   module Client
     module Rack
       class Exporter
         attr_reader :app, :registry, :path
-
-        API_VERSION  = '0.0.2'
-        CONTENT_TYPE = 'application/json; schema="prometheus/telemetry"; version=' + API_VERSION
-        HEADERS      = { 'Content-Type' => CONTENT_TYPE }
 
         def initialize(app, options = {})
           @app = app
@@ -18,7 +15,7 @@ module Prometheus
 
         def call(env)
           if env['PATH_INFO'] == @path
-            metrics_response
+            response(Formats::JSON)
           else
             @app.call(env)
           end
@@ -26,8 +23,12 @@ module Prometheus
 
       protected
 
-        def metrics_response
-          [200, HEADERS, [@registry.to_json]]
+        def response(format)
+          [
+            200,
+            { 'Content-Type' => format::TYPE },
+            [format.marshal(@registry)]
+          ]
         end
 
       end

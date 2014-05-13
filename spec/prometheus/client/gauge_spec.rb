@@ -3,7 +3,7 @@ require 'examples/metric_example'
 
 module Prometheus::Client
   describe Gauge do
-    let(:gauge) { Gauge.new }
+    let(:gauge) { Gauge.new(:foo, 'foo description') }
 
     it_behaves_like Metric do
       let(:type) { NilClass }

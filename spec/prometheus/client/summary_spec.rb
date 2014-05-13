@@ -3,7 +3,7 @@ require 'examples/metric_example'
 
 module Prometheus::Client
   describe Summary do
-    let(:summary) { Summary.new }
+    let(:summary) { Summary.new(:bar, 'bar description') }
 
     it_behaves_like Metric do
       let(:type) { Hash }

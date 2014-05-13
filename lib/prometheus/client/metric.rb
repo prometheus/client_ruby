@@ -5,7 +5,20 @@ module Prometheus
   module Client
     # Metric
     class Metric
-      def initialize
+      attr_reader :name, :docstring, :base_labels
+
+      def initialize(name, docstring, base_labels = {})
+        unless name.is_a?(Symbol)
+          raise ArgumentError, 'name must be a symbol'
+        end
+        @name = name
+
+        if !docstring.respond_to?(:empty?) || docstring.empty?
+          raise ArgumentError, 'docstring must be given'
+        end
+        @docstring = docstring
+
+        @base_labels = LabelSet.new(base_labels)
         @mutex = Mutex.new
         @values = Hash.new { |hash, key| hash[key] = default }
       end
@@ -20,24 +33,19 @@ module Prometheus
         @values[label_set_for(labels)]
       end
 
-      # Generates JSON representation
-      def to_json(*json)
-        {
-          'type' => type,
-          'value' => value
-        }.to_json(*json)
+      def values
+        synchronize do
+          @values.inject({}) do |memo, (labels, value)|
+            memo[labels] = get(labels)
+            memo
+          end
+        end
       end
 
     private
 
       def default
         nil
-      end
-
-      def value
-        @values.map do |labels, value|
-          { :labels => labels, :value => get(labels) }
-        end
       end
 
       def label_set_for(labels)

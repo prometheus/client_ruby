@@ -1,5 +1,5 @@
-require_relative '../../../../lib/prometheus/client/rack/collector'
 require 'rack/test'
+require 'prometheus/client/rack/collector'
 
 describe Prometheus::Client::Rack::Collector do
   include Rack::Test::Methods
@@ -22,7 +22,7 @@ describe Prometheus::Client::Rack::Collector do
 
   it 'handles errors in the registry gracefully' do
     app
-    registry.get(:http_requests_total).metric.should_receive(:increment).and_raise(NoMethodError)
+    registry.get(:http_requests_total).should_receive(:increment).and_raise(NoMethodError)
 
     get '/foo'
 
@@ -30,36 +30,17 @@ describe Prometheus::Client::Rack::Collector do
   end
 
   it 'traces request information' do
-    Time.should_receive(:now).twice.and_return(0.0, 0.000042)
+    Time.should_receive(:now).twice.and_return(0.0, 0.000002)
     expected_labels = { method: 'get', path: '/foo', code: '200' }
 
     get '/foo'
 
-    expect(registry.to_json).to eql([
-      {
-        baseLabels: { name: 'http_requests_total' },
-        docstring: 'A counter of the total number of HTTP requests made',
-        metric: {
-          type: 'counter',
-          value: [{ labels: expected_labels, value: 1 }]
-        }
-      },
-      {
-        baseLabels: { name: 'http_request_durations_total_microseconds' },
-        docstring: 'The total amount of time Rack has spent answering HTTP requests (microseconds).',
-        metric: {
-          type: 'counter',
-          value: [{ labels: expected_labels, value: 42 }]
-        }
-      },
-      {
-        baseLabels: { name: 'http_request_durations_microseconds' },
-        docstring: 'A histogram of the response latency for requests made (microseconds).',
-        metric: {
-          type: 'histogram',
-          value: [{ labels: expected_labels, value: { '0.5' => 42, '0.9' => 42, '0.99' => 42 } }]
-        }
-      }
-    ].to_json)
+    {
+      http_requests_total: 1,
+      http_request_durations_total_microseconds: 2,
+      http_request_durations_microseconds: { 0.5 => 2, 0.9 => 2, 0.99 => 2 },
+    }.each do |metric, result|
+      expect(registry.get(metric).get(expected_labels)).to eql(result)
+    end
   end
 end

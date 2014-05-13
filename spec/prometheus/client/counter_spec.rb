@@ -3,7 +3,7 @@ require 'examples/metric_example'
 
 module Prometheus::Client
   describe Counter do
-    let(:counter) { Counter.new }
+    let(:counter) { Counter.new(:foo, 'foo description') }
 
     it_behaves_like Metric do
       let(:type) { Fixnum }

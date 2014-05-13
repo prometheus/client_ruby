@@ -1,5 +1,6 @@
-require_relative '../../../../lib/prometheus/client/rack/exporter'
+require 'json'
 require 'rack/test'
+require 'prometheus/client/rack/exporter'
 
 describe Prometheus::Client::Rack::Exporter do
   include Rack::Test::Methods
