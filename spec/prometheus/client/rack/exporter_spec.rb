@@ -34,7 +34,7 @@ describe Prometheus::Client::Rack::Exporter do
       expect(last_response.header['Content-Type']).to eql(expected_content_type)
       expect(last_response.body).to eql([
         {
-          baseLabels: { name: 'foo' },
+          baseLabels: { __name__: 'foo' },
           docstring: 'foo counter',
           metric: {
             type: 'counter',

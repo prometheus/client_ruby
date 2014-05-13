@@ -10,7 +10,7 @@ module Prometheus
         def self.marshal(registry)
           registry.metrics.map do |metric|
             {
-              baseLabels: metric.base_labels.merge(name: metric.name),
+              baseLabels: metric.base_labels.merge(__name__: metric.name),
               docstring:  metric.docstring,
               metric: {
                 type:  metric.type,

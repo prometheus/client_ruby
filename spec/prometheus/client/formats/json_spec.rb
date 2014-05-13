@@ -24,7 +24,7 @@ describe Prometheus::Client::Formats::JSON do
     it 'returns a version 0.0.2 compatible JSON string' do
       expect(subject.marshal(registry)).to eql([
         {
-          "baseLabels" => { "name" => "foo" },
+          "baseLabels" => { "__name__" => "foo" },
           "docstring" => "foo description",
           "metric" => {
             "type" => "counter",
@@ -34,7 +34,7 @@ describe Prometheus::Client::Formats::JSON do
           }
         },
         {
-          "baseLabels" => { "status" => "success", "name" => "bar" },
+          "baseLabels" => { "status" => "success", "__name__" => "bar" },
           "docstring" => "bar description",
           "metric" => {
             "type" => "gauge",
