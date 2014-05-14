@@ -24,10 +24,6 @@ module Prometheus
             }
           end.to_json
         end
-
-        def self.unmarshal(*)
-          fail NotImplementedError
-        end
       end
     end
   end
