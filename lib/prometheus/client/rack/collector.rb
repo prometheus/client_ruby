@@ -6,10 +6,15 @@ module Prometheus
       class Collector
         attr_reader :app, :registry
 
-        def initialize(app, options = {}, &block)
+        def initialize(app, options = {}, &label_builder)
           @app = app
           @registry = options[:registry] || Client.registry
-          @block = block
+          @label_builder = label_builder || proc do |env|
+            {
+              method: env['REQUEST_METHOD'].downcase,
+              path:   env['PATH_INFO'].to_s
+            }
+          end
 
           init_metrics
         end
@@ -37,14 +42,7 @@ module Prometheus
         end
 
         def record(duration, env, response, exception)
-          labels = if @block
-            @block.call(env)
-          else
-            {
-              :method => env['REQUEST_METHOD'].downcase,
-              :path   => env['PATH_INFO'].to_s,
-            }
-          end
+          labels = @label_builder.call(env)
 
           if response
             labels[:code] = response.first.to_s
