@@ -9,7 +9,7 @@ module Prometheus::Client
 
       it 'raises an exception if a reserved base label is used' do
         expect do
-          described_class.new(:foo, 'foo docstring', { :name => 'reserved' })
+          described_class.new(:foo, 'foo docstring', { __name__: 'reserved' })
         end.to raise_exception LabelSet::ReservedLabelError
       end
 

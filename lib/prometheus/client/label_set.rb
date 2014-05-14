@@ -4,7 +4,7 @@ module Prometheus
     # correct.
     class LabelSet
       # TODO: we might allow setting :instance in the future
-      RESERVED_LABELS = [:name, :job, :instance]
+      RESERVED_LABELS = [:job, :instance]
 
       class LabelSetError        < StandardError; end
       class InvalidLabelSetError < LabelSetError; end
@@ -25,7 +25,11 @@ module Prometheus
         @@validated[labels.hash] ||= begin
           labels.keys.each do |key|
             unless Symbol === key
-              raise InvalidLabelError, "label name #{key} is not a symbol"
+              raise InvalidLabelError, "label #{key} is not a symbol"
+            end
+
+            if key.to_s.start_with?('__')
+              raise ReservedLabelError, "label #{key} must not start with __"
             end
 
             if RESERVED_LABELS.include?(key)

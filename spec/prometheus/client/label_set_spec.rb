@@ -21,8 +21,14 @@ module Prometheus::Client
         end.to raise_exception(LabelSet::InvalidLabelError)
       end
 
+      it 'raises InvalidLabelError if a label key starts with __' do
+        expect do
+          LabelSet.new(:__reserved__ => 'key')
+        end.to raise_exception(LabelSet::ReservedLabelError)
+      end
+
       it 'raises ReservedLabelError if a label key is reserved' do
-        [:name, :job, :instance].each do |label|
+        [:job, :instance].each do |label|
           expect do
             LabelSet.new(label => 'value')
           end.to raise_exception(LabelSet::ReservedLabelError)
