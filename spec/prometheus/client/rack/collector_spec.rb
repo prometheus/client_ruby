@@ -36,7 +36,7 @@ describe Prometheus::Client::Rack::Collector do
 
   it 'traces request information' do
     Time.should_receive(:now).twice.and_return(0.0, 0.000002)
-    expected_labels = { method: 'get', path: '/foo', code: '200' }
+    labels = { method: 'get', path: '/foo', code: '200' }
 
     get '/foo'
 
@@ -45,7 +45,21 @@ describe Prometheus::Client::Rack::Collector do
       http_request_durations_total_microseconds: 2,
       http_request_durations_microseconds: { 0.5 => 2, 0.9 => 2, 0.99 => 2 },
     }.each do |metric, result|
-      expect(registry.get(metric).get(expected_labels)).to eql(result)
+      expect(registry.get(metric).get(labels)).to eql(result)
+    end
+  end
+
+  context 'when the app raises an exception' do
+    let(:original_app) do
+      ->(_) { fail NoMethodError }
+    end
+
+    it 'traces exceptions' do
+      labels = { method: 'get', path: '/foo', exception: 'NoMethodError' }
+
+      expect { get '/foo' }.to raise_error NoMethodError
+
+      expect(registry.get(:http_requests_total).get(labels)).to eql(1)
     end
   end
 
@@ -59,9 +73,9 @@ describe Prometheus::Client::Rack::Collector do
     it 'allows labels configuration' do
       get '/foo/bar'
 
-      expected_labels = { method: 'get', code: '200' }
+      labels = { method: 'get', code: '200' }
 
-      expect(registry.get(:http_requests_total).get(expected_labels)).to eql(1)
+      expect(registry.get(:http_requests_total).get(labels)).to eql(1)
     end
   end
 
