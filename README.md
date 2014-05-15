@@ -8,6 +8,7 @@ through a JSON web services interface. Intended to be used together with a
 [![Build Status][3]](http://travis-ci.org/prometheus/client_ruby)
 [![Dependency Status][5]](https://gemnasium.com/prometheus/client_ruby)
 [![Code Climate][6]](https://codeclimate.com/github/prometheus/client_ruby)
+[![Coverage Status][7]](https://coveralls.io/r/prometheus/client_ruby)
 
 ## Usage
 
@@ -133,3 +134,4 @@ rake
 [4]: https://badge.fury.io/rb/prometheus-client.svg
 [5]: https://gemnasium.com/prometheus/client_ruby.svg
 [6]: https://codeclimate.com/github/prometheus/client_ruby.png
+[7]: https://coveralls.io/repos/prometheus/client_ruby/badge.png?branch=master
