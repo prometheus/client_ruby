@@ -11,7 +11,9 @@ task default: [:spec, :rubocop]
 task test: :spec
 
 desc 'Run specs'
-RSpec::Core::RakeTask.new
+RSpec::Core::RakeTask.new do |t|
+  t.rspec_opts = '--require ./spec/spec_helper.rb'
+end
 
 desc 'Lint code'
 Rubocop::RakeTask.new

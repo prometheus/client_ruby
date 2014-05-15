@@ -7,4 +7,5 @@ group :test do
   gem 'rake'
   gem 'rspec'
   gem 'rubocop'
+  gem 'simplecov'
 end
