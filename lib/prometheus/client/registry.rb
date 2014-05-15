@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'thread'
 
 require 'prometheus/client/counter'
@@ -20,7 +22,7 @@ module Prometheus
 
         @mutex.synchronize do
           if exist?(name.to_sym)
-            raise AlreadyRegisteredError, "#{name} has already been registered"
+            fail AlreadyRegisteredError, "#{name} has already been registered"
           else
             @metrics[name.to_sym] = metric
           end
@@ -52,7 +54,6 @@ module Prometheus
       def metrics
         @metrics.values
       end
-
     end
   end
 end

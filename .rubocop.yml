@@ -1,0 +1,9 @@
+AllCops:
+    Exclude:
+        - lib/prometheus/client/version.rb
+
+AlignHash:
+    EnforcedHashRocketStyle: table
+
+TrailingComma:
+    EnforcedStyleForMultiline: comma

@@ -1,7 +1,11 @@
+# encoding: UTF-8
+
 require 'prometheus/client/metric'
 
 module Prometheus
   module Client
+    # A Gauge is a metric that exposes merely an instantaneous value or some
+    # snapshot thereof.
     class Gauge < Metric
       def type
         :gauge

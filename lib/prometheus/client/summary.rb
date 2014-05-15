@@ -1,8 +1,12 @@
+# encoding: UTF-8
+
 require 'quantile'
 require 'prometheus/client/metric'
 
 module Prometheus
   module Client
+    # Summary is an accumulator for samples. It captures Numeric data and
+    # provides an efficient quantile calculation mechanism.
     class Summary < Metric
       def type
         :histogram
@@ -18,19 +22,18 @@ module Prometheus
       def get(labels = {})
         synchronize do
           estimator = @values[label_set_for(labels)]
-          estimator.invariants.inject({}) do |memo, invariant|
+          estimator.invariants.reduce({}) do |memo, invariant|
             memo[invariant.quantile] = estimator.query(invariant.quantile)
             memo
           end
         end
       end
 
-    private
+      private
 
       def default
         Quantile::Estimator.new
       end
-
     end
   end
 end

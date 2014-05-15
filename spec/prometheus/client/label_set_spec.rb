@@ -1,38 +1,38 @@
+# encoding: UTF-8
+
 require 'prometheus/client/label_set'
 
-module Prometheus::Client
-  describe LabelSet do
-    describe '.new' do
-      it 'returns a valid label set' do
-        hash = { :version => 'alpha' }
+describe Prometheus::Client::LabelSet do
+  describe '.new' do
+    it 'returns a valid label set' do
+      hash = { version: 'alpha' }
 
-        expect(LabelSet.new(hash)).to eql(hash)
-      end
+      expect(described_class.new(hash)).to eql(hash)
+    end
 
-      it 'raises InvalidLabelSetError if a label set is not a hash' do
+    it 'raises Invaliddescribed_classError if a label set is not a hash' do
+      expect do
+        described_class.new('invalid')
+      end.to raise_exception(described_class::InvalidLabelSetError)
+    end
+
+    it 'raises InvalidLabelError if a label key is not a symbol' do
+      expect do
+        described_class.new('key' => 'value')
+      end.to raise_exception(described_class::InvalidLabelError)
+    end
+
+    it 'raises InvalidLabelError if a label key starts with __' do
+      expect do
+        described_class.new(__reserved__: 'key')
+      end.to raise_exception(described_class::ReservedLabelError)
+    end
+
+    it 'raises ReservedLabelError if a label key is reserved' do
+      [:job, :instance].each do |label|
         expect do
-          LabelSet.new('invalid')
-        end.to raise_exception(LabelSet::InvalidLabelSetError)
-      end
-
-      it 'raises InvalidLabelError if a label key is not a symbol' do
-        expect do
-          LabelSet.new('key' => 'value')
-        end.to raise_exception(LabelSet::InvalidLabelError)
-      end
-
-      it 'raises InvalidLabelError if a label key starts with __' do
-        expect do
-          LabelSet.new(:__reserved__ => 'key')
-        end.to raise_exception(LabelSet::ReservedLabelError)
-      end
-
-      it 'raises ReservedLabelError if a label key is reserved' do
-        [:job, :instance].each do |label|
-          expect do
-            LabelSet.new(label => 'value')
-          end.to raise_exception(LabelSet::ReservedLabelError)
-        end
+          described_class.new(label => 'value')
+        end.to raise_exception(described_class::ReservedLabelError)
       end
     end
   end

@@ -1,9 +1,14 @@
+# encoding: UTF-8
+
 require 'prometheus/client'
 require 'prometheus/client/formats/json'
 
 module Prometheus
   module Client
     module Rack
+      # Exporter is a Rack middleware that provides a sample implementation of
+      # a HTTP tracer. The default label builder can be modified to export a
+      # differet set of labels per recorded metric.
       class Exporter
         attr_reader :app, :registry, :path
 
@@ -21,16 +26,15 @@ module Prometheus
           end
         end
 
-      protected
+        protected
 
         def response(format)
           [
             200,
             { 'Content-Type' => format::TYPE },
-            [format.marshal(@registry)]
+            [format.marshal(@registry)],
           ]
         end
-
       end
     end
   end

@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'prometheus/client/formats/json'
 
 describe Prometheus::Client::Formats::JSON do
@@ -17,33 +19,33 @@ describe Prometheus::Client::Formats::JSON do
         type: :gauge,
         values: { { code: 'pink' } => 15 },
       ),
-    ])
+    ],)
   end
 
   describe '.marshal' do
     it 'returns a version 0.0.2 compatible JSON string' do
       expect(subject.marshal(registry)).to eql([
         {
-          "baseLabels" => { "__name__" => "foo" },
-          "docstring" => "foo description",
-          "metric" => {
-            "type" => "counter",
-            "value" => [
-              { "labels" => { "code"=>"red" }, "value" => 42 },
-            ]
-          }
+          'baseLabels' => { '__name__' => 'foo' },
+          'docstring'  => 'foo description',
+          'metric'     => {
+            'type'  => 'counter',
+            'value' => [
+              { 'labels' => { 'code' => 'red' }, 'value' => 42 },
+            ],
+          },
         },
         {
-          "baseLabels" => { "status" => "success", "__name__" => "bar" },
-          "docstring" => "bar description",
-          "metric" => {
-            "type" => "gauge",
-            "value" => [
-              { "labels" => { "code" => "pink" }, "value" => 15 },
-            ]
-          }
+          'baseLabels' => { 'status' => 'success', '__name__' => 'bar' },
+          'docstring'  => 'bar description',
+          'metric'     => {
+            'type'  => 'gauge',
+            'value' => [
+              { 'labels' => { 'code' => 'pink' }, 'value' => 15 },
+            ],
+          },
         },
-      ].to_json)
+      ].to_json,)
     end
   end
 end

@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'thread'
 require 'prometheus/client/label_set'
 
@@ -9,15 +11,14 @@ module Prometheus
 
       def initialize(name, docstring, base_labels = {})
         unless name.is_a?(Symbol)
-          raise ArgumentError, 'name must be a symbol'
+          fail ArgumentError, 'given name must be a symbol'
         end
-        @name = name
 
         if !docstring.respond_to?(:empty?) || docstring.empty?
-          raise ArgumentError, 'docstring must be given'
+          fail ArgumentError, 'docstring must be given'
         end
-        @docstring = docstring
 
+        @name, @docstring = name, docstring
         @base_labels = LabelSet.new(base_labels)
         @mutex = Mutex.new
         @values = Hash.new { |hash, key| hash[key] = default }
@@ -25,7 +26,7 @@ module Prometheus
 
       # Returns the metric type
       def type
-        raise NotImplementedError
+        fail NotImplementedError
       end
 
       # Returns the value for the given label set
@@ -35,14 +36,14 @@ module Prometheus
 
       def values
         synchronize do
-          @values.inject({}) do |memo, (labels, value)|
+          @values.reduce({}) do |memo, (labels, _)|
             memo[labels] = get(labels)
             memo
           end
         end
       end
 
-    private
+      private
 
       def default
         nil

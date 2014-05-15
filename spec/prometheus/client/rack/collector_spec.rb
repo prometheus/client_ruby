@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'rack/test'
 require 'prometheus/client/rack/collector'
 
@@ -9,11 +11,11 @@ describe Prometheus::Client::Rack::Collector do
   end
 
   let(:original_app) do
-    lambda { |env| [200, {'Content-Type' => 'text/html'}, ['OK']] }
+    ->(_) { [200, { 'Content-Type' => 'text/html' }, ['OK']] }
   end
 
-  let(:app) do
-    Prometheus::Client::Rack::Collector.new(original_app, registry: registry)
+  let!(:app) do
+    described_class.new(original_app, registry: registry)
   end
 
   it 'returns the app response' do
@@ -24,8 +26,8 @@ describe Prometheus::Client::Rack::Collector do
   end
 
   it 'handles errors in the registry gracefully' do
-    app
-    registry.get(:http_requests_total).should_receive(:increment).and_raise(NoMethodError)
+    counter = registry.get(:http_requests_total)
+    counter.should_receive(:increment).and_raise(NoMethodError)
 
     get '/foo'
 
@@ -49,7 +51,7 @@ describe Prometheus::Client::Rack::Collector do
 
   context 'setting up with a block' do
     let(:app) do
-      Prometheus::Client::Rack::Collector.new(original_app, registry: registry) do |env|
+      described_class.new(original_app, registry: registry) do |env|
         { method: env['REQUEST_METHOD'].downcase } # and ignore the path
       end
     end

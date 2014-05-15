@@ -56,7 +56,7 @@ The following metric types are currently supported.
 
 ### Counter
 
-A Counter is a metric that exposes merely a sum or tally of things.
+Counter is a metric that exposes merely a sum or tally of things.
 
 ```ruby
 counter = Prometheus::Client::Counter.new(:foo, '...')
@@ -77,8 +77,8 @@ counter.get(service: 'bar')
 
 ### Gauge
 
-A Gauge is a metric that exposes merely an instantaneous value or some
-snapshot thereof.
+Gauge is a metric that exposes merely an instantaneous value or some snapshot
+thereof.
 
 ```ruby
 gauge = Prometheus::Client::Gauge.new(:bar, '...')
@@ -93,7 +93,7 @@ gauge.get({ role: 'problematic' })
 
 ### Summary
 
-The Summary is an accumulator for samples. It captures Numeric data and provides
+Summary is an accumulator for samples. It captures Numeric data and provides
 an efficient percentile calculation mechanism.
 
 ```ruby
@@ -121,7 +121,7 @@ Install necessary development gems with `bundle install` and run tests with
 rspec:
 
 ```bash
-rspec
+rake
 ```
 
 [1]: https://github.com/prometheus/prometheus

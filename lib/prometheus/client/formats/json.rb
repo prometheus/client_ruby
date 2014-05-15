@@ -1,11 +1,16 @@
+# encoding: UTF-8
+
 require 'json'
 
 module Prometheus
   module Client
     module Formats
+      # JSON format is a deprecated, human-readable format to expose the state
+      # of a given registry.
       module JSON
         VERSION = '0.0.2'
-        TYPE    = 'application/json; schema="prometheus/telemetry"; version=' + VERSION
+        SCHEMA  = 'schema="prometheus/telemetry"'
+        TYPE    = "application/json; #{SCHEMA}; version=#{VERSION}"
 
         def self.marshal(registry)
           registry.metrics.map do |metric|
@@ -14,18 +19,15 @@ module Prometheus
               docstring:  metric.docstring,
               metric: {
                 type:  metric.type,
-                value: metric.values.map { |labels, value|
-                  { labels: labels, value: value }
-                }
-              }
+                value: metric.values.map { |l, v| { labels: l, value: v } },
+              },
             }
           end.to_json
         end
 
-        def self.unmarshal(text)
-          raise NotImplementedError
+        def self.unmarshal(*)
+          fail NotImplementedError
         end
-
       end
     end
   end

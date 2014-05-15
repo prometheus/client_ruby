@@ -1,8 +1,12 @@
+# encoding: UTF-8
+
 require 'prometheus/client'
 
 module Prometheus
   module Client
     module Rack
+      # Collector is a Rack middleware that provides a sample implementation of
+      # a Prometheus HTTP client API.
       class Collector
         attr_reader :app, :registry
 
@@ -12,36 +16,43 @@ module Prometheus
           @label_builder = label_builder || proc do |env|
             {
               method: env['REQUEST_METHOD'].downcase,
-              path:   env['PATH_INFO'].to_s
+              path:   env['PATH_INFO'].to_s,
             }
           end
 
-          init_metrics
+          init
         end
 
         def call(env) # :nodoc:
           trace(env) { @app.call(env) }
         end
 
-      protected
+        protected
 
-        def init_metrics
-          @requests = @registry.counter(:http_requests_total, 'A counter of the total number of HTTP requests made')
-          @requests_duration = @registry.counter(:http_request_durations_total_microseconds, 'The total amount of time Rack has spent answering HTTP requests (microseconds).')
-          @durations = @registry.summary(:http_request_durations_microseconds, 'A histogram of the response latency for requests made (microseconds).')
+        def init
+          @requests = @registry.counter(
+            :http_requests_total,
+            'A counter of the total number of HTTP requests made',)
+          @requests_duration = @registry.counter(
+            :http_request_durations_total_microseconds,
+            'The total amount of time spent answering HTTP requests ' \
+            '(microseconds).',)
+          @durations = @registry.summary(
+            :http_request_durations_microseconds,
+            'A histogram of the response latency (microseconds).',)
         end
 
-        def trace(env, &block)
+        def trace(env)
           start = Time.now
           response = yield
         rescue => exception
           raise
         ensure
           duration = ((Time.now - start) * 1_000_000).to_i
-          record(duration, env, response, exception)
+          record(labels(env, response, exception), duration)
         end
 
-        def record(duration, env, response, exception)
+        def labels(env, response, exception)
           labels = @label_builder.call(env)
 
           if response
@@ -50,13 +61,19 @@ module Prometheus
             labels[:exception] = exception.class.name
           end
 
+          labels
+        rescue
+          nil
+        end
+
+        def record(labels, duration)
           @requests.increment(labels)
           @requests_duration.increment(labels, duration)
           @durations.add(labels, duration)
-        rescue => error
+        rescue
           # TODO: log unexpected exception during request recording
+          nil
         end
-
       end
     end
   end

@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 module Prometheus
   module Client
     # LabelSet is a pseudo class used to ensure given labels are semantically
@@ -12,29 +14,18 @@ module Prometheus
       class ReservedLabelError   < LabelSetError; end
 
       # A list of validated label sets
-      @@validated = {}
+      @validated = {}
 
       def self.new(labels)
         validate(labels)
         labels
       end
 
-    protected
-
       def self.validate(labels)
-        @@validated[labels.hash] ||= begin
+        @validated[labels.hash] ||= begin
           labels.keys.each do |key|
-            unless Symbol === key
-              raise InvalidLabelError, "label #{key} is not a symbol"
-            end
-
-            if key.to_s.start_with?('__')
-              raise ReservedLabelError, "label #{key} must not start with __"
-            end
-
-            if RESERVED_LABELS.include?(key)
-              raise ReservedLabelError, "labels may not contain reserved #{key} label"
-            end
+            validate_symbol(key)
+            validate_reserved_key(key)
           end
 
           true
@@ -43,6 +34,21 @@ module Prometheus
         raise InvalidLabelSetError, "#{labels} is not a valid label set"
       end
 
+      def self.validate_symbol(key)
+        unless key.is_a?(Symbol)
+          fail InvalidLabelError, "label #{key} is not a symbol"
+        end
+      end
+
+      def self.validate_reserved_key(key)
+        if key.to_s.start_with?('__')
+          fail ReservedLabelError, "label #{key} must not start with __"
+        end
+
+        if RESERVED_LABELS.include?(key)
+          fail ReservedLabelError, "#{key} is reserved"
+        end
+      end
     end
   end
 end
