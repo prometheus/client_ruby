@@ -4,6 +4,11 @@ A suite of instrumentation metric primitives for Ruby that can be exposed
 through a JSON web services interface. Intended to be used together with a
 [Prometheus server][1].
 
+[![Gem Version][4]](http://badge.fury.io/rb/prometheus-client)
+[![Build Status][3]](http://travis-ci.org/prometheus/client_ruby)
+[![Dependency Status][5]](https://gemnasium.com/prometheus/client_ruby)
+[![Code Climate][6]](https://codeclimate.com/github/prometheus/client_ruby)
+
 ## Usage
 
 ### Library
@@ -115,8 +120,6 @@ summary.get({ service: 'database' })
 
 ## Tests
 
-[![Build Status][3]](http://travis-ci.org/prometheus/client_ruby)
-
 Install necessary development gems with `bundle install` and run tests with
 rspec:
 
@@ -127,3 +130,6 @@ rake
 [1]: https://github.com/prometheus/prometheus
 [2]: http://rack.github.io/
 [3]: https://secure.travis-ci.org/prometheus/client_ruby.png?branch=master
+[4]: https://badge.fury.io/rb/prometheus-client.svg
+[5]: https://gemnasium.com/prometheus/client_ruby.svg
+[6]: https://codeclimate.com/github/prometheus/client_ruby.png
