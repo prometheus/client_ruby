@@ -13,9 +13,9 @@ module Prometheus
       class Exporter
         attr_reader :app, :registry, :path
 
-        AVAILABLE = [Formats::Text, Formats::JSON]
-        FORMATS   = AVAILABLE.reduce({}) { |a, e| a.merge(e::TYPE => e) }
-        FALLBACK  = Formats::JSON
+        FORMATS  = [Formats::Text, Formats::JSON]
+        ACCEPT   = FORMATS.reduce({}) { |a, e| a.merge(e::CONTENT_TYPE => e) }
+        FALLBACK = Formats::JSON
 
         def initialize(app, options = {})
           @app = app
@@ -25,8 +25,8 @@ module Prometheus
 
         def call(env)
           if env['PATH_INFO'] == @path
-            format = negotiate(env['HTTP_ACCEPT'], FORMATS, FALLBACK)
-            respond_with(format)
+            format = negotiate(env['HTTP_ACCEPT'], ACCEPT, FALLBACK)
+            format ? respond_with(format) : not_acceptable(FORMATS)
           else
             @app.call(env)
           end
@@ -35,11 +35,13 @@ module Prometheus
         private
 
         def negotiate(accept, formats, fallback)
+          return fallback if accept.to_s.empty?
+
           parse(accept).each do |content_type, _|
             return formats[content_type] if formats.key?(content_type)
           end
 
-          fallback
+          nil
         end
 
         def parse(header)
@@ -56,8 +58,18 @@ module Prometheus
         def respond_with(format)
           [
             200,
-            { 'Content-Type' => format::TYPE },
+            { 'Content-Type' => format::CONTENT_TYPE },
             [format.marshal(@registry)],
+          ]
+        end
+
+        def not_acceptable(formats)
+          types = formats.map { |format| format::MEDIA_TYPE }
+
+          [
+            406,
+            { 'Content-Type' => 'text/plain' },
+            ["Supported media types: #{types.join(', ')}"],
           ]
         end
       end

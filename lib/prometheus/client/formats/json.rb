@@ -8,10 +8,13 @@ module Prometheus
       # JSON format is a deprecated, human-readable format to expose the state
       # of a given registry.
       module JSON
-        VERSION = '0.0.2'
-        SCHEMA  = 'schema="prometheus/telemetry"'
-        TYPE    = "application/json; #{SCHEMA}; version=#{VERSION}"
-        MAPPING = { :summary => :histogram }
+        MEDIA_TYPE   = 'application/json'
+        SCHEMA       = 'prometheus/telemetry'
+        VERSION      = '0.0.2'
+        CONTENT_TYPE = \
+          %Q(#{MEDIA_TYPE}; schema="#{SCHEMA}"; version=#{VERSION})
+
+        MAPPING = { summary: :histogram }
 
         def self.marshal(registry)
           registry.metrics.map do |metric|

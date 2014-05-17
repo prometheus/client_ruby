@@ -5,8 +5,9 @@ module Prometheus
     module Formats
       # Text format is human readable mainly used for manual inspection.
       module Text
-        VERSION = '0.0.4'
-        TYPE    = 'text/plain; version=' + VERSION
+        MEDIA_TYPE   = 'text/plain'
+        VERSION      = '0.0.4'
+        CONTENT_TYPE = %Q(#{MEDIA_TYPE}; version=#{VERSION})
 
         METRIC_LINE = '%s%s %s'
         TYPE_LINE   = '# TYPE %s %s'

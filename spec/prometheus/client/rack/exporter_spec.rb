@@ -29,62 +29,74 @@ describe Prometheus::Client::Rack::Exporter do
     text = Prometheus::Client::Formats::Text
     json = Prometheus::Client::Formats::JSON
 
-    shared_examples 'response' do |headers, format|
-      it 'returns a valid prometheus compatible response' do
+    shared_examples 'ok' do |headers, fmt|
+      it "responds with 200 OK and Content-Type #{fmt::CONTENT_TYPE}" do
         registry.counter(:foo, 'foo counter').increment({}, 9)
 
         get '/metrics', nil, headers
 
-        expect(last_response).to be_ok
-        expect(last_response.header['Content-Type']).to eql(format::TYPE)
-        expect(last_response.body).to eql(format.marshal(registry))
+        expect(last_response.status).to eql(200)
+        expect(last_response.header['Content-Type']).to eql(fmt::CONTENT_TYPE)
+        expect(last_response.body).to eql(fmt.marshal(registry))
+      end
+    end
+
+    shared_examples 'not acceptable' do |headers|
+      it 'responds with 406 Not Acceptable' do
+        message = 'Supported media types: text/plain, application/json'
+
+        get '/metrics', nil, headers
+
+        expect(last_response.status).to eql(406)
+        expect(last_response.header['Content-Type']).to eql('text/plain')
+        expect(last_response.body).to eql(message)
       end
     end
 
     context 'when client does send a Accept header' do
-      include_examples 'response', {}, json
+      include_examples 'ok', {}, json
     end
 
     context 'when client requests application/json' do
-      headers = { 'HTTP_ACCEPT' => json::TYPE }
+      accept = json::CONTENT_TYPE
 
-      include_examples 'response', headers, json
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, json
     end
 
     context 'when client requests text/plain' do
-      headers = { 'HTTP_ACCEPT' => text::TYPE }
+      accept = text::CONTENT_TYPE
 
-      include_examples 'response', headers, text
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, text
     end
 
     context 'when client uses different white spaces in Accept header' do
-      headers = { 'HTTP_ACCEPT' => 'text/plain;q=1.0  ; version=0.0.4' }
+      accept = 'text/plain;q=1.0  ; version=0.0.4'
 
-      include_examples 'response', headers, text
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, text
     end
 
     context 'when client accepts multiple formats' do
-      headers = { 'HTTP_ACCEPT' => "#{json::TYPE};q=0.5, #{text::TYPE};q=0.7" }
+      accept = "#{json::CONTENT_TYPE};q=0.5, #{text::CONTENT_TYPE};q=0.7"
 
-      include_examples 'response', headers, text
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, text
     end
 
     context 'when client does not include quality attribute' do
-      headers = { 'HTTP_ACCEPT' => "#{json::TYPE};q=0.5, #{text::TYPE}" }
+      accept = "#{json::CONTENT_TYPE};q=0.5, #{text::CONTENT_TYPE}"
 
-      include_examples 'response', headers, text
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, text
     end
 
     context 'when client accepts some unknown formats' do
-      headers = { 'HTTP_ACCEPT' => "#{text::TYPE};q=0.3, proto/buf;q=0.7" }
+      accept = "#{text::CONTENT_TYPE};q=0.3, proto/buf;q=0.7"
 
-      include_examples 'response', headers, text
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, text
     end
 
     context 'when client accepts only unknown formats' do
-      headers = { 'HTTP_ACCEPT' => 'fancy/woo;q=0.3, proto/buf;q=0.7' }
+      accept = 'fancy/woo;q=0.3, proto/buf;q=0.7'
 
-      include_examples 'response', headers, json
+      include_examples 'not acceptable', 'HTTP_ACCEPT' => accept
     end
   end
 end
