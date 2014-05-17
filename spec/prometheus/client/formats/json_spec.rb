@@ -19,6 +19,13 @@ describe Prometheus::Client::Formats::JSON do
         type: :gauge,
         values: { { code: 'pink' } => 15 },
       ),
+      double(
+        name: :baz,
+        docstring: 'baz description',
+        base_labels: { status: 'test' },
+        type: :summary,
+        values: { { code: 'orange' } => { 0.5 => 15, 0.9 => 20, 0.99 => 32 } },
+      ),
     ],)
   end
 
@@ -42,6 +49,19 @@ describe Prometheus::Client::Formats::JSON do
             'type'  => 'gauge',
             'value' => [
               { 'labels' => { 'code' => 'pink' }, 'value' => 15 },
+            ],
+          },
+        },
+        {
+          'baseLabels' => { 'status' => 'test', '__name__' => 'baz' },
+          'docstring'  => 'baz description',
+          'metric'     => {
+            'type'  => 'histogram',
+            'value' => [
+              {
+                'labels' => { 'code' => 'orange' },
+                'value'  => { 0.5 => 15, 0.9 => 20, 0.99 => 32 },
+              },
             ],
           },
         },

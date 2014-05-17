@@ -9,7 +9,7 @@ module Prometheus
     # provides an efficient quantile calculation mechanism.
     class Summary < Metric
       def type
-        :histogram
+        :summary
       end
 
       # Records a given value.

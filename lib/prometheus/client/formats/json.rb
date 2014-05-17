@@ -11,6 +11,7 @@ module Prometheus
         VERSION = '0.0.2'
         SCHEMA  = 'schema="prometheus/telemetry"'
         TYPE    = "application/json; #{SCHEMA}; version=#{VERSION}"
+        MAPPING = { :summary => :histogram }
 
         def self.marshal(registry)
           registry.metrics.map do |metric|
@@ -18,7 +19,7 @@ module Prometheus
               baseLabels: metric.base_labels.merge(__name__: metric.name),
               docstring:  metric.docstring,
               metric: {
-                type:  metric.type,
+                type:  MAPPING[metric.type] || metric.type,
                 value: metric.values.map { |l, v| { labels: l, value: v } },
               },
             }

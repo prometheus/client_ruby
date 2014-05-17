@@ -10,12 +10,6 @@ describe Prometheus::Client::Summary do
     let(:type) { Hash }
   end
 
-  describe '#type' do
-    it 'returns histogram for API compatibility' do
-      expect(summary.type).to eql(:histogram)
-    end
-  end
-
   describe '#add' do
     it 'records the given value' do
       expect do
