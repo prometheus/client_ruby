@@ -21,9 +21,15 @@ module Prometheus
       # Returns the value for the given label set
       def get(labels = {})
         synchronize do
-          estimator = @values[label_set_for(labels)]
-          estimator.invariants.reduce({}) do |memo, invariant|
-            memo[invariant.quantile] = estimator.query(invariant.quantile)
+          transform(@values[label_set_for(labels)])
+        end
+      end
+
+      # Returns all label sets with their values
+      def values
+        synchronize do
+          @values.reduce({}) do |memo, (labels, value)|
+            memo[labels] = transform(value)
             memo
           end
         end
@@ -33,6 +39,13 @@ module Prometheus
 
       def default
         Quantile::Estimator.new
+      end
+
+      def transform(estimator)
+        estimator.invariants.reduce({}) do |memo, invariant|
+          memo[invariant.quantile] = estimator.query(invariant.quantile)
+          memo
+        end
       end
     end
   end

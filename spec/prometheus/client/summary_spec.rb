@@ -39,4 +39,15 @@ describe Prometheus::Client::Summary do
     end
   end
 
+  describe '#values' do
+    it 'returns a hash of all recorded summaries' do
+      summary.add({ status: 'bar' }, 3)
+      summary.add({ status: 'foo' }, 5)
+
+      expect(summary.values).to eql(
+        { status: 'bar' } => { 0.5 => 3, 0.9 => 3, 0.99 => 3 },
+        { status: 'foo' } => { 0.5 => 5, 0.9 => 5, 0.99 => 5 },
+      )
+    end
+  end
 end
