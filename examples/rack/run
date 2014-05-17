@@ -39,4 +39,4 @@ sleep 1
 printf "GET ${URL}\nPOST ${URL}\nDELETE ${URL}" | vegeta attack &>> /dev/null
 
 # output the result
-curl "${URL}metrics.json" | pretty_json
+curl -s "${URL}metrics" | pretty_json
