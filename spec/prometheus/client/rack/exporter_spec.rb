@@ -58,12 +58,24 @@ describe Prometheus::Client::Rack::Exporter do
     end
 
     context 'when client requests application/json' do
+      accept = 'application/json'
+
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, json
+    end
+
+    context "when client requests '#{json::CONTENT_TYPE}'" do
       accept = json::CONTENT_TYPE
 
       include_examples 'ok', { 'HTTP_ACCEPT' => accept }, json
     end
 
     context 'when client requests text/plain' do
+      accept = 'text/plain'
+
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, text
+    end
+
+    context "when client requests '#{text::CONTENT_TYPE}'" do
       accept = text::CONTENT_TYPE
 
       include_examples 'ok', { 'HTTP_ACCEPT' => accept }, text

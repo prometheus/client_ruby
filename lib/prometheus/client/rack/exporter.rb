@@ -14,18 +14,18 @@ module Prometheus
         attr_reader :app, :registry, :path
 
         FORMATS  = [Formats::Text, Formats::JSON]
-        ACCEPT   = FORMATS.reduce({}) { |a, e| a.merge(e::CONTENT_TYPE => e) }
         FALLBACK = Formats::JSON
 
         def initialize(app, options = {})
           @app = app
           @registry = options[:registry] || Client.registry
           @path = options[:path] || '/metrics'
+          @accpetable = build_dictionary(FORMATS)
         end
 
         def call(env)
           if env['PATH_INFO'] == @path
-            format = negotiate(env['HTTP_ACCEPT'], ACCEPT, FALLBACK)
+            format = negotiate(env['HTTP_ACCEPT'], @accpetable, FALLBACK)
             format ? respond_with(format) : not_acceptable(FORMATS)
           else
             @app.call(env)
@@ -71,6 +71,14 @@ module Prometheus
             { 'Content-Type' => 'text/plain' },
             ["Supported media types: #{types.join(', ')}"],
           ]
+        end
+
+        def build_dictionary(formats)
+          formats.reduce({}) do |memo, format|
+            memo[format::CONTENT_TYPE] = format
+            memo[format::MEDIA_TYPE] = format
+            memo
+          end
         end
       end
     end
