@@ -8,6 +8,21 @@ module Prometheus
     # Summary is an accumulator for samples. It captures Numeric data and
     # provides an efficient quantile calculation mechanism.
     class Summary < Metric
+      # Value represents the state of a Summary at a given point.
+      class Value < Hash
+        attr_accessor :sum, :total
+
+        def initialize(estimator)
+          @sum, @total = estimator.sum, estimator.observations
+
+          values = estimator.invariants.each_with_object({}) do |i, memo|
+            memo[i.quantile] = estimator.query(i.quantile)
+          end
+
+          replace(values)
+        end
+      end
+
       def type
         :summary
       end
@@ -21,7 +36,7 @@ module Prometheus
       # Returns the value for the given label set
       def get(labels = {})
         synchronize do
-          transform(@values[label_set_for(labels)])
+          Value.new(@values[label_set_for(labels)])
         end
       end
 
@@ -29,7 +44,7 @@ module Prometheus
       def values
         synchronize do
           @values.each_with_object({}) do |(labels, value), memo|
-            memo[labels] = transform(value)
+            memo[labels] = Value.new(value)
           end
         end
       end
@@ -38,12 +53,6 @@ module Prometheus
 
       def default
         Quantile::Estimator.new
-      end
-
-      def transform(estimator)
-        estimator.invariants.each_with_object({}) do |invariant, memo|
-          memo[invariant.quantile] = estimator.query(invariant.quantile)
-        end
       end
     end
   end

@@ -19,13 +19,22 @@ describe Prometheus::Client::Summary do
   end
 
   describe '#get' do
-    it 'returns a set of quantile values' do
+    before do
       summary.add({ foo: 'bar' }, 3)
       summary.add({ foo: 'bar' }, 5.2)
       summary.add({ foo: 'bar' }, 13)
       summary.add({ foo: 'bar' }, 4)
+    end
 
+    it 'returns a set of quantile values' do
       expect(summary.get(foo: 'bar')).to eql(0.5 => 4, 0.9 => 5.2, 0.99 => 5.2)
+    end
+
+    it 'returns a value which responds to #sum and #total' do
+      value = summary.get(foo: 'bar')
+
+      expect(value.sum).to eql(25.2)
+      expect(value.total).to eql(4)
     end
 
     it 'uses nil as default value' do
