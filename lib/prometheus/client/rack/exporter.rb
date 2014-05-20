@@ -74,10 +74,9 @@ module Prometheus
         end
 
         def build_dictionary(formats)
-          formats.reduce({}) do |memo, format|
+          formats.each_with_object({}) do |format, memo|
             memo[format::CONTENT_TYPE] = format
             memo[format::MEDIA_TYPE] = format
-            memo
           end
         end
       end

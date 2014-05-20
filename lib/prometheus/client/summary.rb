@@ -28,9 +28,8 @@ module Prometheus
       # Returns all label sets with their values
       def values
         synchronize do
-          @values.reduce({}) do |memo, (labels, value)|
+          @values.each_with_object({}) do |(labels, value), memo|
             memo[labels] = transform(value)
-            memo
           end
         end
       end
@@ -42,9 +41,8 @@ module Prometheus
       end
 
       def transform(estimator)
-        estimator.invariants.reduce({}) do |memo, invariant|
+        estimator.invariants.each_with_object({}) do |invariant, memo|
           memo[invariant.quantile] = estimator.query(invariant.quantile)
-          memo
         end
       end
     end

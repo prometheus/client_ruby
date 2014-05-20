@@ -36,9 +36,8 @@ module Prometheus
 
       def values
         synchronize do
-          @values.reduce({}) do |memo, (labels, value)|
+          @values.each_with_object({}) do |(labels, value), memo|
             memo[labels] = value
-            memo
           end
         end
       end
