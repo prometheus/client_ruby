@@ -12,7 +12,7 @@ through a JSON web services interface. Intended to be used together with a
 
 ## Usage
 
-### Library
+### Overview
 
 ```ruby
 require 'prometheus/client'
@@ -55,6 +55,28 @@ Start the server and have a look at the metrics endpoint:
 
 For further instructions and other scripts to get started, have a look at the
 integrated [example application](examples/rack/README.md).
+
+### Pushgateway
+
+The Ruby client can also be used to push its collected metrics to a
+[Pushgateway][8]. This comes in handy with batch jobs or in other scenarios
+where it's not possible or feasible to let a Prometheus server scrape a Ruby
+process.
+
+```ruby
+require 'prometheus/client'
+require 'prometheus/client/push'
+
+prometheus = Prometheus::Client.registry
+# ... register some metrics, set/add/increment/etc. their values
+
+# push the registry state to the default gateway
+Prometheus::Client::Push.new('my-batch-job').push(prometheus)
+
+# optional: specify the instance name (instead of IP) and gateway
+Prometheus::Client::Push.new(
+  'my-job', 'instance-name', 'http://example.domain:1234').push(prometheus)
+```
 
 ## Metrics
 
@@ -115,8 +137,6 @@ summary.get({ service: 'database' })
 
 ## Todo
 
-  * add push support to a vanilla prometheus exporter
-  * use a more performant JSON library
   * add protobuf support
 
 ## Tests
@@ -135,3 +155,4 @@ rake
 [5]: https://gemnasium.com/prometheus/client_ruby.svg
 [6]: https://codeclimate.com/github/prometheus/client_ruby.png
 [7]: https://coveralls.io/repos/prometheus/client_ruby/badge.png?branch=master
+[8]: https://github.com/prometheus/pushgateway
