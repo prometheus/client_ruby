@@ -28,8 +28,7 @@ module Prometheus
             lines << format(HELP_LINE, metric.name, escape(metric.docstring))
 
             metric.values.each do |label_set, value|
-              set = metric.base_labels.merge(label_set)
-              representation(metric, set, value) { |l| lines << l }
+              representation(metric, label_set, value) { |l| lines << l }
             end
           end
 
@@ -39,18 +38,24 @@ module Prometheus
 
         private
 
-        def self.representation(metric, set, value)
-          if metric.type == :summary
-            value.each do |q, v|
-              yield metric(metric.name, labels(set.merge(quantile: q)), v)
-            end
+        def self.representation(metric, label_set, value, &block)
+          set = metric.base_labels.merge(label_set)
 
-            l = labels(set)
-            yield metric("#{metric.name}_sum", l, value.sum)
-            yield metric("#{metric.name}_total", l, value.total)
+          if metric.type == :summary
+            summary(metric.name, set, value, &block)
           else
             yield metric(metric.name, labels(set), value)
           end
+        end
+
+        def self.summary(name, set, value)
+          value.each do |q, v|
+            yield metric(name, labels(set.merge(quantile: q)), v)
+          end
+
+          l = labels(set)
+          yield metric("#{name}_sum", l, value.sum)
+          yield metric("#{name}_total", l, value.total)
         end
 
         def self.metric(name, labels, value)
