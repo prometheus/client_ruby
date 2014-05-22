@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
 require 'thread'
-require 'prometheus/client/label_set'
+require 'prometheus/client/label_set_validator'
 
 module Prometheus
   module Client
@@ -10,18 +10,16 @@ module Prometheus
       attr_reader :name, :docstring, :base_labels
 
       def initialize(name, docstring, base_labels = {})
-        unless name.is_a?(Symbol)
-          fail ArgumentError, 'given name must be a symbol'
-        end
+        @mutex = Mutex.new
+        @validator = LabelSetValidator.new
+        @values = Hash.new { |hash, key| hash[key] = default }
 
-        if !docstring.respond_to?(:empty?) || docstring.empty?
-          fail ArgumentError, 'docstring must be given'
-        end
+        validate_name(name)
+        validate_docstring(docstring)
+        @validator.valid?(base_labels)
 
         @name, @docstring = name, docstring
-        @base_labels = LabelSet.new(base_labels)
-        @mutex = Mutex.new
-        @values = Hash.new { |hash, key| hash[key] = default }
+        @base_labels = base_labels
       end
 
       # Returns the metric type
@@ -34,6 +32,7 @@ module Prometheus
         @values[label_set_for(labels)]
       end
 
+      # Returns all label sets with their values
       def values
         synchronize do
           @values.each_with_object({}) do |(labels, value), memo|
@@ -48,8 +47,20 @@ module Prometheus
         nil
       end
 
+      def validate_name(name)
+        return true if name.is_a?(Symbol)
+
+        fail ArgumentError, 'given name must be a symbol'
+      end
+
+      def validate_docstring(docstring)
+        return true if docstring.respond_to?(:empty?) && !docstring.empty?
+
+        fail ArgumentError, 'docstring must be given'
+      end
+
       def label_set_for(labels)
-        LabelSet.new(labels)
+        @validator.validate(labels)
       end
 
       def synchronize(&block)

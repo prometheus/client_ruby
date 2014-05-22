@@ -9,9 +9,11 @@ shared_examples_for Prometheus::Client::Metric do
     end
 
     it 'raises an exception if a reserved base label is used' do
+      exception = Prometheus::Client::LabelSetValidator::ReservedLabelError
+
       expect do
         described_class.new(:foo, 'foo docstring',  __name__: 'reserved')
-      end.to raise_exception Prometheus::Client::LabelSet::ReservedLabelError
+      end.to raise_exception exception
     end
 
     it 'raises an exception if the given name is blank' do
