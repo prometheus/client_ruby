@@ -51,15 +51,25 @@ describe Prometheus::Client::Rack::Collector do
 
   context 'when the app raises an exception' do
     let(:original_app) do
-      ->(_) { fail NoMethodError }
+      lambda do |env|
+        if env['PATH_INFO'] == '/broken'
+          fail NoMethodError
+        else
+          [200, { 'Content-Type' => 'text/html' }, ['OK']]
+        end
+      end
+    end
+
+    before do
+      get '/foo'
     end
 
     it 'traces exceptions' do
-      labels = { method: 'get', path: '/foo', exception: 'NoMethodError' }
+      labels = { exception: 'NoMethodError' }
 
-      expect { get '/foo' }.to raise_error NoMethodError
+      expect { get '/broken' }.to raise_error NoMethodError
 
-      expect(registry.get(:http_requests_total).get(labels)).to eql(1)
+      expect(registry.get(:http_exceptions_total).get(labels)).to eql(1)
     end
   end
 

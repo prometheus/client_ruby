@@ -35,8 +35,10 @@ module Prometheus
 
       # Returns the value for the given label set
       def get(labels = {})
+        @validator.valid?(labels)
+
         synchronize do
-          Value.new(@values[label_set_for(labels)])
+          Value.new(@values[labels])
         end
       end
 

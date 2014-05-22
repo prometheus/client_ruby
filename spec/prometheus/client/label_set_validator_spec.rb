@@ -57,5 +57,13 @@ describe Prometheus::Client::LabelSetValidator do
 
       expect { validator.validate(input) }.to raise_exception(invalid)
     end
+
+    it 'raises InvalidLabelSetError for varying label sets' do
+      validator.validate(method: 'get', code: '200')
+
+      expect do
+        validator.validate(method: 'get', exception: 'NoMethodError')
+      end.to raise_exception(invalid)
+    end
   end
 end

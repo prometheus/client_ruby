@@ -29,7 +29,9 @@ module Prometheus
 
       # Returns the value for the given label set
       def get(labels = {})
-        @values[label_set_for(labels)]
+        @validator.valid?(labels)
+
+        @values[labels]
       end
 
       # Returns all label sets with their values

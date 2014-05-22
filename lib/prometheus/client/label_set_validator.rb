@@ -30,12 +30,22 @@ module Prometheus
       end
 
       def validate(labels)
-        @validated[labels.hash] ||= valid?(labels)
+        return labels if @validated.key?(labels.hash)
 
-        labels
+        valid?(labels)
+
+        unless @validated.empty? || match?(labels, @validated.first.last)
+          fail InvalidLabelSetError, 'labels must have the same signature'
+        end
+
+        @validated[labels.hash] = labels
       end
 
       private
+
+      def match?(a, b)
+        a.keys.sort == b.keys.sort
+      end
 
       def validate_symbol(key)
         return true if key.is_a?(Symbol)

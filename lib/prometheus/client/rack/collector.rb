@@ -20,7 +20,8 @@ module Prometheus
             }
           end
 
-          init
+          init_request_metrics
+          init_exception_metrics
         end
 
         def call(env) # :nodoc:
@@ -29,10 +30,10 @@ module Prometheus
 
         protected
 
-        def init
+        def init_request_metrics
           @requests = @registry.counter(
             :http_requests_total,
-            'A counter of the total number of HTTP requests made',)
+            'A counter of the total number of HTTP requests made.',)
           @requests_duration = @registry.counter(
             :http_request_durations_total_microseconds,
             'The total amount of time spent answering HTTP requests ' \
@@ -42,28 +43,27 @@ module Prometheus
             'A histogram of the response latency (microseconds).',)
         end
 
-        def trace(env)
-          start = Time.now
-          response = yield
-        rescue => exception
-          raise
-        ensure
-          duration = ((Time.now - start) * 1_000_000).to_i
-          record(labels(env, response, exception), duration)
+        def init_exception_metrics
+          @exceptions = @registry.counter(
+            :http_exceptions_total,
+            'A counter of the total number of exceptions raised.',)
         end
 
-        def labels(env, response, exception)
-          labels = @label_builder.call(env)
-
-          if response
-            labels[:code] = response.first.to_s
-          else
-            labels[:exception] = exception.class.name
+        def trace(env)
+          start = Time.now
+          yield.tap do |response|
+            duration = ((Time.now - start) * 1_000_000).to_i
+            record(labels(env, response), duration)
           end
+        rescue => exception
+          @exceptions.increment(exception: exception.class.name)
+          raise
+        end
 
-          labels
-        rescue
-          nil
+        def labels(env, response)
+          @label_builder.call(env).tap do |labels|
+            labels[:code] = response.first.to_s
+          end
         end
 
         def record(labels, duration)
