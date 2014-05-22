@@ -15,11 +15,9 @@ module Prometheus
         def initialize(estimator)
           @sum, @total = estimator.sum, estimator.observations
 
-          values = estimator.invariants.each_with_object({}) do |i, memo|
-            memo[i.quantile] = estimator.query(i.quantile)
+          estimator.invariants.each do |invariant|
+            self[invariant.quantile] = estimator.query(invariant.quantile)
           end
-
-          replace(values)
         end
       end
 
