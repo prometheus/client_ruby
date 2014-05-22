@@ -15,9 +15,13 @@ describe Prometheus::Client::Formats::Text do
       double(
         name: :foo,
         docstring: 'foo description',
-        base_labels: {},
+        base_labels: { umlauts: 'Björn', utf: '佖佥' },
         type: :counter,
-        values: { { code: 'red' } => 42 },
+        values: {
+          { code: 'red' }   => 42,
+          { code: 'green' } => 3.14E42,
+          { code: 'blue' }  => -1.23e-45,
+        },
       ),
       double(
         name: :bar,
@@ -48,7 +52,9 @@ describe Prometheus::Client::Formats::Text do
       expect(subject.marshal(registry)).to eql <<-'TEXT'
 # TYPE foo counter
 # HELP foo foo description
-foo{code="red"} 42
+foo{umlauts="Björn",utf="佖佥",code="red"} 42
+foo{umlauts="Björn",utf="佖佥",code="green"} 3.14e+42
+foo{umlauts="Björn",utf="佖佥",code="blue"} -1.23e-45
 # TYPE bar gauge
 # HELP bar bar description\nwith newline
 bar{status="success",code="pink"} 15
