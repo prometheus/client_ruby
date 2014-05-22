@@ -47,12 +47,20 @@ module Prometheus
         def parse(header)
           header.to_s.split(/\s*,\s*/).map do |type|
             attributes = type.split(/\s*;\s*/)
-            quality = 1.0
-            attributes.delete_if do |attr|
-              quality = attr.split('q=').last.to_f if attr.start_with?('q=')
-            end
+            quality = extract_quality(attributes)
+
             [attributes.join('; '), quality]
           end.sort_by(&:last).reverse
+        end
+
+        def extract_quality(attributes, default = 1.0)
+          quality = default
+
+          attributes.delete_if do |attr|
+            quality = attr.split('q=').last.to_f if attr.start_with?('q=')
+          end
+
+          quality
         end
 
         def respond_with(format)
