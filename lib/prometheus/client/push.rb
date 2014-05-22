@@ -23,14 +23,14 @@ module Prometheus
         @job, @instance, @gateway = job, instance, gateway || DEFAULT_GATEWAY
 
         @uri  = parse(@gateway)
-        @path = format(instance ? INSTANCE_PATH : PATH, job, instance)
+        @path = build_path(job, instance)
       end
 
       def push(registry)
         data = Formats::Text.marshal(registry)
         http = Net::HTTP.new(@uri.host, @uri.port)
 
-        http.send_request('PUT', @path, data, HEADER)
+        http.send_request('PUT', path, data, HEADER)
       end
 
       private
@@ -45,6 +45,14 @@ module Prometheus
         end
       rescue URI::InvalidURIError => e
         raise ArgumentError, "#{url} is not a valid URL: #{e}"
+      end
+
+      def build_path(job, instance)
+        if instance
+          format(INSTANCE_PATH, URI.escape(job), URI.escape(instance))
+        else
+          format(PATH, URI.escape(job))
+        end
       end
     end
   end

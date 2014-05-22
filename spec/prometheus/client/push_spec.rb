@@ -26,7 +26,9 @@ describe Prometheus::Client::Push do
         Prometheus::Client::Push.new('test-job', nil, 'inva.lid:1233')
       end.to raise_error ArgumentError
     end
+  end
 
+  describe '#path' do
     it 'uses the default metrics path if no instance value given' do
       push = Prometheus::Client::Push.new('test-job')
 
@@ -37,6 +39,13 @@ describe Prometheus::Client::Push do
       push = Prometheus::Client::Push.new('bar-job', 'foo')
 
       expect(push.path).to eql('/metrics/jobs/bar-job/instances/foo')
+    end
+
+    it 'escapes non-URL characters' do
+      push = Prometheus::Client::Push.new('bar job', 'foo <my instance>')
+
+      expected = '/metrics/jobs/bar%20job/instances/foo%20%3Cmy%20instance%3E'
+      expect(push.path).to eql(expected)
     end
   end
 
