@@ -53,8 +53,14 @@ describe Prometheus::Client::Rack::Exporter do
       end
     end
 
-    context 'when client does send a Accept header' do
+    context 'when client does not send a Accept header' do
       include_examples 'ok', {}, json
+    end
+
+    context 'when client accpets any media type' do
+      accept = '*/*'
+
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, json
     end
 
     context 'when client requests application/json' do
@@ -109,6 +115,12 @@ describe Prometheus::Client::Rack::Exporter do
       accept = 'fancy/woo;q=0.3, proto/buf;q=0.7'
 
       include_examples 'not acceptable', 'HTTP_ACCEPT' => accept
+    end
+
+    context 'when client accepts unknown formats and wildcard' do
+      accept = 'fancy/woo;q=0.3, proto/buf;q=0.7, */*;q=0.1'
+
+      include_examples 'ok', { 'HTTP_ACCEPT' => accept }, json
     end
   end
 end

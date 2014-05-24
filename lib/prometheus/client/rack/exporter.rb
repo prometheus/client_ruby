@@ -20,12 +20,12 @@ module Prometheus
           @app = app
           @registry = options[:registry] || Client.registry
           @path = options[:path] || '/metrics'
-          @accpetable = build_dictionary(FORMATS)
+          @acceptable = build_dictionary(FORMATS, FALLBACK)
         end
 
         def call(env)
           if env['PATH_INFO'] == @path
-            format = negotiate(env['HTTP_ACCEPT'], @accpetable, FALLBACK)
+            format = negotiate(env['HTTP_ACCEPT'], @acceptable)
             format ? respond_with(format) : not_acceptable(FORMATS)
           else
             @app.call(env)
@@ -34,8 +34,8 @@ module Prometheus
 
         private
 
-        def negotiate(accept, formats, fallback)
-          return fallback if accept.to_s.empty?
+        def negotiate(accept, formats)
+          accept = '*/*' if accept.to_s.empty?
 
           parse(accept).each do |content_type, _|
             return formats[content_type] if formats.key?(content_type)
@@ -81,8 +81,8 @@ module Prometheus
           ]
         end
 
-        def build_dictionary(formats)
-          formats.each_with_object({}) do |format, memo|
+        def build_dictionary(formats, fallback)
+          formats.each_with_object('*/*' => fallback) do |format, memo|
             memo[format::CONTENT_TYPE] = format
             memo[format::MEDIA_TYPE] = format
           end
