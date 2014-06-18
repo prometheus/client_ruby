@@ -33,20 +33,20 @@ module Prometheus
         def init_request_metrics
           @requests = @registry.counter(
             :http_requests_total,
-            'A counter of the total number of HTTP requests made.',)
+            'A counter of the total number of HTTP requests made.')
           @requests_duration = @registry.counter(
             :http_request_durations_total_microseconds,
             'The total amount of time spent answering HTTP requests ' \
             '(microseconds).',)
           @durations = @registry.summary(
             :http_request_durations_microseconds,
-            'A histogram of the response latency (microseconds).',)
+            'A histogram of the response latency (microseconds).')
         end
 
         def init_exception_metrics
           @exceptions = @registry.counter(
             :http_exceptions_total,
-            'A counter of the total number of exceptions raised.',)
+            'A counter of the total number of exceptions raised.')
         end
 
         def trace(env)

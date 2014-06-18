@@ -16,6 +16,6 @@ RSpec::Core::RakeTask.new do |t|
 end
 
 desc 'Lint code'
-Rubocop::RakeTask.new
+RuboCop::RakeTask.new
 
 Bundler::GemHelper.install_tasks
