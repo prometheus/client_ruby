@@ -53,7 +53,7 @@ describe Prometheus::Client::LabelSetValidator do
 
     it 'raises an exception if a given label set is not valid' do
       input = 'broken'
-      validator.should_receive(:valid?).with(input).and_raise(invalid)
+      expect(validator).to receive(:valid?).with(input).and_raise(invalid)
 
       expect { validator.validate(input) }.to raise_exception(invalid)
     end

@@ -27,7 +27,7 @@ describe Prometheus::Client::Rack::Collector do
 
   it 'handles errors in the registry gracefully' do
     counter = registry.get(:http_requests_total)
-    counter.should_receive(:increment).and_raise(NoMethodError)
+    expect(counter).to receive(:increment).and_raise(NoMethodError)
 
     get '/foo'
 
@@ -35,7 +35,7 @@ describe Prometheus::Client::Rack::Collector do
   end
 
   it 'traces request information' do
-    Time.should_receive(:now).twice.and_return(0.0, 0.000002)
+    expect(Time).to receive(:now).twice.and_return(0.0, 0.000002)
     labels = { method: 'get', path: '/foo', code: '200' }
 
     get '/foo'

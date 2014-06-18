@@ -48,7 +48,7 @@ describe Prometheus::Client::Registry do
         end
       end.each(&:join)
 
-      expect(containers.compact).to have(1).entry
+      expect(containers.compact.size).to eql(1)
     end
   end
 

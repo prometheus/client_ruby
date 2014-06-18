@@ -52,13 +52,13 @@ describe Prometheus::Client::Push do
   describe '#add' do
     it 'pushes a given registry to the configured Pushgateway' do
       http = double(:http)
-      http.should_receive(:send_request).with(
+      expect(http).to receive(:send_request).with(
         'PUT',
         '/metrics/jobs/foo/instances/bar',
         Prometheus::Client::Formats::Text.marshal(registry),
         'Content-Type' => Prometheus::Client::Formats::Text::CONTENT_TYPE,
       )
-      Net::HTTP.should_receive(:new).with('pu.sh', 9091).and_return(http)
+      expect(Net::HTTP).to receive(:new).with('pu.sh', 9091).and_return(http)
 
       described_class.new('foo', 'bar', 'http://pu.sh:9091').add(registry)
     end
@@ -67,17 +67,17 @@ describe Prometheus::Client::Push do
   describe '#replace' do
     it 'replaces any existing metrics with registry' do
       http = double(:http)
-      http.should_receive(:send_request).with(
+      expect(http).to receive(:send_request).with(
         'DELETE',
         '/metrics/jobs/foo/instances/bar',
       )
-      http.should_receive(:send_request).with(
+      expect(http).to receive(:send_request).with(
         'PUT',
         '/metrics/jobs/foo/instances/bar',
         Prometheus::Client::Formats::Text.marshal(registry),
         'Content-Type' => Prometheus::Client::Formats::Text::CONTENT_TYPE,
       )
-      Net::HTTP.should_receive(:new).with('pu.sh', 9091).and_return(http)
+      expect(Net::HTTP).to receive(:new).with('pu.sh', 9091).and_return(http)
 
       described_class.new('foo', 'bar', 'http://pu.sh:9091').replace(registry)
     end
