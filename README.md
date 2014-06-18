@@ -71,11 +71,15 @@ prometheus = Prometheus::Client.registry
 # ... register some metrics, set/add/increment/etc. their values
 
 # push the registry state to the default gateway
-Prometheus::Client::Push.new('my-batch-job').push(prometheus)
+Prometheus::Client::Push.new('my-batch-job').add(prometheus)
 
 # optional: specify the instance name (instead of IP) and gateway
 Prometheus::Client::Push.new(
-  'my-job', 'instance-name', 'http://example.domain:1234').push(prometheus)
+  'my-job', 'instance-name', 'http://example.domain:1234').add(prometheus)
+
+# If you want to replace any previously pushed metrics for a given instance,
+# use the #replace method.
+Prometheus::Client::Push.new('my-batch-job', 'instance').replace(prometheus)
 ```
 
 ## Metrics

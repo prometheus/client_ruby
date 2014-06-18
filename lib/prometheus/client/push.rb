@@ -24,13 +24,19 @@ module Prometheus
 
         @uri  = parse(@gateway)
         @path = build_path(job, instance)
+        @http = Net::HTTP.new(@uri.host, @uri.port)
       end
 
-      def push(registry)
+      def add(registry)
         data = Formats::Text.marshal(registry)
-        http = Net::HTTP.new(@uri.host, @uri.port)
 
-        http.send_request('PUT', path, data, HEADER)
+        @http.send_request('PUT', path, data, HEADER)
+      end
+
+      def replace(registry)
+        @http.send_request('DELETE', path)
+
+        add(registry)
       end
 
       private
