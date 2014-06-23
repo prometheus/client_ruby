@@ -28,15 +28,11 @@ module Prometheus
       end
 
       def add(registry)
-        data = Formats::Text.marshal(registry)
-
-        @http.send_request('PUT', path, data, HEADER)
+        request('POST', registry)
       end
 
       def replace(registry)
-        @http.send_request('DELETE', path)
-
-        add(registry)
+        request('PUT', registry)
       end
 
       private
@@ -59,6 +55,12 @@ module Prometheus
         else
           format(PATH, URI.escape(job))
         end
+      end
+
+      def request(method, registry)
+        data = Formats::Text.marshal(registry)
+
+        @http.send_request(method, path, data, HEADER)
       end
     end
   end

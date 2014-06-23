@@ -53,7 +53,7 @@ describe Prometheus::Client::Push do
     it 'pushes a given registry to the configured Pushgateway' do
       http = double(:http)
       expect(http).to receive(:send_request).with(
-        'PUT',
+        'POST',
         '/metrics/jobs/foo/instances/bar',
         Prometheus::Client::Formats::Text.marshal(registry),
         'Content-Type' => Prometheus::Client::Formats::Text::CONTENT_TYPE,
@@ -67,10 +67,6 @@ describe Prometheus::Client::Push do
   describe '#replace' do
     it 'replaces any existing metrics with registry' do
       http = double(:http)
-      expect(http).to receive(:send_request).with(
-        'DELETE',
-        '/metrics/jobs/foo/instances/bar',
-      )
       expect(http).to receive(:send_request).with(
         'PUT',
         '/metrics/jobs/foo/instances/bar',
