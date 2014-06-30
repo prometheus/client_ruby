@@ -7,7 +7,7 @@ module Prometheus
     module Rack
       # Collector is a Rack middleware that provides a sample implementation of
       # a HTTP tracer. The default label builder can be modified to export a
-      # differet set of labels per recorded metric.
+      # different set of labels per recorded metric.
       class Collector
         attr_reader :app, :registry
 
