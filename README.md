@@ -35,8 +35,8 @@ http_requests.increment
 ### Rack middleware
 
 There are two [Rack][2] middlewares available, one to expose a metrics HTTP
-endpoint to be scraped by a prometheus server and one to trace all HTTP
-requests.
+endpoint to be scraped by a prometheus server ([Exporter][9]) and one to trace all HTTP
+requests ([Collector][10]).
 
 ```ruby
 # config.ru
@@ -160,3 +160,5 @@ rake
 [6]: https://codeclimate.com/github/prometheus/client_ruby.png
 [7]: https://coveralls.io/repos/prometheus/client_ruby/badge.png?branch=master
 [8]: https://github.com/prometheus/pushgateway
+[9]: lib/prometheus/client/rack/exporter.rb
+[10]: lib/prometheus/client/rack/collector.rb
