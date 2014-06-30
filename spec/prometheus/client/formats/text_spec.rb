@@ -34,7 +34,7 @@ describe Prometheus::Client::Formats::Text do
         docstring: 'baz "description" \\escaping',
         base_labels: {},
         type: :counter,
-        values: { { text: %Q(with "quotes", \\escape \n and newline) } => 15 },
+        values: { { text: "with \"quotes\", \\escape \n and newline" } => 15 },
       ),
       double(
         name: :qux,
@@ -43,7 +43,7 @@ describe Prometheus::Client::Formats::Text do
         type: :summary,
         values: { { code: '1' } => summary_value },
       ),
-    ],)
+    ])
   end
 
   describe '.marshal' do

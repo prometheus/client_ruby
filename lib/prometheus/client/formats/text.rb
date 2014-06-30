@@ -7,7 +7,7 @@ module Prometheus
       module Text
         MEDIA_TYPE   = 'text/plain'
         VERSION      = '0.0.4'
-        CONTENT_TYPE = %Q(#{MEDIA_TYPE}; version=#{VERSION})
+        CONTENT_TYPE = "#{MEDIA_TYPE}; version=#{VERSION}"
 
         METRIC_LINE = '%s%s %s'
         TYPE_LINE   = '# TYPE %s %s'

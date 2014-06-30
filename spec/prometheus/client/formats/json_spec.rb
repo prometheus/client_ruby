@@ -26,7 +26,7 @@ describe Prometheus::Client::Formats::JSON do
         type: :summary,
         values: { { code: 'orange' } => { 0.5 => 15, 0.9 => 20, 0.99 => 32 } },
       ),
-    ],)
+    ])
   end
 
   describe '.marshal' do
@@ -65,7 +65,7 @@ describe Prometheus::Client::Formats::JSON do
             ],
           },
         },
-      ].to_json,)
+      ].to_json)
     end
   end
 end
