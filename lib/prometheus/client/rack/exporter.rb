@@ -8,8 +8,7 @@ module Prometheus
   module Client
     module Rack
       # Exporter is a Rack middleware that provides a sample implementation of
-      # a HTTP tracer. The default label builder can be modified to export a
-      # differet set of labels per recorded metric.
+      # a Prometheus HTTP client API.
       class Exporter
         attr_reader :app, :registry, :path
 
