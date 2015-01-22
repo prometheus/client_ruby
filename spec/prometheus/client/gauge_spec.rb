@@ -25,5 +25,4 @@ describe Prometheus::Client::Gauge do
       end.to_not change { gauge.get }
     end
   end
-
 end

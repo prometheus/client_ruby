@@ -7,3 +7,6 @@ AlignHash:
 
 TrailingComma:
     EnforcedStyleForMultiline: comma
+
+Metrics/AbcSize:
+    Max: 18

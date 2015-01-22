@@ -88,5 +88,4 @@ describe Prometheus::Client::Rack::Collector do
       expect(registry.get(:http_requests_total).get(labels)).to eql(1)
     end
   end
-
 end

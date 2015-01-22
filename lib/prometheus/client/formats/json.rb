@@ -11,8 +11,7 @@ module Prometheus
         MEDIA_TYPE   = 'application/json'
         SCHEMA       = 'prometheus/telemetry'
         VERSION      = '0.0.2'
-        CONTENT_TYPE = \
-          %Q(#{MEDIA_TYPE}; schema="#{SCHEMA}"; version=#{VERSION})
+        CONTENT_TYPE = %(#{MEDIA_TYPE}; schema="#{SCHEMA}"; version=#{VERSION})
 
         MAPPING = { summary: :histogram }
 
