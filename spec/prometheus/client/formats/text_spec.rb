@@ -66,7 +66,7 @@ qux{for="sake",code="1",quantile="0.5"} 4.2
 qux{for="sake",code="1",quantile="0.9"} 8.32
 qux{for="sake",code="1",quantile="0.99"} 15.3
 qux_sum{for="sake",code="1"} 1243.21
-qux_total{for="sake",code="1"} 93
+qux_count{for="sake",code="1"} 93
       TEXT
     end
   end
