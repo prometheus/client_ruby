@@ -55,7 +55,7 @@ module Prometheus
 
           l = labels(set)
           yield metric("#{name}_sum", l, value.sum)
-          yield metric("#{name}_total", l, value.total)
+          yield metric("#{name}_count", l, value.total)
         end
 
         def self.metric(name, labels, value)
