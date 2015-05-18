@@ -20,9 +20,10 @@ module Prometheus
       attr_reader :job, :instance, :gateway, :path
 
       def initialize(job, instance = nil, gateway = nil)
-        @job, @instance, @gateway = job, instance, gateway || DEFAULT_GATEWAY
-
-        @uri  = parse(@gateway)
+        @job = job
+        @instance = instance
+        @gateway = gateway || DEFAULT_GATEWAY
+        @uri = parse(@gateway)
         @path = build_path(job, instance)
         @http = Net::HTTP.new(@uri.host, @uri.port)
       end

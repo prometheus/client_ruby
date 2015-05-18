@@ -8,10 +8,10 @@ module Prometheus
       # TODO: we might allow setting :instance in the future
       RESERVED_LABELS = [:job, :instance]
 
-      class LabelSetError        < StandardError; end
+      class LabelSetError < StandardError; end
       class InvalidLabelSetError < LabelSetError; end
-      class InvalidLabelError    < LabelSetError; end
-      class ReservedLabelError   < LabelSetError; end
+      class InvalidLabelError < LabelSetError; end
+      class ReservedLabelError < LabelSetError; end
 
       def initialize
         @validated = {}

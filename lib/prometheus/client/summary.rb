@@ -13,7 +13,8 @@ module Prometheus
         attr_accessor :sum, :total
 
         def initialize(estimator)
-          @sum, @total = estimator.sum, estimator.observations
+          @sum = estimator.sum
+          @total = estimator.observations
 
           estimator.invariants.each do |invariant|
             self[invariant.quantile] = estimator.query(invariant.quantile)

@@ -18,7 +18,8 @@ module Prometheus
         validate_docstring(docstring)
         @validator.valid?(base_labels)
 
-        @name, @docstring = name, docstring
+        @name = name
+        @docstring = docstring
         @base_labels = base_labels
       end
 
