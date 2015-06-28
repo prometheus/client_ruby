@@ -14,13 +14,7 @@ module Prometheus
         def initialize(app, options = {}, &label_builder)
           @app = app
           @registry = options[:registry] || Client.registry
-          @label_builder = label_builder || proc do |env|
-            {
-              method: env['REQUEST_METHOD'].downcase,
-              host:   env['HTTP_HOST'].to_s,
-              path:   env['PATH_INFO'].to_s,
-            }
-          end
+          @label_builder = label_builder || DEFAULT_LABEL_BUILDER
 
           init_request_metrics
           init_exception_metrics
@@ -31,6 +25,14 @@ module Prometheus
         end
 
         protected
+
+        DEFAULT_LABEL_BUILDER = proc do |env|
+          {
+            method: env['REQUEST_METHOD'].downcase,
+            host:   env['HTTP_HOST'].to_s,
+            path:   env['PATH_INFO'].to_s,
+          }
+        end
 
         def init_request_metrics
           @requests = @registry.counter(
