@@ -17,6 +17,7 @@ module Prometheus
           @label_builder = label_builder || proc do |env|
             {
               method: env['REQUEST_METHOD'].downcase,
+              host:   env['HTTP_HOST'].to_s,
               path:   env['PATH_INFO'].to_s,
             }
           end
