@@ -12,7 +12,7 @@ shared_examples_for Prometheus::Client::Metric do
       exception = Prometheus::Client::LabelSetValidator::ReservedLabelError
 
       expect do
-        described_class.new(:foo, 'foo docstring',  __name__: 'reserved')
+        described_class.new(:foo, 'foo docstring', __name__: 'reserved')
       end.to raise_exception exception
     end
 
