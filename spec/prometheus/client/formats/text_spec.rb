@@ -4,7 +4,7 @@ require 'prometheus/client/formats/text'
 
 describe Prometheus::Client::Formats::Text do
   let(:summary_value) do
-    { 0.5  => 4.2, 0.9  => 8.32, 0.99 => 15.3 }.tap do |value|
+    { 0.5 => 4.2, 0.9 => 8.32, 0.99 => 15.3 }.tap do |value|
       allow(value).to receive_messages(sum: 1243.21, total: 93)
     end
   end

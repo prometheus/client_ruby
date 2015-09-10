@@ -42,8 +42,8 @@ describe Prometheus::Client::Rack::Collector do
 
     {
       http_requests_total: 1,
-      http_request_durations_total_microseconds: 2,
-      http_request_durations_microseconds: { 0.5 => 2, 0.9 => 2, 0.99 => 2 },
+      http_request_duration_total_microseconds: 2,
+      http_request_duration_microseconds: { 0.5 => 2, 0.9 => 2, 0.99 => 2 },
     }.each do |metric, result|
       expect(registry.get(metric).get(labels)).to eql(result)
     end

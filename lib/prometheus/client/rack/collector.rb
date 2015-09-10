@@ -39,11 +39,11 @@ module Prometheus
             :http_requests_total,
             'A counter of the total number of HTTP requests made.')
           @requests_duration = @registry.counter(
-            :http_request_durations_total_microseconds,
+            :http_request_duration_total_microseconds,
             'The total amount of time spent answering HTTP requests ' \
             '(microseconds).')
           @durations = @registry.summary(
-            :http_request_durations_microseconds,
+            :http_request_duration_microseconds,
             'A histogram of the response latency (microseconds).')
         end
 
