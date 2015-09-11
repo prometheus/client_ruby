@@ -31,6 +31,12 @@ describe Prometheus::Client::Counter do
       end.to change { counter.get }.by(5)
     end
 
+    it 'raises an ArgumentError on negative increments' do
+      expect do
+        counter.increment({}, -1)
+      end.to raise_error ArgumentError
+    end
+
     it 'returns the new counter value' do
       expect(counter.increment).to eql(1)
     end
@@ -43,40 +49,6 @@ describe Prometheus::Client::Counter do
           end
         end.each(&:join)
       end.to change { counter.get }.by(100)
-    end
-  end
-
-  describe '#decrement' do
-    it 'decrements the counter' do
-      expect do
-        counter.decrement
-      end.to change { counter.get }.by(-1)
-    end
-
-    it 'decrements the counter for a given label set' do
-      expect do
-        expect do
-          counter.decrement(test: 'label')
-        end.to change { counter.get(test: 'label') }.by(-1)
-      end.to_not change { counter.get }
-    end
-
-    it 'decrements the counter by a given value' do
-      expect do
-        counter.decrement({}, 5)
-      end.to change { counter.get }.by(-5)
-    end
-
-    it 'is thread safe' do
-      100.times { counter.increment }
-
-      expect do
-        10.times.map do
-          Thread.new do
-            10.times { counter.decrement }
-          end
-        end.each(&:join)
-      end.to change { counter.get }.to(0)
     end
   end
 end
