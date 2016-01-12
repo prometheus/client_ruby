@@ -20,5 +20,5 @@ ab -c 10 -n 1000 http://127.0.0.1:5000/
 View the metrics output.
 
 ```bash
-curl http://127.0.0.1:5000/metrics.json
+curl http://127.0.0.1:5000/metrics
 ```

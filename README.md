@@ -1,7 +1,7 @@
 # Prometheus Ruby Client
 
 A suite of instrumentation metric primitives for Ruby that can be exposed
-through a JSON web services interface. Intended to be used together with a
+through a HTTP interface. Intended to be used together with a
 [Prometheus server][1].
 
 [![Gem Version][4]](http://badge.fury.io/rb/prometheus-client)
