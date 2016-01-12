@@ -5,20 +5,8 @@ and `Rack::Collector` rack middlwares.
 
 ## Usage
 
-Start the Server.
+Execute the provided `run` script:
 
 ```bash
-unicorn -p 5000 -c unicorn.conf
-```
-
-Benchmark number of requests.
-
-```bash
-ab -c 10 -n 1000 http://127.0.0.1:5000/
-```
-
-View the metrics output.
-
-```bash
-curl http://127.0.0.1:5000/metrics
+./run
 ```

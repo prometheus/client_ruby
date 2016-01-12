@@ -38,6 +38,9 @@ There are two [Rack][2] middlewares available, one to expose a metrics HTTP
 endpoint to be scraped by a prometheus server ([Exporter][9]) and one to trace all HTTP
 requests ([Collector][10]).
 
+It's highly recommended to enable gzip compression for the metrics endpoint,
+for example by including the `Rack::Deflater` middleware.
+
 ```ruby
 # config.ru
 
@@ -45,9 +48,11 @@ require 'rack'
 require 'prometheus/client/rack/collector'
 require 'prometheus/client/rack/exporter'
 
+use Rack::Deflater, if: ->(env, status, headers, body) { body.any? && body[0].length > 512 }
 use Prometheus::Client::Rack::Collector
 use Prometheus::Client::Rack::Exporter
-run lambda { |env| [200, {'Content-Type' => 'text/html'}, ['OK']] }
+
+run ->(env) { [200, {'Content-Type' => 'text/html'}, ['OK']] }
 ```
 
 Start the server and have a look at the metrics endpoint:

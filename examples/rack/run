@@ -6,12 +6,15 @@ installed() {
 	which $1 > /dev/null
 }
 
-fatal() {
+log() {
 	echo >&2 $1
+}
+
+fatal() {
+	log $1
 	exit 1
 }
 
-# check dependencies
 if ! installed vegeta; then
 	if ! installed go; then
 		fatal "Could not find go. Either run the examples manually or install"
@@ -24,15 +27,15 @@ fi
 PORT=5000
 URL=http://127.0.0.1:${PORT}/
 
-# start example server
+log "starting example server"
 bundle install --quiet
 bundle exec unicorn -p ${PORT} -c unicorn.conf &>> /dev/null &
 
 # wait until unicorn is available
 sleep 1
 
-# do requests
-printf "GET ${URL}\nPOST ${URL}\nDELETE ${URL}" | vegeta attack &>> /dev/null
+log "sending requests for 5 seconds"
+printf "GET ${URL}\nPOST ${URL}\nDELETE ${URL}" | vegeta attack -duration 5s &>> /dev/null
 
-# output the result
+log "printing /metrics"
 curl -s "${URL}metrics"
