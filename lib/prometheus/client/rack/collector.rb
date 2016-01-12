@@ -39,12 +39,11 @@ module Prometheus
             :http_requests_total,
             'A counter of the total number of HTTP requests made.')
           @requests_duration = @registry.counter(
-            :http_request_duration_total_microseconds,
-            'The total amount of time spent answering HTTP requests ' \
-            '(microseconds).')
+            :http_request_duration_total_seconds,
+            'The total amount of time spent answering HTTP requests.')
           @durations = @registry.summary(
-            :http_request_duration_microseconds,
-            'A histogram of the response latency (microseconds).')
+            :http_request_duration_seconds,
+            'A histogram of the response latency.')
         end
 
         def init_exception_metrics
@@ -56,7 +55,7 @@ module Prometheus
         def trace(env)
           start = Time.now
           yield.tap do |response|
-            duration = ((Time.now - start) * 1_000_000).to_i
+            duration = (Time.now - start).to_f
             record(labels(env, response), duration)
           end
         rescue => exception
