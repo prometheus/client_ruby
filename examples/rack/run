@@ -6,10 +6,6 @@ installed() {
 	which $1 > /dev/null
 }
 
-pretty_json() {
-	ruby -e "require 'json'; puts JSON.pretty_generate(JSON.load(STDIN))"
-}
-
 fatal() {
 	echo >&2 $1
 	exit 1
@@ -39,4 +35,4 @@ sleep 1
 printf "GET ${URL}\nPOST ${URL}\nDELETE ${URL}" | vegeta attack &>> /dev/null
 
 # output the result
-curl -s "${URL}metrics" | pretty_json
+curl -s "${URL}metrics"

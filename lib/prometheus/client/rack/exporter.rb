@@ -1,7 +1,6 @@
 # encoding: UTF-8
 
 require 'prometheus/client'
-require 'prometheus/client/formats/json'
 require 'prometheus/client/formats/text'
 
 module Prometheus
@@ -12,8 +11,8 @@ module Prometheus
       class Exporter
         attr_reader :app, :registry, :path
 
-        FORMATS  = [Formats::Text, Formats::JSON]
-        FALLBACK = Formats::JSON
+        FORMATS  = [Formats::Text]
+        FALLBACK = Formats::Text
 
         def initialize(app, options = {})
           @app = app
