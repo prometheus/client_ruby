@@ -53,7 +53,7 @@ module Prometheus
             'A counter of the requests > 5s except toolbox.')
           @toolbox_long_requests = @registry.counter(
             :toolbox_long_requests_total,
-            'A counter of the toolbox requests > 15s except toolbox.')
+            'A counter of the toolbox requests > 15s.')
         end
 
         def init_exception_metrics
