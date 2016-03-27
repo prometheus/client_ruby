@@ -1,6 +1,7 @@
 # encoding: UTF-8
 
 require 'prometheus/client'
+require 'prometheus/client/push'
 
 module Prometheus
   module Client
@@ -18,6 +19,9 @@ module Prometheus
 
           init_request_metrics
           init_exception_metrics
+          init_long_metrics
+          config = Rails.application.config.prometheus_gataway
+          @push = Client::Push.new(config[:job], Process.pid.to_s, config[:url])
         end
 
         def call(env) # :nodoc:
@@ -46,6 +50,12 @@ module Prometheus
             'A histogram of the response latency.')
         end
 
+        def init_long_metrics
+          @long_requests = @registry.counter(
+            :long_requests_total,
+            'A counter of the requests > 5s for all and > 15s for toolbox.')
+        end
+
         def init_exception_metrics
           @exceptions = @registry.counter(
             :http_exceptions_total,
@@ -70,9 +80,12 @@ module Prometheus
         end
 
         def record(labels, duration)
+          @long_requests.increment(labels) if labels[:path].include?('/toolbox') && duration >= 15
+          @long_requests.increment(labels) if labels[:path].exclude?('/toolbox') && duration >= 5
           @requests.increment(labels)
           @requests_duration.increment(labels, duration)
           @durations.add(labels, duration)
+          @push.add(@registry)
         rescue
           # TODO: log unexpected exception during request recording
           nil
