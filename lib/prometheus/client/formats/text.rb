@@ -44,6 +44,8 @@ module Prometheus
 
             if metric.type == :summary
               summary(metric.name, set, value, &block)
+            elsif metric.type == :histogram
+              histogram(metric.name, set, value, &block)
             else
               yield metric(metric.name, labels(set), value)
             end
@@ -53,6 +55,17 @@ module Prometheus
             value.each do |q, v|
               yield metric(name, labels(set.merge(quantile: q)), v)
             end
+
+            l = labels(set)
+            yield metric("#{name}_sum", l, value.sum)
+            yield metric("#{name}_count", l, value.total)
+          end
+
+          def histogram(name, set, value)
+            value.each do |q, v|
+              yield metric(name, labels(set.merge(le: q)), v)
+            end
+            yield metric(name, labels(set.merge(le: '+Inf')), value.total)
 
             l = labels(set)
             yield metric("#{name}_sum", l, value.sum)

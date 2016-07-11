@@ -76,6 +76,14 @@ describe Prometheus::Client::Registry do
     end
   end
 
+  describe '#histogram' do
+    it 'registers a new histogram metric container and returns the histogram' do
+      metric = registry.histogram(:test, 'test docstring')
+
+      expect(metric).to be_a(Prometheus::Client::Histogram)
+    end
+  end
+
   describe '#exist?' do
     it 'returns true if a metric name has been registered' do
       registry.register(double(name: :test))
