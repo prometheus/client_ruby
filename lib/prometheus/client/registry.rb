@@ -22,7 +22,7 @@ module Prometheus
 
         @mutex.synchronize do
           if exist?(name.to_sym)
-            fail AlreadyRegisteredError, "#{name} has already been registered"
+            raise AlreadyRegisteredError, "#{name} has already been registered"
           else
             @metrics[name.to_sym] = metric
           end

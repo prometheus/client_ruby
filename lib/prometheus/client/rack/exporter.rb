@@ -11,7 +11,7 @@ module Prometheus
       class Exporter
         attr_reader :app, :registry, :path
 
-        FORMATS  = [Formats::Text]
+        FORMATS  = [Formats::Text].freeze
         FALLBACK = Formats::Text
 
         def initialize(app, options = {})

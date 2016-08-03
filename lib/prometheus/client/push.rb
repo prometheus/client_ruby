@@ -12,10 +12,10 @@ module Prometheus
     # Push implements a simple way to transmit a given registry to a given
     # Pushgateway.
     class Push
-      DEFAULT_GATEWAY = 'http://localhost:9091'
-      PATH            = '/metrics/jobs/%s'
-      INSTANCE_PATH   = '/metrics/jobs/%s/instances/%s'
-      HEADER          = { 'Content-Type' => Formats::Text::CONTENT_TYPE }
+      DEFAULT_GATEWAY = 'http://localhost:9091'.freeze
+      PATH            = '/metrics/jobs/%s'.freeze
+      INSTANCE_PATH   = '/metrics/jobs/%s/instances/%s'.freeze
+      HEADER          = { 'Content-Type' => Formats::Text::CONTENT_TYPE }.freeze
 
       attr_reader :job, :instance, :gateway, :path
 
@@ -44,7 +44,7 @@ module Prometheus
         if uri.scheme == 'http'
           uri
         else
-          fail ArgumentError, 'only HTTP gateway URLs are supported currently.'
+          raise ArgumentError, 'only HTTP gateway URLs are supported currently.'
         end
       rescue URI::InvalidURIError => e
         raise ArgumentError, "#{url} is not a valid URL: #{e}"

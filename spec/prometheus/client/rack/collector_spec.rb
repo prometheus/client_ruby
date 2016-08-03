@@ -51,11 +51,9 @@ describe Prometheus::Client::Rack::Collector do
   context 'when the app raises an exception' do
     let(:original_app) do
       lambda do |env|
-        if env['PATH_INFO'] == '/broken'
-          fail NoMethodError
-        else
-          [200, { 'Content-Type' => 'text/html' }, ['OK']]
-        end
+        raise NoMethodError if env['PATH_INFO'] == '/broken'
+
+        [200, { 'Content-Type' => 'text/html' }, ['OK']]
       end
     end
 

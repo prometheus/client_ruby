@@ -37,7 +37,7 @@ describe Prometheus::Client::Registry do
         super.tap { sleep(0.01) }
       end
 
-      5.times.map do
+      Array.new(5) do
         Thread.new do
           result = begin
             registry.register(double(name: :test))

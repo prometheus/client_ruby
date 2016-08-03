@@ -10,7 +10,7 @@ describe Prometheus::Client::Formats::Text do
   end
 
   let(:registry) do
-    double(metrics: [
+    metrics = [
       double(
         name: :foo,
         docstring: 'foo description',
@@ -27,23 +27,30 @@ describe Prometheus::Client::Formats::Text do
         docstring: "bar description\nwith newline",
         base_labels: { status: 'success' },
         type: :gauge,
-        values: { { code: 'pink' } => 15 },
+        values: {
+          { code: 'pink' } => 15,
+        },
       ),
       double(
         name: :baz,
         docstring: 'baz "description" \\escaping',
         base_labels: {},
         type: :counter,
-        values: { { text: "with \"quotes\", \\escape \n and newline" } => 15 },
+        values: {
+          { text: "with \"quotes\", \\escape \n and newline" } => 15,
+        },
       ),
       double(
         name: :qux,
         docstring: 'qux description',
         base_labels: { for: 'sake' },
         type: :summary,
-        values: { { code: '1' } => summary_value },
+        values: {
+          { code: '1' } => summary_value,
+        },
       ),
-    ])
+    ]
+    double(metrics: metrics)
   end
 
   describe '.marshal' do

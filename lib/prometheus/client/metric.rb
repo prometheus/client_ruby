@@ -25,7 +25,7 @@ module Prometheus
 
       # Returns the metric type
       def type
-        fail NotImplementedError
+        raise NotImplementedError
       end
 
       # Returns the value for the given label set
@@ -53,13 +53,13 @@ module Prometheus
       def validate_name(name)
         return true if name.is_a?(Symbol)
 
-        fail ArgumentError, 'given name must be a symbol'
+        raise ArgumentError, 'given name must be a symbol'
       end
 
       def validate_docstring(docstring)
         return true if docstring.respond_to?(:empty?) && !docstring.empty?
 
-        fail ArgumentError, 'docstring must be given'
+        raise ArgumentError, 'docstring must be given'
       end
 
       def label_set_for(labels)

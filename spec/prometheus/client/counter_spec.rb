@@ -43,7 +43,7 @@ describe Prometheus::Client::Counter do
 
     it 'is thread safe' do
       expect do
-        10.times.map do
+        Array.new(10) do
           Thread.new do
             10.times { counter.increment }
           end
