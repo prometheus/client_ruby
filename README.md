@@ -96,19 +96,16 @@ The following metric types are currently supported.
 Counter is a metric that exposes merely a sum or tally of things.
 
 ```ruby
-counter = Prometheus::Client::Counter.new(:foo, '...')
+counter = Prometheus::Client::Counter.new(:service_requests_total, '...')
 
 # increment the counter for a given label set
-counter.increment(service: 'foo')
+counter.increment({ service: 'foo' })
 
 # increment by a given value
 counter.increment({ service: 'bar' }, 5)
 
-# decrement the counter
-counter.decrement(service: 'exceptional')
-
 # get current value for a given label set
-counter.get(service: 'bar')
+counter.get({ service: 'bar' })
 # => 5
 ```
 
@@ -118,30 +115,47 @@ Gauge is a metric that exposes merely an instantaneous value or some snapshot
 thereof.
 
 ```ruby
-gauge = Prometheus::Client::Gauge.new(:bar, '...')
+gauge = Prometheus::Client::Gauge.new(:room_temperature_celsius, '...')
 
 # set a value
-gauge.set({ role: 'base' }, 'up')
+gauge.set({ room: 'kitchen' }, 21.534)
 
 # retrieve the current value for a given label set
-gauge.get({ role: 'problematic' })
-# => 'down'
+gauge.get({ room: 'kitchen' })
+# => 21.534
+```
+
+### Histogram
+
+A histogram samples observations (usually things like request durations or
+response sizes) and counts them in configurable buckets. It also provides a sum
+of all observed values.
+
+```ruby
+histogram = Prometheus::Client::Histogram.new(:service_latency_seconds, '...')
+
+# record a value
+histogram.observe({ service: 'users' }, Benchmark.realtime { service.call(arg) })
+
+# retrieve the current quantile values
+histogram.get({ service: 'users' })
+# => { 0.005 => 3, 0.01 => 15, 0.025 => 18, ..., 2.5 => 42, 5 => 42, 10 = >42 }
 ```
 
 ### Summary
 
-Summary is an accumulator for samples. It captures Numeric data and provides
-an efficient percentile calculation mechanism.
+Summary, similar to histograms, is an accumulator for samples. It captures
+Numeric data and provides an efficient percentile calculation mechanism.
 
 ```ruby
-summary = Prometheus::Client::Summary.new(:baz, '...')
+summary = Prometheus::Client::Summary.new(:service_latency_seconds, '...')
 
 # record a value
-summary.add({ service: 'slow' }, Benchmark.realtime { service.call(arg) })
+summary.add({ service: 'database' }, Benchmark.realtime { service.call(arg) })
 
 # retrieve the current quantile values
 summary.get({ service: 'database' })
-# => { 0.5: 1.233122, 0.9: 83.4323, 0.99: 341.3428231 }
+# => { 0.5 => 0.1233122, 0.9 => 3.4323, 0.99 => 5.3428231 }
 ```
 
 ## Todo
