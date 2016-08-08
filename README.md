@@ -73,7 +73,7 @@ require 'prometheus/client'
 require 'prometheus/client/push'
 
 prometheus = Prometheus::Client.registry
-# ... register some metrics, set/add/increment/etc. their values
+# ... register some metrics, set/increment/observe/etc. their values
 
 # push the registry state to the default gateway
 Prometheus::Client::Push.new('my-batch-job').add(prometheus)
@@ -151,7 +151,7 @@ Numeric data and provides an efficient percentile calculation mechanism.
 summary = Prometheus::Client::Summary.new(:service_latency_seconds, '...')
 
 # record a value
-summary.add({ service: 'database' }, Benchmark.realtime { service.call(arg) })
+summary.observe({ service: 'database' }, Benchmark.realtime { service.call() })
 
 # retrieve the current quantile values
 summary.get({ service: 'database' })

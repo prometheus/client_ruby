@@ -71,7 +71,7 @@ module Prometheus
 
         def record(labels, duration)
           @requests.increment(labels)
-          @durations.add(labels, duration)
+          @durations.observe(labels, duration)
         rescue
           # TODO: log unexpected exception during request recording
           nil

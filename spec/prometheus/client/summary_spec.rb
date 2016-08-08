@@ -10,20 +10,20 @@ describe Prometheus::Client::Summary do
     let(:type) { Hash }
   end
 
-  describe '#add' do
+  describe '#observe' do
     it 'records the given value' do
       expect do
-        summary.add({}, 5)
+        summary.observe({}, 5)
       end.to change { summary.get }
     end
   end
 
   describe '#get' do
     before do
-      summary.add({ foo: 'bar' }, 3)
-      summary.add({ foo: 'bar' }, 5.2)
-      summary.add({ foo: 'bar' }, 13)
-      summary.add({ foo: 'bar' }, 4)
+      summary.observe({ foo: 'bar' }, 3)
+      summary.observe({ foo: 'bar' }, 5.2)
+      summary.observe({ foo: 'bar' }, 13)
+      summary.observe({ foo: 'bar' }, 4)
     end
 
     it 'returns a set of quantile values' do
@@ -44,8 +44,8 @@ describe Prometheus::Client::Summary do
 
   describe '#values' do
     it 'returns a hash of all recorded summaries' do
-      summary.add({ status: 'bar' }, 3)
-      summary.add({ status: 'foo' }, 5)
+      summary.observe({ status: 'bar' }, 3)
+      summary.observe({ status: 'foo' }, 5)
 
       expect(summary.values).to eql(
         { status: 'bar' } => { 0.5 => 3, 0.9 => 3, 0.99 => 3 },
