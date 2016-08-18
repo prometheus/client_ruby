@@ -1,5 +1,3 @@
-$LOAD_PATH << File.expand_path('../../lib', File.dirname(__FILE__))
-
 require 'rack'
 require 'prometheus/client/rack/collector'
 require 'prometheus/client/rack/exporter'
