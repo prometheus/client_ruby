@@ -49,10 +49,10 @@ something like this:
 ```ruby
 use Prometheus::Client::Rack::Collector do |env|
   {
-    method:     env['REQUEST_METHOD'].downcase,
-    host:       env['HTTP_HOST'].to_s,
-    path:       env['PATH_INFO'].to_s,
-    user_agent: env['HTTP_USER_AGENT'].to_s,
+    method:       env['REQUEST_METHOD'].downcase,
+    host:         env['HTTP_HOST'].to_s,
+    path:         env['PATH_INFO'].to_s,
+    http_version: env['HTTP_VERSION'].to_s,
   }
 end
 ```
