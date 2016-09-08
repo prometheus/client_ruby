@@ -85,6 +85,10 @@ Prometheus::Client::Push.new(
 # If you want to replace any previously pushed metrics for a given instance,
 # use the #replace method.
 Prometheus::Client::Push.new('my-batch-job', 'instance').replace(prometheus)
+
+# If you want to delete all previously pushed metrics for a given instance,
+# use the #delete method.
+Prometheus::Client::Push.new('my-batch-job', 'instance').delete
 ```
 
 ## Metrics

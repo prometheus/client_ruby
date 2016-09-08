@@ -36,6 +36,10 @@ module Prometheus
         request('PUT', registry)
       end
 
+      def delete
+        @http.send_request('DELETE', path)
+      end
+
       private
 
       def parse(url)
