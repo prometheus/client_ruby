@@ -85,8 +85,6 @@ describe Prometheus::Client::Push do
       expect(http).to receive(:send_request).with(
         'DELETE',
         '/metrics/jobs/foo/instances/bar',
-        nil,
-        'Content-Type' => Prometheus::Client::Formats::Text::CONTENT_TYPE,
       )
       expect(Net::HTTP).to receive(:new).with('pu.sh', 9091).and_return(http)
 

@@ -37,7 +37,7 @@ module Prometheus
       end
 
       def delete
-        request('DELETE')
+        @http.send_request('DELETE', path)
       end
 
       private
@@ -62,8 +62,8 @@ module Prometheus
         end
       end
 
-      def request(method, registry = nil)
-        data = Formats::Text.marshal(registry) if registry
+      def request(method, registry)
+        data = Formats::Text.marshal(registry)
 
         @http.send_request(method, path, data, HEADER)
       end
