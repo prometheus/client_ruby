@@ -36,6 +36,10 @@ module Prometheus
         request('PUT', registry)
       end
 
+      def delete
+        request('DELETE')
+      end
+
       private
 
       def parse(url)
@@ -58,8 +62,8 @@ module Prometheus
         end
       end
 
-      def request(method, registry)
-        data = Formats::Text.marshal(registry)
+      def request(method, registry = nil)
+        data = Formats::Text.marshal(registry) if registry
 
         @http.send_request(method, path, data, HEADER)
       end
