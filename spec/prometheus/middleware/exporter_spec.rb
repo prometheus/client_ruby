@@ -1,9 +1,9 @@
 # encoding: UTF-8
 
 require 'rack/test'
-require 'prometheus/client/rack/exporter'
+require 'prometheus/middleware/exporter'
 
-describe Prometheus::Client::Rack::Exporter do
+describe Prometheus::Middleware::Exporter do
   include Rack::Test::Methods
 
   let(:registry) do
@@ -12,7 +12,7 @@ describe Prometheus::Client::Rack::Exporter do
 
   let(:app) do
     app = ->(_) { [200, { 'Content-Type' => 'text/html' }, ['OK']] }
-    Prometheus::Client::Rack::Exporter.new(app, registry: registry)
+    described_class.new(app, registry: registry)
   end
 
   context 'when requesting app endpoints' do
