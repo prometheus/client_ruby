@@ -21,10 +21,12 @@ describe Prometheus::Client::Push do
       expect(push.gateway).to eql('http://pu.sh:1234')
     end
 
-    it 'raises an ArgumentError if a given gateway URL can not be parsed' do
-      expect do
-        Prometheus::Client::Push.new('test-job', nil, 'inva.lid:1233')
-      end.to raise_error ArgumentError
+    it 'raises an ArgumentError if the given gateway URL is invalid' do
+      ['inva.lid:1233', 'http://[invalid]'].each do |url|
+        expect do
+          Prometheus::Client::Push.new('test-job', nil, url)
+        end.to raise_error ArgumentError
+      end
     end
   end
 

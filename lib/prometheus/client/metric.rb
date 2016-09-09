@@ -23,11 +23,6 @@ module Prometheus
         @base_labels = base_labels
       end
 
-      # Returns the metric type
-      def type
-        raise NotImplementedError
-      end
-
       # Returns the value for the given label set
       def get(labels = {})
         @validator.valid?(labels)

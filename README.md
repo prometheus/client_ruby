@@ -141,7 +141,7 @@ histogram = Prometheus::Client::Histogram.new(:service_latency_seconds, '...')
 # record a value
 histogram.observe({ service: 'users' }, Benchmark.realtime { service.call(arg) })
 
-# retrieve the current quantile values
+# retrieve the current bucket values
 histogram.get({ service: 'users' })
 # => { 0.005 => 3, 0.01 => 15, 0.025 => 18, ..., 2.5 => 42, 5 => 42, 10 = >42 }
 ```
@@ -161,10 +161,6 @@ summary.observe({ service: 'database' }, Benchmark.realtime { service.call() })
 summary.get({ service: 'database' })
 # => { 0.5 => 0.1233122, 0.9 => 3.4323, 0.99 => 5.3428231 }
 ```
-
-## Todo
-
-  * add protobuf support
 
 ## Tests
 
