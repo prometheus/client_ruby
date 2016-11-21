@@ -13,3 +13,6 @@ Style/TrailingCommaInLiteral:
 
 Metrics/AbcSize:
     Max: 18
+
+Style/GuardClause:
+  Enabled: false
