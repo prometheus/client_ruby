@@ -16,6 +16,7 @@ module Prometheus
       PATH            = '/metrics/jobs/%s'.freeze
       INSTANCE_PATH   = '/metrics/jobs/%s/instances/%s'.freeze
       HEADER          = { 'Content-Type' => Formats::Text::CONTENT_TYPE }.freeze
+      SUPPORTED_SCHEMES = %w(http https).freeze
 
       attr_reader :job, :instance, :gateway, :path
 
@@ -26,6 +27,7 @@ module Prometheus
         @uri = parse(@gateway)
         @path = build_path(job, instance)
         @http = Net::HTTP.new(@uri.host, @uri.port)
+        @http.use_ssl = @uri.scheme == 'https'
       end
 
       def add(registry)
@@ -45,7 +47,7 @@ module Prometheus
       def parse(url)
         uri = URI.parse(url)
 
-        if uri.scheme != 'http'
+        unless SUPPORTED_SCHEMES.include?(uri.scheme)
           raise ArgumentError, 'only HTTP gateway URLs are supported currently.'
         end
 
