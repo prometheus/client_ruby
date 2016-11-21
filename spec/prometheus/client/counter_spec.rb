@@ -7,7 +7,7 @@ describe Prometheus::Client::Counter do
   let(:counter) { Prometheus::Client::Counter.new(:foo, 'foo description') }
 
   it_behaves_like Prometheus::Client::Metric do
-    let(:type) { Fixnum }
+    let(:type) { Integer }
   end
 
   describe '#increment' do
