@@ -47,29 +47,29 @@ module Prometheus
             elsif metric.type == :histogram
               histogram(metric.name, set, value, &block)
             else
-              yield metric(metric.name, labels(set), value)
+              yield metric(metric.name, labels(set), value.get)
             end
           end
 
           def summary(name, set, value)
             value.each do |q, v|
-              yield metric(name, labels(set.merge(quantile: q)), v)
+              yield metric(name, labels(set.merge(quantile: q)), v.get)
             end
 
             l = labels(set)
-            yield metric("#{name}_sum", l, value.sum)
-            yield metric("#{name}_count", l, value.total)
+            yield metric("#{name}_sum", l, value.sum.get)
+            yield metric("#{name}_count", l, value.total.get)
           end
 
           def histogram(name, set, value)
             value.each do |q, v|
-              yield metric(name, labels(set.merge(le: q)), v)
+              yield metric(name, labels(set.merge(le: q)), v.get)
             end
-            yield metric(name, labels(set.merge(le: '+Inf')), value.total)
+            yield metric(name, labels(set.merge(le: '+Inf')), value.total.get)
 
             l = labels(set)
-            yield metric("#{name}_sum", l, value.sum)
-            yield metric("#{name}_count", l, value.total)
+            yield metric("#{name}_sum", l, value.sum.get)
+            yield metric("#{name}_count", l, value.total.get)
           end
 
           def metric(name, labels, value)

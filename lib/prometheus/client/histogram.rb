@@ -12,21 +12,22 @@ module Prometheus
       class Value < Hash
         attr_accessor :sum, :total
 
-        def initialize(buckets)
-          @sum = 0.0
-          @total = 0
+        def initialize(type, name, labels, buckets)
+          @sum = ValueType.new(type, name, name.to_s + '_sum', labels)
+          # TODO: get rid of total and use +Inf bucket instead.
+          @total = ValueType.new(type, name, name.to_s + '_count', labels)
 
           buckets.each do |bucket|
-            self[bucket] = 0
+            self[bucket] = ValueType.new(type, name, name.to_s + '_count', labels)
           end
         end
 
         def observe(value)
-          @sum += value
-          @total += 1
+          @sum.increment(value)
+          @total.increment()
 
           each_key do |bucket|
-            self[bucket] += 1 if value <= bucket
+            self[bucket].increment() if value <= bucket
           end
         end
       end
@@ -61,8 +62,9 @@ module Prometheus
 
       private
 
-      def default
-        Value.new(@buckets)
+      def default(labels)
+        # TODO: default function needs to know key of hash info (label names and values)
+        Value.new(type, @name, labels, @buckets)
       end
 
       def sorted?(bucket)

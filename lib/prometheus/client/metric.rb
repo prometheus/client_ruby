@@ -12,7 +12,7 @@ module Prometheus
       def initialize(name, docstring, base_labels = {})
         @mutex = Mutex.new
         @validator = LabelSetValidator.new
-        @values = Hash.new { |hash, key| hash[key] = default }
+        @values = Hash.new { |hash, key| hash[key] = default(key) }
 
         validate_name(name)
         validate_docstring(docstring)
@@ -27,7 +27,7 @@ module Prometheus
       def get(labels = {})
         @validator.valid?(labels)
 
-        @values[labels]
+        @values[labels].get
       end
 
       # Returns all label sets with their values
@@ -41,8 +41,8 @@ module Prometheus
 
       private
 
-      def default
-        nil
+      def default(labels)
+        ValueType.new(@name, @name, labels, nil)
       end
 
       def validate_name(name)

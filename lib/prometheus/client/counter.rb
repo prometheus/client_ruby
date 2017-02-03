@@ -1,6 +1,7 @@
 # encoding: UTF-8
 
 require 'prometheus/client/metric'
+require 'prometheus/client/valuetype'
 
 module Prometheus
   module Client
@@ -14,13 +15,13 @@ module Prometheus
         raise ArgumentError, 'increment must be a non-negative number' if by < 0
 
         label_set = label_set_for(labels)
-        synchronize { @values[label_set] += by }
+        synchronize { @values[label_set].increment(by) }
       end
 
       private
 
-      def default
-        0
+      def default(labels)
+        Prometheus::Client::ValueType.new(type, @name, @name, labels)
       end
     end
   end

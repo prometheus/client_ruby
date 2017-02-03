@@ -14,12 +14,12 @@ module Prometheus
       class Value < Hash
         attr_accessor :sum, :total
 
-        def initialize(estimator)
-          @sum = estimator.sum
-          @total = estimator.observations
+        def initialize(name, labels, estimator)
+          @sum = ValueType.new(name, name + '_sum', labels, estimator.sum)
+          @total = ValueType.new(name, name + '_count', labels, estimator.observations)
 
           estimator.invariants.each do |invariant|
-            self[invariant.quantile] = estimator.query(invariant.quantile)
+            self[invariant.quantile] = ValueType.new(name, labels, estimator.query(invariant.quantile), nil)
           end
         end
       end

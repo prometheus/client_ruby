@@ -13,7 +13,7 @@ module Prometheus
 
       # Sets the value for the given label set
       def set(labels, value)
-        @values[label_set_for(labels)] = value
+        @values[label_set_for(labels)].set(value)
       end
     end
   end
