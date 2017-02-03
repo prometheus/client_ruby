@@ -2,6 +2,7 @@
 
 require 'thread'
 require 'prometheus/client/label_set_validator'
+require 'prometheus/client/valuetype'
 
 module Prometheus
   module Client
@@ -42,7 +43,7 @@ module Prometheus
       private
 
       def default(labels)
-        ValueType.new(@name, @name, labels, nil)
+        ValueType.new(type, @name, @name, labels, nil)
       end
 
       def validate_name(name)

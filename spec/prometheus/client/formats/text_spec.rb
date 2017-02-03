@@ -1,6 +1,7 @@
 # encoding: UTF-8
 
 require 'prometheus/client/formats/text'
+require 'prometheus/client/valuetype'
 
 describe Prometheus::Client::Formats::Text do
   let(:summary_value) do
@@ -65,6 +66,11 @@ describe Prometheus::Client::Formats::Text do
         },
       ),
     ]
+    metrics.each do |m|
+      m.values.each do |k, v|
+        m.values[k] = Prometheus::Client::ValueType.new(m.type, m.name, m.name, k, v)
+      end
+    end
     double(metrics: metrics)
   end
 

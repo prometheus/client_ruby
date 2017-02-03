@@ -30,6 +30,14 @@ module Prometheus
             self[bucket].increment() if value <= bucket
           end
         end
+
+        def get()
+          hash = {}
+          each_key do |bucket|
+            hash[bucket] = self[bucket].get()
+          end
+          hash
+        end
       end
 
       # DEFAULT_BUCKETS are the default Histogram buckets. The default buckets

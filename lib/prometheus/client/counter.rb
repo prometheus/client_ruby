@@ -21,7 +21,7 @@ module Prometheus
       private
 
       def default(labels)
-        Prometheus::Client::ValueType.new(type, @name, @name, labels)
+        ValueType.new(type, @name, @name, labels)
       end
     end
   end
