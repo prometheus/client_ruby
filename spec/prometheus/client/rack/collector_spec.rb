@@ -41,7 +41,7 @@ describe Prometheus::Client::Rack::Collector do
     get '/foo'
 
     {
-      http_requests_total: 1,
+      http_requests_total: 1.0,
       http_request_duration_seconds: { 0.5 => 0.2, 0.9 => 0.2, 0.99 => 0.2 },
     }.each do |metric, result|
       expect(registry.get(metric).get(labels)).to eql(result)
@@ -66,7 +66,7 @@ describe Prometheus::Client::Rack::Collector do
 
       expect { get '/broken' }.to raise_error NoMethodError
 
-      expect(registry.get(:http_exceptions_total).get(labels)).to eql(1)
+      expect(registry.get(:http_exceptions_total).get(labels)).to eql(1.0)
     end
   end
 
@@ -82,7 +82,7 @@ describe Prometheus::Client::Rack::Collector do
 
       labels = { method: 'get', code: '200' }
 
-      expect(registry.get(:http_requests_total).get(labels)).to eql(1)
+      expect(registry.get(:http_requests_total).get(labels)).to eql(1.0)
     end
   end
 end
