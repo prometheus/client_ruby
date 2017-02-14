@@ -13,6 +13,8 @@ group :test do
   gem 'rack-test'
   gem 'rake'
   gem 'rspec'
-  gem 'rubocop', ruby_version?('< 2.0') ? '< 0.42' : nil
+  gem 'rubocop', ruby_version?('< 2.0') ? '< 0.42' : '~> 0.45.0'
   gem 'tins', '< 1.7' if ruby_version?('< 2.0')
+  # 1.4+ is not compatible with ruby 1.9
+  gem 'term-ansicolor', '~> 1.3.2'
 end
