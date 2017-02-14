@@ -29,13 +29,13 @@ URL=http://127.0.0.1:${PORT}/
 
 log "starting example server"
 bundle install --quiet
-bundle exec unicorn -p ${PORT} -c unicorn.conf &>> /dev/null &
+bundle exec unicorn -p ${PORT} -c unicorn.conf &> /dev/null &
 
 # wait until unicorn is available
 sleep 1
 
 log "sending requests for 5 seconds"
-printf "GET ${URL}\nPOST ${URL}\nDELETE ${URL}" | vegeta attack -duration 5s &>> /dev/null
+printf "GET ${URL}\nPOST ${URL}\nDELETE ${URL}" | vegeta attack -duration 5s &> /dev/null
 
 log "printing /metrics"
 curl -s "${URL}metrics"
