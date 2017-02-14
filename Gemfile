@@ -7,8 +7,8 @@ def ruby_version?(constraint)
 end
 
 group :test do
-  gem 'json', '< 2.0' if ruby_version?('< 2.0')
   gem 'coveralls'
+  gem 'json', '< 2.0' if ruby_version?('< 2.0')
   gem 'rack', '< 2.0' if ruby_version?('< 2.2.2')
   gem 'rack-test'
   gem 'rake'

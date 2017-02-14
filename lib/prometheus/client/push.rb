@@ -45,11 +45,11 @@ module Prometheus
       def parse(url)
         uri = URI.parse(url)
 
-        if uri.scheme == 'http'
-          uri
-        else
+        if uri.scheme != 'http'
           raise ArgumentError, 'only HTTP gateway URLs are supported currently.'
         end
+
+        uri
       rescue URI::InvalidURIError => e
         raise ArgumentError, "#{url} is not a valid URL: #{e}"
       end

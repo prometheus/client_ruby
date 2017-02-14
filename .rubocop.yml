@@ -13,3 +13,7 @@ Style/TrailingCommaInLiteral:
 
 Metrics/AbcSize:
     Max: 18
+
+Metrics/BlockLength:
+    Exclude:
+        - 'spec/**/*.rb'
