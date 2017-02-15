@@ -21,7 +21,7 @@ module Prometheus
       private
 
       def default(labels)
-        ValueType.new(type, @name, @name, labels)
+        ValueClass.new(type, @name, @name, labels)
       end
     end
   end

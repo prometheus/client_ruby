@@ -15,11 +15,11 @@ module Prometheus
         attr_accessor :sum, :total
 
         def initialize(name, labels, estimator)
-          @sum = ValueType.new(name, name + '_sum', labels, estimator.sum)
-          @total = ValueType.new(name, name + '_count', labels, estimator.observations)
+          @sum = ValueClass.new(name, name + '_sum', labels, estimator.sum)
+          @total = ValueClass.new(name, name + '_count', labels, estimator.observations)
 
           estimator.invariants.each do |invariant|
-            self[invariant.quantile] = ValueType.new(name, labels, estimator.query(invariant.quantile), nil)
+            self[invariant.quantile] = ValueClass.new(name, labels, estimator.query(invariant.quantile), nil)
           end
         end
       end

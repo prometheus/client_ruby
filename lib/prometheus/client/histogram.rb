@@ -13,12 +13,12 @@ module Prometheus
         attr_accessor :sum, :total
 
         def initialize(type, name, labels, buckets)
-          @sum = ValueType.new(type, name, name.to_s + '_sum', labels)
+          @sum = ValueClass.new(type, name, name.to_s + '_sum', labels)
           # TODO: get rid of total and use +Inf bucket instead.
-          @total = ValueType.new(type, name, name.to_s + '_count', labels)
+          @total = ValueClass.new(type, name, name.to_s + '_count', labels)
 
           buckets.each do |bucket|
-            self[bucket] = ValueType.new(type, name, name.to_s + '_count', labels)
+            self[bucket] = ValueClass.new(type, name, name.to_s + '_count', labels)
           end
         end
 

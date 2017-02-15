@@ -43,7 +43,7 @@ module Prometheus
       private
 
       def default(labels)
-        ValueType.new(type, @name, @name, labels, nil)
+        ValueClass.new(type, @name, @name, labels)
       end
 
       def validate_name(name)

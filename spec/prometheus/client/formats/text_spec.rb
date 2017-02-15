@@ -68,7 +68,7 @@ describe Prometheus::Client::Formats::Text do
     ]
     metrics.each do |m|
       m.values.each do |k, v|
-        m.values[k] = Prometheus::Client::ValueType.new(m.type, m.name, m.name, k, v)
+        m.values[k] = Prometheus::Client::ValueClass.new(m.type, m.name, m.name, k, v)
       end
     end
     double(metrics: metrics)
