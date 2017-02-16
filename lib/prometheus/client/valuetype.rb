@@ -22,7 +22,7 @@ module Prometheus
         @value
       end
 
-      def multiprocess
+      def self.multiprocess
         false
       end
     end
@@ -79,7 +79,7 @@ module Prometheus
         end
       end
 
-      def multiprocess
+      def self.multiprocess
         true
       end
     end

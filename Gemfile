@@ -6,7 +6,7 @@ def ruby_version?(constraint)
   Gem::Dependency.new('', constraint).match?('', RUBY_VERSION)
 end
 
-gem 'mmap', git: 'https://github.com/lyda/mmap.git', :branch => 'modern-ruby'
+gem 'mmap2'#, git: 'https://github.com/lyda/mmap.git', :branch => 'modern-ruby'
 
 group :test do
   gem 'json', '< 2.0' if ruby_version?('< 2.0')
