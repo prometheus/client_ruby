@@ -36,7 +36,7 @@ module Prometheus
       def initialize(type, metric_name, name, labels, multiprocess_mode='')
         file_prefix = type.to_s
         if type == :gauge
-          file_prefix += '_' +  multiprocess_mode
+          file_prefix += '_' +  multiprocess_mode.to_s
         end
 
         @@files_lock.synchronize do

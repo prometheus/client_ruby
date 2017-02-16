@@ -7,9 +7,9 @@ module Prometheus
     # A Gauge is a metric that exposes merely an instantaneous value or some
     # snapshot thereof.
     class Gauge < Metric
-      def initialize(name, docstring, base_labels = {}, multiprocess_mode='all')
+      def initialize(name, docstring, base_labels = {}, multiprocess_mode=:all)
         super(name, docstring, base_labels)
-        if ValueClass.multiprocess and !['min', 'max', 'livesum', 'liveall', 'all'].include?(multiprocess_mode)
+        if ValueClass.multiprocess and ![:min, :max, :livesum, :liveall, :all].include?(multiprocess_mode)
           raise ArgumentError, 'Invalid multiprocess mode: ' + multiprocess_mode
         end
         @multiprocess_mode = multiprocess_mode
