@@ -34,6 +34,7 @@ module Prometheus
       @@pid = Process.pid
 
       def initialize(type, metric_name, name, labels, multiprocess_mode='')
+        puts "/////////////", type.to_s
         file_prefix = type.to_s
         if type == :gauge
           file_prefix += '_' +  multiprocess_mode.to_s

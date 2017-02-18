@@ -19,9 +19,16 @@ module Prometheus
           @total = ValueClass.new(name, name + '_count', labels, estimator.observations)
 
           estimator.invariants.each do |invariant|
-            self[invariant.quantile] = ValueClass.new(name, labels, estimator.query(invariant.quantile), nil)
+            self[invariant.quantile] = ValueClass.new(type, name, labels, estimator.query(invariant.quantile), nil)
           end
         end
+      end
+
+      def initialize(name, docstring, base_labels = {}, multiprocess_mode)
+        if ENV['prometheus_multiproc_dir']
+          raise ArgumentError, "Summary metric type does not have multiprocess support"
+        end
+        super(name, docstring, base_labels)
       end
 
       def type
@@ -56,7 +63,7 @@ module Prometheus
 
       private
 
-      def default
+      def default(labels)
         Quantile::Estimator.new
       end
     end

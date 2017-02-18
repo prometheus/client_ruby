@@ -44,6 +44,9 @@ module Prometheus
             parts = File.basename(f).split("_")
             type = parts[0].to_sym
             d = MmapedDict.new(f)
+            puts "================"
+            puts d.all_values
+            puts "================"
             d.all_values.each do |key, value|
               metric_name, name, labelnames, labelvalues = JSON.parse(key)
               metric = metrics.fetch(metric_name, {
@@ -86,15 +89,17 @@ module Prometheus
                   samples[[name, labels]] = value
                 end
               when :histogram
-                bucket = labels.select{|l| l[0] == 'le' }
+                puts "------", labels
+                bucket = labels.select{|l| l[0] == 'le' }.map {|k, v| v.to_f}.first
                 if bucket
                   without_le = labels.select{ |l| l[0] != 'le' }
                   b = buckets.fetch(without_le, {})
-                  v = b.fetch(bucket[0].to_f, 0.0) + value
+                  v = b.fetch(bucket, 0.0) + value
                   if !buckets.has_key?(without_le)
                     buckets[without_le] = {}
                   end
-                  buckets[without_le][bucket[0].to_f] = v
+                  puts "INSERTING BUCKET #{bucket}"
+                  buckets[without_le][bucket] = v
                 else
                   s = samples.fetch([name, labels], 0.0)
                   samples[[name, labels]] = s + value
@@ -122,8 +127,22 @@ module Prometheus
                 [name, labels.to_h, value]
               end
             end
-            metrics.values
           end
+
+          output = ''
+          metrics.each do |name, metric|
+            output += "# HELP #{name} #{metric[:help]}\n"
+            output += "# TYPE #{name} #{metric[:type].to_s}\n"
+            metric[:samples].each do |metric_name, labels, value|
+              if !labels.empty?
+                labelstr = '{' + labels.sort.map { |k, v| "#{k}='#{v}'" }.join(',') + '}'
+              else
+                labelstr = ''
+              end
+              output += "#{metric_name}#{labelstr} #{value}\n"
+            end
+          end
+          output
         end
 
         class << self
