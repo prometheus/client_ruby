@@ -44,9 +44,6 @@ module Prometheus
             parts = File.basename(f).split("_")
             type = parts[0].to_sym
             d = MmapedDict.new(f)
-            puts "================"
-            puts d.all_values
-            puts "================"
             d.all_values.each do |key, value|
               metric_name, name, labelnames, labelvalues = JSON.parse(key)
               metric = metrics.fetch(metric_name, {
@@ -89,7 +86,6 @@ module Prometheus
                   samples[[name, labels]] = value
                 end
               when :histogram
-                puts "------", labels
                 bucket = labels.select{|l| l[0] == 'le' }.map {|k, v| v.to_f}.first
                 if bucket
                   without_le = labels.select{ |l| l[0] != 'le' }
@@ -98,7 +94,6 @@ module Prometheus
                   if !buckets.has_key?(without_le)
                     buckets[without_le] = {}
                   end
-                  puts "INSERTING BUCKET #{bucket}"
                   buckets[without_le][bucket] = v
                 else
                   s = samples.fetch([name, labels], 0.0)
