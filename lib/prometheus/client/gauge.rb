@@ -13,6 +13,10 @@ module Prometheus
 
       # Sets the value for the given label set
       def set(labels, value)
+        unless value.is_a?(Numeric)
+          raise ArgumentError, 'value must be a number'
+        end
+
         @values[label_set_for(labels)] = value
       end
     end

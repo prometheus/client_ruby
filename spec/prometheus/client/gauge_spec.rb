@@ -24,5 +24,13 @@ describe Prometheus::Client::Gauge do
         end.to change { gauge.get(test: 'value') }.from(nil).to(42)
       end.to_not change { gauge.get }
     end
+
+    context 'given an invalid value' do
+      it 'raises an ArgumentError' do
+        expect do
+          gauge.set({}, nil)
+        end.to raise_exception(ArgumentError)
+      end
+    end
   end
 end
