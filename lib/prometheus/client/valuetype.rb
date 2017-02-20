@@ -34,6 +34,7 @@ module Prometheus
       @@pid = Process.pid
 
       def initialize(type, metric_name, name, labels, multiprocess_mode='')
+        @@pid = Process.pid
         file_prefix = type.to_s
         if type == :gauge
           file_prefix += '_' +  multiprocess_mode.to_s
@@ -101,8 +102,8 @@ end
 # The file starts with a 4 byte int, indicating how much of it is used.
 # Then 4 bytes of padding.
 # There's then a number of entries, consisting of a 4 byte int which is the
-# size of the next field, a utf-8 encoded string key, padding to a 8 byte
-#alignment, and then a 8 byte float which is the value.
+# size of the next field, a utf-8 encoded string key, padding to an 8 byte
+# alignment, and then a 8 byte float which is the value.
 #
 # TODO(julius): dealing with Mmap.new, truncate etc. errors?
 class MmapedDict
@@ -118,7 +119,7 @@ class MmapedDict
     end
     @capacity = @f.size
     @m = Mmap.new(filename, 'rw', Mmap::MAP_SHARED)
-    #@m.mlock
+    # @m.mlock # TODO: Why does this raise an error?
 
     @positions = {}
     @used = @m[0..3].unpack('l')[0]
