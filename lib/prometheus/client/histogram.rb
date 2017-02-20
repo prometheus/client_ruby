@@ -14,10 +14,10 @@ module Prometheus
 
         def initialize(buckets)
           @sum = 0.0
-          @total = 0
+          @total = 0.0
 
           buckets.each do |bucket|
-            self[bucket] = 0
+            self[bucket] = 0.0
           end
         end
 

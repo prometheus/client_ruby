@@ -10,8 +10,8 @@ describe Prometheus::Client::Formats::Text do
   end
 
   let(:histogram_value) do
-    { 10 => 1, 20 => 2, 30 => 2 }.tap do |value|
-      allow(value).to receive_messages(sum: 15.2, total: 2)
+    { 10 => 1.0, 20 => 2.0, 30 => 2.0 }.tap do |value|
+      allow(value).to receive_messages(sum: 15.2, total: 2.0)
     end
   end
 
@@ -23,7 +23,7 @@ describe Prometheus::Client::Formats::Text do
         base_labels: { umlauts: 'Björn', utf: '佖佥' },
         type: :counter,
         values: {
-          { code: 'red' }   => 42,
+          { code: 'red' }   => 42.0,
           { code: 'green' } => 3.14E42,
           { code: 'blue' }  => -1.23e-45,
         },
@@ -34,7 +34,7 @@ describe Prometheus::Client::Formats::Text do
         base_labels: { status: 'success' },
         type: :gauge,
         values: {
-          { code: 'pink' } => 15,
+          { code: 'pink' } => 15.0,
         },
       ),
       double(
@@ -43,7 +43,7 @@ describe Prometheus::Client::Formats::Text do
         base_labels: {},
         type: :counter,
         values: {
-          { text: "with \"quotes\", \\escape \n and newline" } => 15,
+          { text: "with \"quotes\", \\escape \n and newline" } => 15.0,
         },
       ),
       double(
@@ -73,15 +73,15 @@ describe Prometheus::Client::Formats::Text do
       expect(subject.marshal(registry)).to eql <<-'TEXT'
 # TYPE foo counter
 # HELP foo foo description
-foo{umlauts="Björn",utf="佖佥",code="red"} 42
+foo{umlauts="Björn",utf="佖佥",code="red"} 42.0
 foo{umlauts="Björn",utf="佖佥",code="green"} 3.14e+42
 foo{umlauts="Björn",utf="佖佥",code="blue"} -1.23e-45
 # TYPE bar gauge
 # HELP bar bar description\nwith newline
-bar{status="success",code="pink"} 15
+bar{status="success",code="pink"} 15.0
 # TYPE baz counter
 # HELP baz baz "description" \\escaping
-baz{text="with \"quotes\", \\escape \n and newline"} 15
+baz{text="with \"quotes\", \\escape \n and newline"} 15.0
 # TYPE qux summary
 # HELP qux qux description
 qux{for="sake",code="1",quantile="0.5"} 4.2
@@ -91,12 +91,12 @@ qux_sum{for="sake",code="1"} 1243.21
 qux_count{for="sake",code="1"} 93
 # TYPE xuq histogram
 # HELP xuq xuq description
-xuq{code="ah",le="10"} 1
-xuq{code="ah",le="20"} 2
-xuq{code="ah",le="30"} 2
-xuq{code="ah",le="+Inf"} 2
+xuq{code="ah",le="10"} 1.0
+xuq{code="ah",le="20"} 2.0
+xuq{code="ah",le="30"} 2.0
+xuq{code="ah",le="+Inf"} 2.0
 xuq_sum{code="ah"} 15.2
-xuq_count{code="ah"} 2
+xuq_count{code="ah"} 2.0
       TEXT
     end
   end
