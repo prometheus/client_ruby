@@ -26,7 +26,7 @@ module Prometheus
 
       def call(env)
         if env['PATH_INFO'] == @path
-          format = negotiate(env['HTTP_ACCEPT'], @acceptable)
+          format = negotiate(env, @acceptable)
           format ? respond_with(format) : not_acceptable(FORMATS)
         else
           @app.call(env)
@@ -35,10 +35,8 @@ module Prometheus
 
       private
 
-      def negotiate(accept, formats)
-        accept = '*/*' if accept.to_s.empty?
-
-        parse(accept).each do |content_type, _|
+      def negotiate(env, formats)
+        parse(env.fetch('HTTP_ACCEPT', '*/*')).each do |content_type, _|
           return formats[content_type] if formats.key?(content_type)
         end
 
@@ -46,7 +44,7 @@ module Prometheus
       end
 
       def parse(header)
-        header.to_s.split(/\s*,\s*/).map do |type|
+        header.split(/\s*,\s*/).map do |type|
           attributes = type.split(/\s*;\s*/)
           quality = extract_quality(attributes)
 
