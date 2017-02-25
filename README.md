@@ -173,11 +173,11 @@ rake
 
 [1]: https://github.com/prometheus/prometheus
 [2]: http://rack.github.io/
-[3]: https://secure.travis-ci.org/prometheus/client_ruby.png?branch=master
+[3]: https://secure.travis-ci.org/prometheus/client_ruby.svg?branch=master
 [4]: https://badge.fury.io/rb/prometheus-client.svg
 [5]: https://gemnasium.com/prometheus/client_ruby.svg
-[6]: https://codeclimate.com/github/prometheus/client_ruby.png
-[7]: https://coveralls.io/repos/prometheus/client_ruby/badge.png?branch=master
+[6]: https://codeclimate.com/github/prometheus/client_ruby.svg
+[7]: https://coveralls.io/repos/prometheus/client_ruby/badge.svg?branch=master
 [8]: https://github.com/prometheus/pushgateway
 [9]: lib/prometheus/middleware/exporter.rb
 [10]: lib/prometheus/middleware/collector.rb
