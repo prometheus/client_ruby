@@ -35,7 +35,7 @@ http_requests.increment
 ### Rack middleware
 
 There are two [Rack][2] middlewares available, one to expose a metrics HTTP
-endpoint to be scraped by a prometheus server ([Exporter][9]) and one to trace all HTTP
+endpoint to be scraped by a Prometheus server ([Exporter][9]) and one to trace all HTTP
 requests ([Collector][10]).
 
 It's highly recommended to enable gzip compression for the metrics endpoint,
@@ -45,14 +45,14 @@ for example by including the `Rack::Deflater` middleware.
 # config.ru
 
 require 'rack'
-require 'prometheus/client/rack/collector'
-require 'prometheus/client/rack/exporter'
+require 'prometheus/middleware/collector'
+require 'prometheus/middleware/exporter'
 
-use Rack::Deflater, if: ->(env, status, headers, body) { body.any? && body[0].length > 512 }
-use Prometheus::Client::Rack::Collector
-use Prometheus::Client::Rack::Exporter
+use Rack::Deflater, if: ->(_, _, _, body) { body.any? && body[0].length > 512 }
+use Prometheus::Middleware::Collector
+use Prometheus::Middleware::Exporter
 
-run ->(env) { [200, {'Content-Type' => 'text/html'}, ['OK']] }
+run ->(_) { [200, {'Content-Type' => 'text/html'}, ['OK']] }
 ```
 
 Start the server and have a look at the metrics endpoint:
@@ -179,5 +179,5 @@ rake
 [6]: https://codeclimate.com/github/prometheus/client_ruby.png
 [7]: https://coveralls.io/repos/prometheus/client_ruby/badge.png?branch=master
 [8]: https://github.com/prometheus/pushgateway
-[9]: lib/prometheus/client/rack/exporter.rb
-[10]: lib/prometheus/client/rack/collector.rb
+[9]: lib/prometheus/middleware/exporter.rb
+[10]: lib/prometheus/middleware/collector.rb
