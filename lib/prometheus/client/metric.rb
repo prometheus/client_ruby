@@ -61,8 +61,8 @@ module Prometheus
         @validator.validate(labels)
       end
 
-      def synchronize(&block)
-        @mutex.synchronize(&block)
+      def synchronize
+        @mutex.synchronize { yield }
       end
     end
   end
