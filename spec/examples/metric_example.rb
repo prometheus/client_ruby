@@ -27,6 +27,20 @@ shared_examples_for Prometheus::Client::Metric do
         described_class.new(:foo, '')
       end.to raise_exception ArgumentError
     end
+
+    it 'raises an exception if a metric name is invalid' do
+      [
+        'string',
+        '42startsWithNumber'.to_sym,
+        'abc def'.to_sym,
+        'abcdef '.to_sym,
+        "abc\ndef".to_sym,
+      ].each do |name|
+        expect do
+          described_class.new(name, 'foo')
+        end.to raise_exception(ArgumentError)
+      end
+    end
   end
 
   describe '#type' do

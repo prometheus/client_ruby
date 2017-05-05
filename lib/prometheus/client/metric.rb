@@ -46,9 +46,13 @@ module Prometheus
       end
 
       def validate_name(name)
-        return true if name.is_a?(Symbol)
-
-        raise ArgumentError, 'given name must be a symbol'
+        unless name.is_a?(Symbol)
+          raise ArgumentError, 'metric name must be a symbol'
+        end
+        unless name.to_s =~ /\A[a-zA-Z_:][a-zA-Z0-9_:]*\Z/
+          msg = 'metric name must match /[a-zA-Z_:][a-zA-Z0-9_:]*/'
+          raise ArgumentError, msg
+        end
       end
 
       def validate_docstring(docstring)
