@@ -13,7 +13,7 @@ group :test do
   gem 'rack-test'
   gem 'rake'
   gem 'rspec'
-  gem 'rubocop', ruby_version?('< 2.0') ? '< 0.42' : nil
+  gem 'rubocop', '< 0.42'
   gem 'term-ansicolor', '< 1.4' if ruby_version?('< 2.0')
   gem 'tins', '< 1.7' if ruby_version?('< 2.0')
 end
