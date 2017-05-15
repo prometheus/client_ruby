@@ -54,7 +54,8 @@ use Prometheus::Middleware::Collector, counter_label_builder: ->(env, code) {
     method:       env['REQUEST_METHOD'].downcase,
     # Include the HTTP Host header as label.
     host:         env['HTTP_HOST'].to_s,
-    # Replace numeric IDs in paths like /users/1234/comments with ':id'.
+    # Include path, but replace all numeric IDs to keep cardinality low.
+    # Think '/users/1234/comments' -> '/users/:id/comments'
     path:         env['PATH_INFO'].to_s.gsub(/\/\d+(\/|$)/, '/:id\\1'),
   }
 }
