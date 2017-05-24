@@ -91,10 +91,10 @@ qux_sum{for="sake",code="1"} 1243.21
 qux_count{for="sake",code="1"} 93
 # TYPE xuq histogram
 # HELP xuq xuq description
-xuq{code="ah",le="10"} 1.0
-xuq{code="ah",le="20"} 2.0
-xuq{code="ah",le="30"} 2.0
-xuq{code="ah",le="+Inf"} 2.0
+xuq_bucket{code="ah",le="10"} 1.0
+xuq_bucket{code="ah",le="20"} 2.0
+xuq_bucket{code="ah",le="30"} 2.0
+xuq_bucket{code="ah",le="+Inf"} 2.0
 xuq_sum{code="ah"} 15.2
 xuq_count{code="ah"} 2.0
       TEXT

@@ -62,10 +62,11 @@ module Prometheus
           end
 
           def histogram(name, set, value)
+            bucket = "#{name}_bucket"
             value.each do |q, v|
-              yield metric(name, labels(set.merge(le: q)), v)
+              yield metric(bucket, labels(set.merge(le: q)), v)
             end
-            yield metric(name, labels(set.merge(le: '+Inf')), value.total)
+            yield metric(bucket, labels(set.merge(le: '+Inf')), value.total)
 
             l = labels(set)
             yield metric("#{name}_sum", l, value.sum)
