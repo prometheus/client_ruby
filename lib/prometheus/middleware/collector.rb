@@ -39,14 +39,14 @@ module Prometheus
         {
           code:   code,
           method: env['REQUEST_METHOD'].downcase,
-          path:   env['PATH_INFO'].gsub(/\/\d+(\/|$)/, '/:id\\1'),
+          path:   env['PATH_INFO'].gsub(%r{/\d+(/|$)}, '/:id\\1'),
         }
       end
 
       DURATION_LB = proc do |env, _|
         {
           method: env['REQUEST_METHOD'].downcase,
-          path:   env['PATH_INFO'].gsub(/\/\d+(\/|$)/, '/:id\\1'),
+          path:   env['PATH_INFO'].gsub(%r{/\d+(/|$)}, '/:id\\1'),
         }
       end
 

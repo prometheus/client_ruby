@@ -48,6 +48,20 @@ describe Prometheus::Middleware::Collector do
     expect(registry.get(metric).get(labels)).to include(0.1 => 0, 0.25 => 1)
   end
 
+  it 'normalizes paths containing numeric IDs by default' do
+    expect(Time).to receive(:now).twice.and_return(0.0, 0.3)
+
+    get '/foo/42/bars'
+
+    metric = :http_server_requests_total
+    labels = { method: 'get', path: '/foo/:id/bars', code: '200' }
+    expect(registry.get(metric).get(labels)).to eql(1.0)
+
+    metric = :http_server_request_duration_seconds
+    labels = { method: 'get', path: '/foo/:id/bars' }
+    expect(registry.get(metric).get(labels)).to include(0.1 => 0, 0.5 => 1)
+  end
+
   context 'when the app raises an exception' do
     let(:original_app) do
       lambda do |env|
