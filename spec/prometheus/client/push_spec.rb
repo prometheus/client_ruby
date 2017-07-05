@@ -29,7 +29,7 @@ describe Prometheus::Client::Push do
       expect(push.headers).to eql(merged_headers)
     end
 
-    it 'allows to averride default headers' do
+    it 'allows to override default headers' do
       headers = { 'Content-Type' => 'application/json' }.freeze
       push = Prometheus::Client::Push.new('test-job', nil, nil, headers)
 
