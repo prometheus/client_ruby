@@ -21,6 +21,22 @@ describe Prometheus::Client::Push do
       expect(push.gateway).to eql('http://pu.sh:1234')
     end
 
+    it 'allows to specify a custom Pushgateway with custom headers' do
+      headers = { 'Key' => 'Value' }
+      push = Prometheus::Client::Push.new('test-job', nil, nil, headers)
+
+      merged_headers = described_class::DEFAULT_HEADERS.merge(headers)
+      expect(push.headers).to eql(merged_headers)
+    end
+
+    it 'allows to averride default headers' do
+      headers = { 'Content-Type' => 'application/json' }.freeze
+      push = Prometheus::Client::Push.new('test-job', nil, nil, headers)
+
+      expect(push.headers).to eql(headers)
+      expect(push.headers['Content-Type']).to eql('application/json')
+    end
+
     it 'raises an ArgumentError if the given gateway URL is invalid' do
       ['inva.lid:1233', 'http://[invalid]'].each do |url|
         expect do

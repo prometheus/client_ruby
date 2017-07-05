@@ -15,15 +15,16 @@ module Prometheus
       DEFAULT_GATEWAY = 'http://localhost:9091'.freeze
       PATH            = '/metrics/jobs/%s'.freeze
       INSTANCE_PATH   = '/metrics/jobs/%s/instances/%s'.freeze
-      HEADER          = { 'Content-Type' => Formats::Text::CONTENT_TYPE }.freeze
+      DEFAULT_HEADERS = { 'Content-Type' => Formats::Text::CONTENT_TYPE }.freeze
       SUPPORTED_SCHEMES = %w(http https).freeze
 
-      attr_reader :job, :instance, :gateway, :path
+      attr_reader :job, :instance, :gateway, :path, :headers
 
-      def initialize(job, instance = nil, gateway = nil)
+      def initialize(job, instance = nil, gateway = nil, headers = {})
         @job = job
         @instance = instance
         @gateway = gateway || DEFAULT_GATEWAY
+        @headers = DEFAULT_HEADERS.merge(headers)
         @uri = parse(@gateway)
         @path = build_path(job, instance)
         @http = Net::HTTP.new(@uri.host, @uri.port)
@@ -67,7 +68,7 @@ module Prometheus
       def request(method, registry)
         data = Formats::Text.marshal(registry)
 
-        @http.send_request(method, path, data, HEADER)
+        @http.send_request(method, path, data, @headers)
       end
     end
   end
