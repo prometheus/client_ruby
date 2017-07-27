@@ -129,6 +129,18 @@ gauge.get({ room: 'kitchen' })
 # => 21.534
 ```
 
+Also you can use gauge as the bi-directional counter:
+
+```ruby
+gauge = Prometheus::Client::Gauge.new(:concurrent_requests_total, '...')
+
+gauge.increment({ service: 'foo' })
+# => 1.0
+
+gauge.decrement({ service: 'foo' })
+# => 0.0
+```
+
 ### Histogram
 
 A histogram samples observations (usually things like request durations or
