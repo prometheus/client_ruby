@@ -10,6 +10,9 @@ module Prometheus
     # By default metrics are registered on the global registry. Set the
     # `:registry` option to use a custom registry.
     #
+    # By default metrics all have the prefix "http_server". Set to something
+    # else if you like.
+    #
     # The request counter metric is broken down by code, method and path by
     # default. Set the `:counter_label_builder` option to use a custom label
     # builder.
@@ -22,6 +25,7 @@ module Prometheus
       def initialize(app, options = {})
         @app = app
         @registry = options[:registry] || Client.registry
+        @metrics_prefix = options[:metrics_prefix] || "http_server"
         @counter_lb = options[:counter_label_builder] || COUNTER_LB
         @duration_lb = options[:duration_label_builder] || DURATION_LB
 
@@ -52,18 +56,18 @@ module Prometheus
 
       def init_request_metrics
         @requests = @registry.counter(
-          :http_server_requests_total,
+          :"#{@metrics_prefix}_requests_total",
           'The total number of HTTP requests handled by the Rack application.',
         )
         @durations = @registry.histogram(
-          :http_server_request_duration_seconds,
+          :"#{@metrics_prefix}_request_duration_seconds",
           'The HTTP response duration of the Rack application.',
         )
       end
 
       def init_exception_metrics
         @exceptions = @registry.counter(
-          :http_server_exceptions_total,
+          :"#{@metrics_prefix}_exceptions_total",
           'The total number of exceptions raised by the Rack application.',
         )
       end
