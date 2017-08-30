@@ -25,7 +25,7 @@ module Prometheus
       def initialize(app, options = {})
         @app = app
         @registry = options[:registry] || Client.registry
-        @metrics_prefix = options[:metrics_prefix] || "http_server"
+        @metrics_prefix = options[:metrics_prefix] || 'http_server'
         @counter_lb = options[:counter_label_builder] || COUNTER_LB
         @duration_lb = options[:duration_label_builder] || DURATION_LB
 
