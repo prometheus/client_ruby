@@ -106,4 +106,32 @@ describe Prometheus::Middleware::Collector do
       expect(registry.get(metric).get(labels)).to eql(1.0)
     end
   end
+
+  context 'when provided a custom metrics_prefix' do
+    let!(:app) do
+      described_class.new(
+        original_app,
+        registry: registry,
+        metrics_prefix: 'lolrus',
+      )
+    end
+
+    it 'provides alternate metric names' do
+      expect(
+        registry.get(:lolrus_requests_total),
+      ).to be_a(Prometheus::Client::Counter)
+      expect(
+        registry.get(:lolrus_request_duration_seconds),
+      ).to be_a(Prometheus::Client::Histogram)
+      expect(
+        registry.get(:lolrus_exceptions_total),
+      ).to be_a(Prometheus::Client::Counter)
+    end
+
+    it "doesn't register the default metrics" do
+      expect(registry.get(:http_server_requests_total)).to be(nil)
+      expect(registry.get(:http_server_request_duration_seconds)).to be(nil)
+      expect(registry.get(:http_server_exceptions_total)).to be(nil)
+    end
+  end
 end
