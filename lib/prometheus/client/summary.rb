@@ -30,8 +30,10 @@ module Prometheus
 
       # Records a given value.
       def observe(labels, value)
-        label_set = label_set_for(labels)
-        synchronize { @values[label_set].observe(value) }
+        synchronize do
+          label_set = label_set_for(labels)
+          @values[label_set].observe(value)
+        end
       end
       alias add observe
       deprecate :add, :observe, 2016, 10

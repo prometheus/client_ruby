@@ -55,8 +55,10 @@ module Prometheus
           raise ArgumentError, 'Label with name "le" is not permitted'
         end
 
-        label_set = label_set_for(labels)
-        synchronize { @values[label_set].observe(value) }
+        synchronize do
+          label_set = label_set_for(labels)
+          @values[label_set].observe(value)
+        end
       end
 
       private

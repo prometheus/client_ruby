@@ -23,8 +23,8 @@ module Prometheus
       # Increments Gauge value by 1 or adds the given value to the Gauge.
       # (The value can be negative, resulting in a decrease of the Gauge.)
       def increment(labels = {}, by = 1)
-        label_set = label_set_for(labels)
         synchronize do
+          label_set = label_set_for(labels)
           @values[label_set] ||= 0
           @values[label_set] += by
         end
