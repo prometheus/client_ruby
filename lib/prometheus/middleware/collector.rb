@@ -71,6 +71,10 @@ module Prometheus
           :"#{@metrics_prefix}_request_duration_seconds",
           'The HTTP response duration of the Rack application.',
         )
+        @summary = @registry.summary(
+          :"#{@metrics_prefix}_request_duration_quantiles",
+          'The HTTP response duration quantiles of the Rack application.',
+        )
       end
 
       def init_exception_metrics
@@ -94,6 +98,7 @@ module Prometheus
       def record(env, code, duration)
         @requests.increment(@counter_lb.call(env, code))
         @durations.observe(@duration_lb.call(env, code), duration)
+        @summary.observe(@duration_lb.call(env, code), duration)
       rescue
         # TODO: log unexpected exception during request recording
         nil
