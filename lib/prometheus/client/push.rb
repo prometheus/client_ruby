@@ -1,5 +1,6 @@
 # encoding: UTF-8
 
+require 'thread'
 require 'net/http'
 require 'uri'
 
@@ -21,6 +22,7 @@ module Prometheus
       attr_reader :job, :instance, :gateway, :path
 
       def initialize(job, instance = nil, gateway = nil)
+        @mutex = Mutex.new
         @job = job
         @instance = instance
         @gateway = gateway || DEFAULT_GATEWAY
@@ -31,15 +33,21 @@ module Prometheus
       end
 
       def add(registry)
-        request('POST', registry)
+        synchronize do
+          request('POST', registry)
+        end
       end
 
       def replace(registry)
-        request('PUT', registry)
+        synchronize do
+          request('PUT', registry)
+        end
       end
 
       def delete
-        @http.send_request('DELETE', path)
+        synchronize do
+          @http.send_request('DELETE', path)
+        end
       end
 
       private
@@ -68,6 +76,10 @@ module Prometheus
         data = Formats::Text.marshal(registry)
 
         @http.send_request(method, path, data, HEADER)
+      end
+
+      def synchronize
+        @mutex.synchronize { yield }
       end
     end
   end
