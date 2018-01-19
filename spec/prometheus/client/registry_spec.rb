@@ -52,6 +52,20 @@ describe Prometheus::Client::Registry do
     end
   end
 
+  describe '#unregister' do
+    it 'unregister a registered metric' do
+      registry.register(double(name: :test))
+      registry.unregister(:test)
+      expect(registry.exist?(:test)).to eql(false)
+    end
+
+    it "doesn't raise when unregistering a not registered metrics" do
+      expect do
+        registry.unregister(:test)
+      end.not_to raise_error
+    end
+  end
+
   describe '#counter' do
     it 'registers a new counter metric container and returns the counter' do
       metric = registry.counter(:test, 'test docstring')
