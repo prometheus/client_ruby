@@ -30,6 +30,13 @@ module Prometheus
         @values[labels]
       end
 
+      # Deletes the value for the given label set
+      def delete(labels = {})
+        synchronize do
+          @values.delete(labels) if @values.key?(labels)
+        end
+      end
+
       # Returns all label sets with their values
       def values
         synchronize do

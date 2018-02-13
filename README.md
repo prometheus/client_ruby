@@ -111,6 +111,9 @@ counter.increment({ service: 'bar' }, 5)
 # get current value for a given label set
 counter.get({ service: 'bar' })
 # => 5
+
+# delete the counter once irrelevant
+counter.delete({ service: 'bar'})
 ```
 
 ### Gauge
@@ -127,6 +130,9 @@ gauge.set({ room: 'kitchen' }, 21.534)
 # retrieve the current value for a given label set
 gauge.get({ room: 'kitchen' })
 # => 21.534
+
+# delete the gauge once irrelevant
+counter.delete({ service: 'bar'})
 ```
 
 Also you can use gauge as the bi-directional counter:

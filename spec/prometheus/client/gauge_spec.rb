@@ -34,6 +34,18 @@ describe Prometheus::Client::Gauge do
     end
   end
 
+  describe '#delete', labels: { test: 'one' } do
+    before do
+      gauge.set(RSpec.current_example.metadata[:labels] || {}, 0)
+    end
+
+    it 'deletes the gauge for a given label set' do
+      expect do
+        gauge.delete(test: 'one')
+      end.to change { gauge.get(test: 'one') }.from(0).to(nil)
+    end
+  end
+
   describe '#increment' do
     before do
       gauge.set(RSpec.current_example.metadata[:labels] || {}, 0)
