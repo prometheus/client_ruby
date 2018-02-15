@@ -39,13 +39,11 @@ module Prometheus
 
       protected
 
-      # rubocop:disable Metrics/LineLength
       aggregation = lambda do |str|
         str
           .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)}, '/:uuid\\1')
           .gsub(%r{/\d+(/|$)}, '/:id\\1')
       end
-      # rubocop:enable Metrics/LineLength
 
       COUNTER_LB = proc do |env, code|
         {
