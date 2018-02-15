@@ -127,18 +127,14 @@ gauge.set({ room: 'kitchen' }, 21.534)
 # retrieve the current value for a given label set
 gauge.get({ room: 'kitchen' })
 # => 21.534
-```
 
-Also you can use gauge as the bi-directional counter:
+# increment the value (default is 1)
+gauge.increment({ room: 'kitchen' })
+# => 22.534
 
-```ruby
-gauge = Prometheus::Client::Gauge.new(:concurrent_requests_total, '...')
-
-gauge.increment({ service: 'foo' })
-# => 1.0
-
-gauge.decrement({ service: 'foo' })
-# => 0.0
+# decrement the value by a given value
+gauge.decrement({ room: 'kitchen' }, 5)
+# => 17.534
 ```
 
 ### Histogram
