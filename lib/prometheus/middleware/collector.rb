@@ -1,5 +1,6 @@
 # encoding: UTF-8
 
+require 'benchmark'
 require 'prometheus/client'
 
 module Prometheus
@@ -81,11 +82,10 @@ module Prometheus
       end
 
       def trace(env)
-        start = Time.now
-        yield.tap do |response|
-          duration = [(Time.now - start).to_f, 0.0].max
-          record(env, response.first.to_s, duration)
-        end
+        response = nil
+        duration = Benchmark.realtime { response = yield }
+        record(env, response.first.to_s, duration)
+        return response
       rescue => exception
         @exceptions.increment(exception: exception.class.name)
         raise
