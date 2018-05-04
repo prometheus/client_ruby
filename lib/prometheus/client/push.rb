@@ -16,7 +16,6 @@ module Prometheus
       DEFAULT_GATEWAY = 'http://localhost:9091'.freeze
       PATH            = '/metrics/jobs/%s'.freeze
       INSTANCE_PATH   = '/metrics/jobs/%s/instances/%s'.freeze
-      HEADER          = { 'Content-Type' => Formats::Text::CONTENT_TYPE }.freeze
       SUPPORTED_SCHEMES = %w(http https).freeze
 
       attr_reader :job, :instance, :gateway, :path
@@ -26,27 +25,28 @@ module Prometheus
         @job = job
         @instance = instance
         @gateway = gateway || DEFAULT_GATEWAY
-        @uri = parse(@gateway)
         @path = build_path(job, instance)
+        @uri = parse("#{@gateway}#{@path}")
+
         @http = Net::HTTP.new(@uri.host, @uri.port)
-        @http.use_ssl = @uri.scheme == 'https'
+        @http.use_ssl = (@uri.scheme == 'https')
       end
 
       def add(registry)
         synchronize do
-          request('POST', registry)
+          request(Net::HTTP::Post, registry)
         end
       end
 
       def replace(registry)
         synchronize do
-          request('PUT', registry)
+          request(Net::HTTP::Put, registry)
         end
       end
 
       def delete
         synchronize do
-          @http.send_request('DELETE', path)
+          request(Net::HTTP::Delete)
         end
       end
 
@@ -72,10 +72,13 @@ module Prometheus
         end
       end
 
-      def request(method, registry)
-        data = Formats::Text.marshal(registry)
+      def request(req_class, registry = nil)
+        req = req_class.new(@uri)
+        req.content_type = Formats::Text::CONTENT_TYPE
+        req.basic_auth(@uri.user, @uri.password) if @uri.user
+        req.body = Formats::Text.marshal(registry) if registry
 
-        @http.send_request(method, path, data, HEADER)
+        @http.request(req)
       end
 
       def synchronize

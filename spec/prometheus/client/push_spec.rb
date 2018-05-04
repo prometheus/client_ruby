@@ -3,8 +3,9 @@
 require 'prometheus/client/push'
 
 describe Prometheus::Client::Push do
+  let(:gateway) { 'http://localhost:9091' }
   let(:registry) { Prometheus::Client.registry }
-  let(:push) { Prometheus::Client::Push.new('test-job') }
+  let(:push) { Prometheus::Client::Push.new('test-job', nil, gateway) }
 
   describe '.new' do
     it 'returns a new push instance' do
@@ -12,6 +13,8 @@ describe Prometheus::Client::Push do
     end
 
     it 'uses localhost as default Pushgateway' do
+      push = Prometheus::Client::Push.new('test-job')
+
       expect(push.gateway).to eql('http://localhost:9091')
     end
 
@@ -27,6 +30,30 @@ describe Prometheus::Client::Push do
           Prometheus::Client::Push.new('test-job', nil, url)
         end.to raise_error ArgumentError
       end
+    end
+  end
+
+  describe '#add' do
+    it 'sends a given registry to via HTTP POST' do
+      expect(push).to receive(:request).with(Net::HTTP::Post, registry)
+
+      push.add(registry)
+    end
+  end
+
+  describe '#replace' do
+    it 'sends a given registry to via HTTP PUT' do
+      expect(push).to receive(:request).with(Net::HTTP::Put, registry)
+
+      push.replace(registry)
+    end
+  end
+
+  describe '#delete' do
+    it 'deletes existing metrics with HTTP DELETE' do
+      expect(push).to receive(:request).with(Net::HTTP::Delete)
+
+      push.delete
     end
   end
 
@@ -51,63 +78,73 @@ describe Prometheus::Client::Push do
     end
   end
 
-  describe '#add' do
-    it 'pushes a given registry to the configured Pushgateway via HTTP' do
-      http = double(:http)
-      expect(http).to receive(:send_request).with(
-        'POST',
-        '/metrics/jobs/foo/instances/bar',
-        Prometheus::Client::Formats::Text.marshal(registry),
-        'Content-Type' => Prometheus::Client::Formats::Text::CONTENT_TYPE,
-      )
-      expect(http).to receive(:use_ssl=).with(false)
-      expect(Net::HTTP).to receive(:new).with('pu.sh', 9091).and_return(http)
+  describe '#request' do
+    let(:content_type) { Prometheus::Client::Formats::Text::CONTENT_TYPE }
+    let(:data) { Prometheus::Client::Formats::Text.marshal(registry) }
+    let(:uri) { URI.parse("#{gateway}/metrics/jobs/test-job") }
 
-      described_class.new('foo', 'bar', 'http://pu.sh:9091').add(registry)
+    it 'sends marshalled registry to the specified gateway' do
+      request = double(:request)
+      expect(request).to receive(:content_type=).with(content_type)
+      expect(request).to receive(:body=).with(data)
+      expect(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
+
+      http = double(:http)
+      expect(http).to receive(:use_ssl=).with(false)
+      expect(http).to receive(:request).with(request)
+      expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+      push.send(:request, Net::HTTP::Post, registry)
     end
 
-    it 'pushes a given registry to the configured Pushgateway via HTTPS' do
-      http = double(:http)
-      expect(http).to receive(:send_request).with(
-        'POST',
-        '/metrics/jobs/foo/instances/bar',
-        Prometheus::Client::Formats::Text.marshal(registry),
-        'Content-Type' => Prometheus::Client::Formats::Text::CONTENT_TYPE,
-      )
-      expect(http).to receive(:use_ssl=).with(true)
-      expect(Net::HTTP).to receive(:new).with('pu.sh', 9091).and_return(http)
+    it 'deletes data from the registry' do
+      request = double(:request)
+      expect(request).to receive(:content_type=).with(content_type)
+      expect(Net::HTTP::Delete).to receive(:new).with(uri).and_return(request)
 
-      described_class.new('foo', 'bar', 'https://pu.sh:9091').add(registry)
-    end
-  end
-
-  describe '#replace' do
-    it 'replaces any existing metrics with registry' do
       http = double(:http)
-      expect(http).to receive(:send_request).with(
-        'PUT',
-        '/metrics/jobs/foo/instances/bar',
-        Prometheus::Client::Formats::Text.marshal(registry),
-        'Content-Type' => Prometheus::Client::Formats::Text::CONTENT_TYPE,
-      )
       expect(http).to receive(:use_ssl=).with(false)
-      expect(Net::HTTP).to receive(:new).with('pu.sh', 9091).and_return(http)
+      expect(http).to receive(:request).with(request)
+      expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
-      described_class.new('foo', 'bar', 'http://pu.sh:9091').replace(registry)
+      push.send(:request, Net::HTTP::Delete)
     end
-  end
 
-  describe '#delete' do
-    it 'deletes existing metrics from the configured Pushgateway' do
-      http = double(:http)
-      expect(http).to receive(:send_request).with(
-        'DELETE',
-        '/metrics/jobs/foo/instances/bar',
-      )
-      expect(http).to receive(:use_ssl=).with(false)
-      expect(Net::HTTP).to receive(:new).with('pu.sh', 9091).and_return(http)
+    context 'HTTPS support' do
+      let(:gateway) { 'https://localhost:9091' }
 
-      described_class.new('foo', 'bar', 'http://pu.sh:9091').delete
+      it 'uses HTTPS when requested' do
+        request = double(:request)
+        expect(request).to receive(:content_type=).with(content_type)
+        expect(request).to receive(:body=).with(data)
+        expect(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
+
+        http = double(:http)
+        expect(http).to receive(:use_ssl=).with(true)
+        expect(http).to receive(:request).with(request)
+        expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+        push.send(:request, Net::HTTP::Post, registry)
+      end
+    end
+
+    context 'Basic Auth support' do
+      let(:gateway) { 'https://super:secret@localhost:9091' }
+
+      it 'sets Basic Auth header when requested' do
+        request = double(:request)
+        expect(request).to receive(:content_type=).with(content_type)
+        expect(request).to receive(:basic_auth).with('super', 'secret')
+        expect(request).to receive(:body=).with(data)
+        expect(Net::HTTP::Put).to receive(:new).with(uri).and_return(request)
+
+        http = double(:http)
+        expect(http).to receive(:use_ssl=).with(true)
+        expect(http).to receive(:request).with(request)
+        expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+        push.send(:request, Net::HTTP::Put, registry)
+      end
     end
   end
 end

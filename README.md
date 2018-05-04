@@ -66,29 +66,30 @@ integrated [example application](examples/rack/README.md).
 The Ruby client can also be used to push its collected metrics to a
 [Pushgateway][8]. This comes in handy with batch jobs or in other scenarios
 where it's not possible or feasible to let a Prometheus server scrape a Ruby
-process.
+process. TLS and basic access authentication are supported.
+
+**Attention**: The implementation still uses the legacy API of the pushgateway.
 
 ```ruby
 require 'prometheus/client'
 require 'prometheus/client/push'
 
-prometheus = Prometheus::Client.registry
+registry = Prometheus::Client.registry
 # ... register some metrics, set/increment/observe/etc. their values
 
 # push the registry state to the default gateway
-Prometheus::Client::Push.new('my-batch-job').add(prometheus)
+Prometheus::Client::Push.new('my-batch-job').add(registry)
 
-# optional: specify the instance name (instead of IP) and gateway
-Prometheus::Client::Push.new(
-  'my-job', 'instance-name', 'http://example.domain:1234').add(prometheus)
+# optional: specify the instance name (instead of IP) and gateway.
+Prometheus::Client::Push.new('my-batch-job', 'foobar', 'https://example.domain:1234').add(registry)
 
 # If you want to replace any previously pushed metrics for a given instance,
 # use the #replace method.
-Prometheus::Client::Push.new('my-batch-job', 'instance').replace(prometheus)
+Prometheus::Client::Push.new('my-batch-job').replace(registry)
 
 # If you want to delete all previously pushed metrics for a given instance,
 # use the #delete method.
-Prometheus::Client::Push.new('my-batch-job', 'instance').delete
+Prometheus::Client::Push.new('my-batch-job').delete
 ```
 
 ## Metrics
