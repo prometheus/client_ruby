@@ -63,7 +63,7 @@ describe Prometheus::Client::LabelSetValidator do
 
       expect do
         validator.validate(method: 'get', exception: 'NoMethodError')
-      end.to raise_exception(invalid)
+      end.to raise_exception(invalid, /keys given: \[:exception, :method\] vs. keys expected: \[:code, :method\]/)
     end
   end
 end
