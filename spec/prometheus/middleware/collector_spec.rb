@@ -121,6 +121,36 @@ describe Prometheus::Middleware::Collector do
     end
   end
 
+  context 'when using a custom exception label builder' do
+    let(:original_app) do
+      lambda do |env|
+        raise NoMethodError if env['PATH_INFO'] == '/broken'
+
+        [200, { 'Content-Type' => 'text/html' }, ['OK']]
+      end
+    end
+
+    let(:app) do
+      described_class.new(
+        original_app,
+        registry: registry,
+        exception_label_builder: lambda do |_, exception|
+          {
+            exception_name: exception.class.name,
+          }
+        end,
+      )
+    end
+
+    it 'allows labels configuration' do
+      expect { get '/broken' }.to raise_error NoMethodError
+
+      metric = :http_server_exceptions_total
+      labels = { exception_name: 'NoMethodError' }
+      expect(registry.get(metric).get(labels)).to eq(1.0)
+    end
+  end
+
   context 'when provided a custom metrics_prefix' do
     let!(:app) do
       described_class.new(

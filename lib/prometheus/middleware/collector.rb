@@ -29,6 +29,7 @@ module Prometheus
         @metrics_prefix = options[:metrics_prefix] || 'http_server'
         @counter_lb = options[:counter_label_builder] || COUNTER_LB
         @duration_lb = options[:duration_label_builder] || DURATION_LB
+        @exception_lb = options[:exception_label_builder] || EXCEPTION_LB
 
         init_request_metrics
         init_exception_metrics
@@ -61,6 +62,12 @@ module Prometheus
         }
       end
 
+      EXCEPTION_LB = proc do |_, exception|
+        {
+          exception: exception.class.name,
+        }
+      end
+
       def init_request_metrics
         @requests = @registry.counter(
           :"#{@metrics_prefix}_requests_total",
@@ -85,7 +92,7 @@ module Prometheus
         record(env, response.first.to_s, duration)
         return response
       rescue => exception
-        @exceptions.increment(exception: exception.class.name)
+        @exceptions.increment(@exception_lb.call(env, exception))
         raise
       end
 
