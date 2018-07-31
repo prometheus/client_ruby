@@ -155,6 +155,57 @@ histogram.get({ service: 'users' })
 # => { 0.005 => 3, 0.01 => 15, 0.025 => 18, ..., 2.5 => 42, 5 => 42, 10 = >42 }
 ```
 
+### Usage with Rails
+
+To use this with Rails, mount the middlewares by modifying your **config.ru** file
+
+```
+# This file is used by Rack-based servers to start the application.
+
+require ::File.expand_path('../config/environment', __FILE__)
+require 'prometheus/middleware/collector'
+require 'prometheus/middleware/exporter'
+
+use Prometheus::Middleware::Collector
+use Prometheus::Middleware::Exporter
+
+run Rails.application
+
+```
+
+### Securing endpoint in a Rails application
+
+
+When hosting **client_ruby** in a Rails app, you will probably want to secure the **/metrics** endpoint. This can be done using HTTP basic auth, assuming you are running your app over HTTPS.
+
+Modify your **config.ru** as in the following [example](https://github.com/crowdAI/crowdai/blob/master/config.ru). In this case we are using an environment variable, CROWDAI_API_KEY, to store the password for basic auth.
+
+```
+# This file is used by Rack-based servers to start the application.
+
+require ::File.expand_path('../config/environment', __FILE__)
+require 'prometheus/middleware/collector'
+require 'prometheus/middleware/exporter'
+
+rackapp = Rack::Builder.app do
+  use Prometheus::Middleware::Collector
+
+  map '/metrics' do
+    use Rack::Auth::Basic, 'Prometheus Metrics' do |username, password|
+      Rack::Utils.secure_compare(ENV['CROWDAI_API_KEY'], password)
+    end
+    use Rack::Deflater
+    use Prometheus::Middleware::Exporter, path: ''
+    run ->(_) { [500, { 'Content-Type' => 'text/html' }, ['crowdAI metrics endpoint is unreachable!']] }
+  end
+
+  run Rails.application
+end
+run rackapp
+```
+
+Thanks to [this issue](https://github.com/prometheus/client_ruby/issues/61) and [this blog post](https://www.robustperception.io/instrumenting-a-ruby-on-rails-application-with-prometheus).
+
 ### Summary
 
 Summary, similar to histograms, is an accumulator for samples. It captures
