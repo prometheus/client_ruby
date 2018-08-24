@@ -6,8 +6,6 @@ through a HTTP interface. Intended to be used together with a
 
 [![Gem Version][4]](http://badge.fury.io/rb/prometheus-client)
 [![Build Status][3]](http://travis-ci.org/prometheus/client_ruby)
-[![Dependency Status][5]](https://gemnasium.com/prometheus/client_ruby)
-[![Code Climate][6]](https://codeclimate.com/github/prometheus/client_ruby)
 [![Coverage Status][7]](https://coveralls.io/r/prometheus/client_ruby)
 
 ## Usage
@@ -184,8 +182,6 @@ rake
 [2]: http://rack.github.io/
 [3]: https://secure.travis-ci.org/prometheus/client_ruby.svg?branch=master
 [4]: https://badge.fury.io/rb/prometheus-client.svg
-[5]: https://gemnasium.com/prometheus/client_ruby.svg
-[6]: https://codeclimate.com/github/prometheus/client_ruby.svg
 [7]: https://coveralls.io/repos/prometheus/client_ruby/badge.svg?branch=master
 [8]: https://github.com/prometheus/pushgateway
 [9]: lib/prometheus/middleware/exporter.rb
