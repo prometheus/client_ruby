@@ -12,7 +12,7 @@ module Prometheus
       class Value < Hash
         attr_accessor :sum, :total
 
-        def initialize(buckets)
+        def initialize(buckets:)
           @sum = 0.0
           @total = 0.0
 
@@ -38,19 +38,18 @@ module Prometheus
                          2.5, 5, 10].freeze
 
       # Offer a way to manually specify buckets
-      def initialize(name, docstring, base_labels = {},
-                     buckets = DEFAULT_BUCKETS)
+      def initialize(name, docstring:, base_labels: {}, buckets: DEFAULT_BUCKETS)
         raise ArgumentError, 'Unsorted buckets, typo?' unless sorted? buckets
 
         @buckets = buckets
-        super(name, docstring, base_labels)
+        super(name, docstring: docstring, base_labels: base_labels)
       end
 
       def type
         :histogram
       end
 
-      def observe(labels, value)
+      def observe(value, labels: {})
         if labels[:le]
           raise ArgumentError, 'Label with name "le" is not permitted'
         end
@@ -62,7 +61,7 @@ module Prometheus
       private
 
       def default
-        Value.new(@buckets)
+        Value.new(buckets: @buckets)
       end
 
       def sorted?(bucket)

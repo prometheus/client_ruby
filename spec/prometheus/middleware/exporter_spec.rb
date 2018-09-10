@@ -29,7 +29,7 @@ describe Prometheus::Middleware::Exporter do
 
     shared_examples 'ok' do |headers, fmt|
       it "responds with 200 OK and Content-Type #{fmt::CONTENT_TYPE}" do
-        registry.counter(:foo, 'foo counter').increment({}, 9)
+        registry.counter(:foo, docstring: 'foo counter').increment(by: 9)
 
         get '/metrics', nil, headers
 

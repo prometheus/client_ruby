@@ -10,7 +10,7 @@ module Prometheus
         :counter
       end
 
-      def increment(labels = {}, by = 1)
+      def increment(by: 1, labels: {})
         raise ArgumentError, 'increment must be a non-negative number' if by < 0
 
         label_set = label_set_for(labels)

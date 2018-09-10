@@ -9,7 +9,7 @@ module Prometheus
     class Metric
       attr_reader :name, :docstring, :base_labels
 
-      def initialize(name, docstring, base_labels = {})
+      def initialize(name, docstring:, base_labels: {})
         @mutex = Mutex.new
         @validator = LabelSetValidator.new
         @values = Hash.new { |hash, key| hash[key] = default }
@@ -24,7 +24,7 @@ module Prometheus
       end
 
       # Returns the value for the given label set
-      def get(labels = {})
+      def get(labels: {})
         @validator.valid?(labels)
 
         @values[labels]

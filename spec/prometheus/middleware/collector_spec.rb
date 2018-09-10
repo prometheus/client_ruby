@@ -41,11 +41,11 @@ describe Prometheus::Middleware::Collector do
 
     metric = :http_server_requests_total
     labels = { method: 'get', path: '/foo', code: '200' }
-    expect(registry.get(metric).get(labels)).to eql(1.0)
+    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
 
     metric = :http_server_request_duration_seconds
     labels = { method: 'get', path: '/foo' }
-    expect(registry.get(metric).get(labels)).to include(0.1 => 0, 0.25 => 1)
+    expect(registry.get(metric).get(labels: labels)).to include(0.1 => 0, 0.25 => 1)
   end
 
   it 'normalizes paths containing numeric IDs by default' do
@@ -55,11 +55,11 @@ describe Prometheus::Middleware::Collector do
 
     metric = :http_server_requests_total
     labels = { method: 'get', path: '/foo/:id/bars', code: '200' }
-    expect(registry.get(metric).get(labels)).to eql(1.0)
+    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
 
     metric = :http_server_request_duration_seconds
     labels = { method: 'get', path: '/foo/:id/bars' }
-    expect(registry.get(metric).get(labels)).to include(0.1 => 0, 0.5 => 1)
+    expect(registry.get(metric).get(labels: labels)).to include(0.1 => 0, 0.5 => 1)
   end
 
   it 'normalizes paths containing UUIDs by default' do
@@ -69,11 +69,11 @@ describe Prometheus::Middleware::Collector do
 
     metric = :http_server_requests_total
     labels = { method: 'get', path: '/foo/:uuid/bars', code: '200' }
-    expect(registry.get(metric).get(labels)).to eql(1.0)
+    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
 
     metric = :http_server_request_duration_seconds
     labels = { method: 'get', path: '/foo/:uuid/bars' }
-    expect(registry.get(metric).get(labels)).to include(0.1 => 0, 0.5 => 1)
+    expect(registry.get(metric).get(labels: labels)).to include(0.1 => 0, 0.5 => 1)
   end
 
   context 'when the app raises an exception' do
@@ -94,7 +94,7 @@ describe Prometheus::Middleware::Collector do
 
       metric = :http_server_exceptions_total
       labels = { exception: 'NoMethodError' }
-      expect(registry.get(metric).get(labels)).to eql(1.0)
+      expect(registry.get(metric).get(labels: labels)).to eql(1.0)
     end
   end
 
@@ -117,7 +117,7 @@ describe Prometheus::Middleware::Collector do
 
       metric = :http_server_requests_total
       labels = { method: 'get', code: '200' }
-      expect(registry.get(metric).get(labels)).to eql(1.0)
+      expect(registry.get(metric).get(labels: labels)).to eql(1.0)
     end
   end
 
