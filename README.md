@@ -19,12 +19,12 @@ require 'prometheus/client'
 prometheus = Prometheus::Client.registry
 
 # create a new counter metric
-http_requests = Prometheus::Client::Counter.new(:http_requests, 'A counter of HTTP requests made')
+http_requests = Prometheus::Client::Counter.new(:http_requests, docstring: 'A counter of HTTP requests made')
 # register the metric
 prometheus.register(http_requests)
 
 # equivalent helper function
-http_requests = prometheus.counter(:http_requests, 'A counter of HTTP requests made')
+http_requests = prometheus.counter(:http_requests, docstring: 'A counter of HTTP requests made')
 
 # start using the counter
 http_requests.increment
@@ -99,16 +99,16 @@ The following metric types are currently supported.
 Counter is a metric that exposes merely a sum or tally of things.
 
 ```ruby
-counter = Prometheus::Client::Counter.new(:service_requests_total, '...')
+counter = Prometheus::Client::Counter.new(:service_requests_total, docstring: '...')
 
 # increment the counter for a given label set
-counter.increment({ service: 'foo' })
+counter.increment(labels: { service: 'foo' })
 
 # increment by a given value
-counter.increment({ service: 'bar' }, 5)
+counter.increment(by: 5, labels: { service: 'bar' })
 
 # get current value for a given label set
-counter.get({ service: 'bar' })
+counter.get(labels: { service: 'bar' })
 # => 5
 ```
 
@@ -118,21 +118,21 @@ Gauge is a metric that exposes merely an instantaneous value or some snapshot
 thereof.
 
 ```ruby
-gauge = Prometheus::Client::Gauge.new(:room_temperature_celsius, '...')
+gauge = Prometheus::Client::Gauge.new(:room_temperature_celsius, docstring: '...')
 
 # set a value
-gauge.set({ room: 'kitchen' }, 21.534)
+gauge.set(21.534, labels: { room: 'kitchen' })
 
 # retrieve the current value for a given label set
-gauge.get({ room: 'kitchen' })
+gauge.get(labels: { room: 'kitchen' })
 # => 21.534
 
 # increment the value (default is 1)
-gauge.increment({ room: 'kitchen' })
+gauge.increment(labels: { room: 'kitchen' })
 # => 22.534
 
 # decrement the value by a given value
-gauge.decrement({ room: 'kitchen' }, 5)
+gauge.decrement(by: 5, labels: { room: 'kitchen' })
 # => 17.534
 ```
 
@@ -143,13 +143,13 @@ response sizes) and counts them in configurable buckets. It also provides a sum
 of all observed values.
 
 ```ruby
-histogram = Prometheus::Client::Histogram.new(:service_latency_seconds, '...')
+histogram = Prometheus::Client::Histogram.new(:service_latency_seconds, docstring: '...')
 
 # record a value
-histogram.observe({ service: 'users' }, Benchmark.realtime { service.call(arg) })
+histogram.observe(Benchmark.realtime { service.call(arg) }, labels: { service: 'users' })
 
 # retrieve the current bucket values
-histogram.get({ service: 'users' })
+histogram.get(labels: { service: 'users' })
 # => { 0.005 => 3, 0.01 => 15, 0.025 => 18, ..., 2.5 => 42, 5 => 42, 10 = >42 }
 ```
 
@@ -159,13 +159,13 @@ Summary, similar to histograms, is an accumulator for samples. It captures
 Numeric data and provides an efficient percentile calculation mechanism.
 
 ```ruby
-summary = Prometheus::Client::Summary.new(:service_latency_seconds, '...')
+summary = Prometheus::Client::Summary.new(:service_latency_seconds, docstring: '...')
 
 # record a value
-summary.observe({ service: 'database' }, Benchmark.realtime { service.call() })
+summary.observe(Benchmark.realtime { service.call() }, labels: { service: 'database' })
 
 # retrieve the current quantile values
-summary.get({ service: 'database' })
+summary.get(labels: { service: 'database' })
 # => { 0.5 => 0.1233122, 0.9 => 3.4323, 0.99 => 5.3428231 }
 ```
 

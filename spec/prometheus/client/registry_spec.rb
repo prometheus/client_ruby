@@ -68,7 +68,7 @@ describe Prometheus::Client::Registry do
 
   describe '#counter' do
     it 'registers a new counter metric container and returns the counter' do
-      metric = registry.counter(:test, 'test docstring')
+      metric = registry.counter(:test, docstring: 'test docstring')
 
       expect(metric).to be_a(Prometheus::Client::Counter)
     end
@@ -76,7 +76,7 @@ describe Prometheus::Client::Registry do
 
   describe '#gauge' do
     it 'registers a new gauge metric container and returns the gauge' do
-      metric = registry.gauge(:test, 'test docstring')
+      metric = registry.gauge(:test, docstring: 'test docstring')
 
       expect(metric).to be_a(Prometheus::Client::Gauge)
     end
@@ -84,7 +84,7 @@ describe Prometheus::Client::Registry do
 
   describe '#summary' do
     it 'registers a new summary metric container and returns the summary' do
-      metric = registry.summary(:test, 'test docstring')
+      metric = registry.summary(:test, docstring: 'test docstring')
 
       expect(metric).to be_a(Prometheus::Client::Summary)
     end
@@ -92,7 +92,7 @@ describe Prometheus::Client::Registry do
 
   describe '#histogram' do
     it 'registers a new histogram metric container and returns the histogram' do
-      metric = registry.histogram(:test, 'test docstring')
+      metric = registry.histogram(:test, docstring: 'test docstring')
 
       expect(metric).to be_a(Prometheus::Client::Histogram)
     end

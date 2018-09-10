@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
 shared_examples_for Prometheus::Client::Metric do
-  subject { described_class.new(:foo, 'foo description') }
+  subject { described_class.new(:foo, docstring: 'foo description') }
 
   describe '.new' do
     it 'returns a new metric' do
@@ -12,19 +12,21 @@ shared_examples_for Prometheus::Client::Metric do
       exception = Prometheus::Client::LabelSetValidator::ReservedLabelError
 
       expect do
-        described_class.new(:foo, 'foo docstring', __name__: 'reserved')
+        described_class.new(:foo,
+                            docstring: 'foo docstring',
+                            base_labels: { __name__: 'reserved' })
       end.to raise_exception exception
     end
 
     it 'raises an exception if the given name is blank' do
       expect do
-        described_class.new(nil, 'foo')
+        described_class.new(nil, docstring: 'foo')
       end.to raise_exception ArgumentError
     end
 
     it 'raises an exception if docstring is missing' do
       expect do
-        described_class.new(:foo, '')
+        described_class.new(:foo, docstring: '')
       end.to raise_exception ArgumentError
     end
 
@@ -37,7 +39,7 @@ shared_examples_for Prometheus::Client::Metric do
         "abc\ndef".to_sym,
       ].each do |name|
         expect do
-          described_class.new(name, 'foo')
+          described_class.new(name, docstring: 'foo')
         end.to raise_exception(ArgumentError)
       end
     end
@@ -55,7 +57,7 @@ shared_examples_for Prometheus::Client::Metric do
     end
 
     it 'returns the current metric value for a given label set' do
-      expect(subject.get(test: 'label')).to be_a(type)
+      expect(subject.get(labels: { test: 'label' })).to be_a(type)
     end
   end
 end

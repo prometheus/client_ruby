@@ -4,7 +4,7 @@ require 'prometheus/client/gauge'
 require 'examples/metric_example'
 
 describe Prometheus::Client::Gauge do
-  let(:gauge) { Prometheus::Client::Gauge.new(:foo, 'foo description') }
+  let(:gauge) { Prometheus::Client::Gauge.new(:foo, docstring: 'foo description') }
 
   it_behaves_like Prometheus::Client::Metric do
     let(:type) { NilClass }
@@ -13,22 +13,22 @@ describe Prometheus::Client::Gauge do
   describe '#set' do
     it 'sets a metric value' do
       expect do
-        gauge.set({}, 42)
+        gauge.set(42)
       end.to change { gauge.get }.from(nil).to(42)
     end
 
     it 'sets a metric value for a given label set' do
       expect do
         expect do
-          gauge.set({ test: 'value' }, 42)
-        end.to change { gauge.get(test: 'value') }.from(nil).to(42)
+          gauge.set(42, labels: { test: 'value' })
+        end.to change { gauge.get(labels: { test: 'value' }) }.from(nil).to(42)
       end.to_not change { gauge.get }
     end
 
     context 'given an invalid value' do
       it 'raises an ArgumentError' do
         expect do
-          gauge.set({}, nil)
+          gauge.set(nil)
         end.to raise_exception(ArgumentError)
       end
     end
@@ -36,7 +36,7 @@ describe Prometheus::Client::Gauge do
 
   describe '#increment' do
     before do
-      gauge.set(RSpec.current_example.metadata[:labels] || {}, 0)
+      gauge.set(0, labels: RSpec.current_example.metadata[:labels] || {})
     end
 
     it 'increments the gauge' do
@@ -48,14 +48,14 @@ describe Prometheus::Client::Gauge do
     it 'increments the gauge for a given label set', labels: { test: 'one' } do
       expect do
         expect do
-          gauge.increment(test: 'one')
-        end.to change { gauge.get(test: 'one') }.by(1.0)
-      end.to_not change { gauge.get(test: 'another') }
+          gauge.increment(labels: { test: 'one' })
+        end.to change { gauge.get(labels: { test: 'one' }) }.by(1.0)
+      end.to_not change { gauge.get(labels: { test: 'another' }) }
     end
 
     it 'increments the gauge by a given value' do
       expect do
-        gauge.increment({}, 5)
+        gauge.increment(by: 5)
       end.to change { gauge.get }.by(5.0)
     end
 
@@ -76,7 +76,7 @@ describe Prometheus::Client::Gauge do
 
   describe '#decrement' do
     before do
-      gauge.set(RSpec.current_example.metadata[:labels] || {}, 0)
+      gauge.set(0, labels: RSpec.current_example.metadata[:labels] || {})
     end
 
     it 'increments the gauge' do
@@ -88,14 +88,14 @@ describe Prometheus::Client::Gauge do
     it 'decrements the gauge for a given label set', labels: { test: 'one' } do
       expect do
         expect do
-          gauge.decrement(test: 'one')
-        end.to change { gauge.get(test: 'one') }.by(-1.0)
-      end.to_not change { gauge.get(test: 'another') }
+          gauge.decrement(labels: { test: 'one' })
+        end.to change { gauge.get(labels: { test: 'one' }) }.by(-1.0)
+      end.to_not change { gauge.get(labels: { test: 'another' }) }
     end
 
     it 'decrements the gauge by a given value' do
       expect do
-        gauge.decrement({}, 5)
+        gauge.decrement(by: 5)
       end.to change { gauge.get }.by(-5.0)
     end
 

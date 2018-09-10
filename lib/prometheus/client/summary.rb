@@ -12,7 +12,7 @@ module Prometheus
       class Value < Hash
         attr_accessor :sum, :total
 
-        def initialize(estimator)
+        def initialize(estimator:)
           @sum = estimator.sum
           @total = estimator.observations
 
@@ -27,17 +27,17 @@ module Prometheus
       end
 
       # Records a given value.
-      def observe(labels, value)
+      def observe(value, labels: {})
         label_set = label_set_for(labels)
         synchronize { @values[label_set].observe(value) }
       end
 
       # Returns the value for the given label set
-      def get(labels = {})
+      def get(labels: {})
         @validator.valid?(labels)
 
         synchronize do
-          Value.new(@values[labels])
+          Value.new(estimator: @values[labels])
         end
       end
 
@@ -45,7 +45,7 @@ module Prometheus
       def values
         synchronize do
           @values.each_with_object({}) do |(labels, value), memo|
-            memo[labels] = Value.new(value)
+            memo[labels] = Value.new(estimator: value)
           end
         end
       end

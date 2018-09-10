@@ -4,7 +4,9 @@ require 'prometheus/client/counter'
 require 'examples/metric_example'
 
 describe Prometheus::Client::Counter do
-  let(:counter) { Prometheus::Client::Counter.new(:foo, 'foo description') }
+  let(:counter) do
+    Prometheus::Client::Counter.new(:foo, docstring: 'foo description')
+  end
 
   it_behaves_like Prometheus::Client::Metric do
     let(:type) { Float }
@@ -20,20 +22,20 @@ describe Prometheus::Client::Counter do
     it 'increments the counter for a given label set' do
       expect do
         expect do
-          counter.increment(test: 'label')
-        end.to change { counter.get(test: 'label') }.by(1.0)
+          counter.increment(labels: { test: 'label' })
+        end.to change { counter.get(labels: { test: 'label' }) }.by(1.0)
       end.to_not change { counter.get }
     end
 
     it 'increments the counter by a given value' do
       expect do
-        counter.increment({}, 5)
+        counter.increment(by: 5)
       end.to change { counter.get }.by(5.0)
     end
 
     it 'raises an ArgumentError on negative increments' do
       expect do
-        counter.increment({}, -1)
+        counter.increment(by: -1)
       end.to raise_error ArgumentError
     end
 
