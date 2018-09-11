@@ -37,23 +37,33 @@ module Prometheus
         end
       end
 
-      def counter(name, docstring:, base_labels: {})
-        register(Counter.new(name, docstring: docstring, base_labels: base_labels))
+      def counter(name, docstring:, labels: [], preset_labels: {})
+        register(Counter.new(name,
+                             docstring: docstring,
+                             labels: labels,
+                             preset_labels: preset_labels))
       end
 
-      def summary(name, docstring:, base_labels: {})
-        register(Summary.new(name, docstring: docstring, base_labels: base_labels))
+      def summary(name, docstring:, labels: [], preset_labels: {})
+        register(Summary.new(name,
+                             docstring: docstring,
+                             labels: labels,
+                             preset_labels: preset_labels))
       end
 
-      def gauge(name, docstring:, base_labels: {})
-        register(Gauge.new(name, docstring: docstring, base_labels: base_labels))
+      def gauge(name, docstring:, labels: [], preset_labels: {})
+        register(Gauge.new(name,
+                           docstring: docstring,
+                           labels: labels,
+                           preset_labels: preset_labels))
       end
 
-      def histogram(name, docstring:, base_labels: {},
+      def histogram(name, docstring:, labels: [], preset_labels: {},
                     buckets: Histogram::DEFAULT_BUCKETS)
         register(Histogram.new(name,
                                docstring: docstring,
-                               base_labels: base_labels,
+                               labels: labels,
+                               preset_labels: preset_labels,
                                buckets: buckets))
       end
 

@@ -40,14 +40,12 @@ module Prometheus
           private
 
           def representation(metric, label_set, value, &block)
-            set = metric.base_labels.merge(label_set)
-
             if metric.type == :summary
-              summary(metric.name, set, value, &block)
+              summary(metric.name, label_set, value, &block)
             elsif metric.type == :histogram
-              histogram(metric.name, set, value, &block)
+              histogram(metric.name, label_set, value, &block)
             else
-              yield metric(metric.name, labels(set), value)
+              yield metric(metric.name, labels(label_set), value)
             end
           end
 

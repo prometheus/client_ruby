@@ -4,7 +4,13 @@ require 'prometheus/client/gauge'
 require 'examples/metric_example'
 
 describe Prometheus::Client::Gauge do
-  let(:gauge) { Prometheus::Client::Gauge.new(:foo, docstring: 'foo description') }
+  let(:expected_labels) { [] }
+
+  let(:gauge) do
+    Prometheus::Client::Gauge.new(:foo,
+                                  docstring: 'foo description',
+                                  labels: expected_labels)
+  end
 
   it_behaves_like Prometheus::Client::Metric do
     let(:type) { NilClass }
@@ -17,12 +23,22 @@ describe Prometheus::Client::Gauge do
       end.to change { gauge.get }.from(nil).to(42)
     end
 
-    it 'sets a metric value for a given label set' do
+    it 'raises an InvalidLabelSetError if sending unexpected labels' do
       expect do
+        gauge.set(42, labels: { test: 'value' })
+      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
+    end
+
+    context "with a an expected label set" do
+      let(:expected_labels) { [:test] }
+
+      it 'sets a metric value for a given label set' do
         expect do
-          gauge.set(42, labels: { test: 'value' })
-        end.to change { gauge.get(labels: { test: 'value' }) }.from(nil).to(42)
-      end.to_not change { gauge.get }
+          expect do
+            gauge.set(42, labels: { test: 'value' })
+          end.to change { gauge.get(labels: { test: 'value' }) }.from(nil).to(42)
+        end.to_not change { gauge.get(labels: { test: 'other' }) }
+      end
     end
 
     context 'given an invalid value' do
@@ -45,12 +61,22 @@ describe Prometheus::Client::Gauge do
       end.to change { gauge.get }.by(1.0)
     end
 
-    it 'increments the gauge for a given label set', labels: { test: 'one' } do
+    it 'raises an InvalidLabelSetError if sending unexpected labels' do
       expect do
+        gauge.increment(labels: { test: 'value' })
+      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
+    end
+
+    context "with a an expected label set" do
+      let(:expected_labels) { [:test] }
+
+      it 'increments the gauge for a given label set', labels: { test: 'one' } do
         expect do
-          gauge.increment(labels: { test: 'one' })
-        end.to change { gauge.get(labels: { test: 'one' }) }.by(1.0)
-      end.to_not change { gauge.get(labels: { test: 'another' }) }
+          expect do
+            gauge.increment(labels: { test: 'one' })
+          end.to change { gauge.get(labels: { test: 'one' }) }.by(1.0)
+        end.to_not change { gauge.get(labels: { test: 'another' }) }
+      end
     end
 
     it 'increments the gauge by a given value' do
@@ -79,18 +105,28 @@ describe Prometheus::Client::Gauge do
       gauge.set(0, labels: RSpec.current_example.metadata[:labels] || {})
     end
 
-    it 'increments the gauge' do
+    it 'decrements the gauge' do
       expect do
         gauge.decrement
       end.to change { gauge.get }.by(-1.0)
     end
 
-    it 'decrements the gauge for a given label set', labels: { test: 'one' } do
+    it 'raises an InvalidLabelSetError if sending unexpected labels' do
       expect do
+        gauge.decrement(labels: { test: 'value' })
+      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
+    end
+
+    context "with a an expected label set" do
+      let(:expected_labels) { [:test] }
+
+      it 'decrements the gauge for a given label set', labels: { test: 'one' } do
         expect do
-          gauge.decrement(labels: { test: 'one' })
-        end.to change { gauge.get(labels: { test: 'one' }) }.by(-1.0)
-      end.to_not change { gauge.get(labels: { test: 'another' }) }
+          expect do
+            gauge.decrement(labels: { test: 'one' })
+          end.to change { gauge.get(labels: { test: 'one' }) }.by(-1.0)
+        end.to_not change { gauge.get(labels: { test: 'another' }) }
+      end
     end
 
     it 'decrements the gauge by a given value' do

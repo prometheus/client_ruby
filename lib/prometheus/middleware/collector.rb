@@ -20,6 +20,11 @@ module Prometheus
     #
     # The request duration metric is broken down by method and path by default.
     # Set the `:duration_label_builder` option to use a custom label builder.
+    #
+    # Label Builder functions will receive a Rack env and a status code, and must
+    # return a hash with the labels for that request. They must also accept an empty
+    # env, and return a hash with the correct keys. This is necessary to initialize
+    # the metrics with the correct set of labels.
     class Collector
       attr_reader :app, :registry
 
@@ -47,6 +52,8 @@ module Prometheus
       end
 
       COUNTER_LB = proc do |env, code|
+        next { code: nil, method: nil, path: nil } if env.empty?
+
         {
           code:   code,
           method: env['REQUEST_METHOD'].downcase,
@@ -55,6 +62,8 @@ module Prometheus
       end
 
       DURATION_LB = proc do |env, _|
+        next { method: nil, path: nil } if env.empty?
+
         {
           method: env['REQUEST_METHOD'].downcase,
           path:   aggregation.call(env['PATH_INFO']),
@@ -66,10 +75,12 @@ module Prometheus
           :"#{@metrics_prefix}_requests_total",
           docstring:
             'The total number of HTTP requests handled by the Rack application.',
+          labels: @counter_lb.call({}, "").keys
         )
         @durations = @registry.histogram(
           :"#{@metrics_prefix}_request_duration_seconds",
           docstring: 'The HTTP response duration of the Rack application.',
+          labels: @duration_lb.call({}, "").keys
         )
       end
 
@@ -77,6 +88,7 @@ module Prometheus
         @exceptions = @registry.counter(
           :"#{@metrics_prefix}_exceptions_total",
           docstring: 'The total number of exceptions raised by the Rack application.',
+          labels: [:exception]
         )
       end
 

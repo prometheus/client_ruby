@@ -38,11 +38,18 @@ module Prometheus
                          2.5, 5, 10].freeze
 
       # Offer a way to manually specify buckets
-      def initialize(name, docstring:, base_labels: {}, buckets: DEFAULT_BUCKETS)
+      def initialize(name,
+                     docstring:,
+                     labels: [],
+                     preset_labels: {},
+                     buckets: DEFAULT_BUCKETS)
         raise ArgumentError, 'Unsorted buckets, typo?' unless sorted? buckets
 
         @buckets = buckets
-        super(name, docstring: docstring, base_labels: base_labels)
+        super(name,
+              docstring: docstring,
+              labels: labels,
+              preset_labels: preset_labels)
       end
 
       def type
@@ -50,15 +57,15 @@ module Prometheus
       end
 
       def observe(value, labels: {})
-        if labels[:le]
-          raise ArgumentError, 'Label with name "le" is not permitted'
-        end
-
         label_set = label_set_for(labels)
         synchronize { @values[label_set].observe(value) }
       end
 
       private
+
+      def reserved_labels
+        [:le]
+      end
 
       def default
         Value.new(buckets: @buckets)

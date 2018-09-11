@@ -52,6 +52,10 @@ module Prometheus
 
       private
 
+      def reserved_labels
+        [:quantile]
+      end
+
       def default
         Quantile::Estimator.new
       end
