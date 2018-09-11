@@ -7,27 +7,28 @@ module Prometheus
   module Client
     # Metric
     class Metric
-      attr_reader :name, :docstring, :base_labels
+      attr_reader :name, :docstring, :preset_labels
 
-      def initialize(name, docstring:, base_labels: {})
+      def initialize(name, docstring:, labels: [], preset_labels: {})
         @mutex = Mutex.new
-        @validator = LabelSetValidator.new
+        @validator = LabelSetValidator.new(expected_labels: labels,
+                                           reserved_labels: reserved_labels)
         @values = Hash.new { |hash, key| hash[key] = default }
 
         validate_name(name)
         validate_docstring(docstring)
-        @validator.valid?(base_labels)
+        @validator.valid?(labels)
+        @validator.valid?(preset_labels)
 
         @name = name
         @docstring = docstring
-        @base_labels = base_labels
+        @preset_labels = preset_labels
       end
 
       # Returns the value for the given label set
       def get(labels: {})
-        @validator.valid?(labels)
-
-        @values[labels]
+        label_set = label_set_for(labels)
+        @values[label_set]
       end
 
       # Returns all label sets with their values
@@ -40,6 +41,10 @@ module Prometheus
       end
 
       private
+
+      def reserved_labels
+        []
+      end
 
       def default
         nil
@@ -62,7 +67,7 @@ module Prometheus
       end
 
       def label_set_for(labels)
-        @validator.validate(labels)
+        @validator.validate(preset_labels.merge(labels))
       end
 
       def synchronize

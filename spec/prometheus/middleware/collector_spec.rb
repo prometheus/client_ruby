@@ -104,6 +104,8 @@ describe Prometheus::Middleware::Collector do
         original_app,
         registry: registry,
         counter_label_builder: lambda do |env, code|
+          next { code: nil, method: nil } if env.empty?
+
           {
             code:   code,
             method: env['REQUEST_METHOD'].downcase,

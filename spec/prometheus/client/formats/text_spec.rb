@@ -20,27 +20,24 @@ describe Prometheus::Client::Formats::Text do
       double(
         name: :foo,
         docstring: 'foo description',
-        base_labels: { umlauts: 'Björn', utf: '佖佥' },
         type: :counter,
         values: {
-          { code: 'red' }   => 42.0,
-          { code: 'green' } => 3.14E42,
-          { code: 'blue' }  => -1.23e-45,
+          { umlauts: 'Björn', utf: '佖佥', code: 'red' }   => 42.0,
+          { umlauts: 'Björn', utf: '佖佥', code: 'green' } => 3.14E42,
+          { umlauts: 'Björn', utf: '佖佥', code: 'blue' }  => -1.23e-45,
         },
       ),
       double(
         name: :bar,
         docstring: "bar description\nwith newline",
-        base_labels: { status: 'success' },
         type: :gauge,
         values: {
-          { code: 'pink' } => 15.0,
+          { status: 'success', code: 'pink' } => 15.0,
         },
       ),
       double(
         name: :baz,
         docstring: 'baz "description" \\escaping',
-        base_labels: {},
         type: :counter,
         values: {
           { text: "with \"quotes\", \\escape \n and newline" } => 15.0,
@@ -49,16 +46,14 @@ describe Prometheus::Client::Formats::Text do
       double(
         name: :qux,
         docstring: 'qux description',
-        base_labels: { for: 'sake' },
         type: :summary,
         values: {
-          { code: '1' } => summary_value,
+          { for: 'sake', code: '1' } => summary_value,
         },
       ),
       double(
         name: :xuq,
         docstring: 'xuq description',
-        base_labels: {},
         type: :histogram,
         values: {
           { code: 'ah' } => histogram_value,

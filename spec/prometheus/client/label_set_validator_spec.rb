@@ -3,7 +3,8 @@
 require 'prometheus/client/label_set_validator'
 
 describe Prometheus::Client::LabelSetValidator do
-  let(:validator) { Prometheus::Client::LabelSetValidator.new }
+  let(:expected_labels) { [] }
+  let(:validator) { Prometheus::Client::LabelSetValidator.new(expected_labels: expected_labels) }
   let(:invalid) { Prometheus::Client::LabelSetValidator::InvalidLabelSetError }
 
   describe '.new' do
@@ -45,25 +46,35 @@ describe Prometheus::Client::LabelSetValidator do
   end
 
   describe '#validate' do
+    let(:expected_labels) { [:method, :code] }
+
     it 'returns a given valid label set' do
-      hash = { version: 'alpha' }
+      hash = { method: 'get', code: '200' }
 
       expect(validator.validate(hash)).to eql(hash)
     end
 
-    it 'raises an exception if a given label set is not valid' do
+    it 'raises an exception if a given label set is not `valid?`' do
       input = 'broken'
       expect(validator).to receive(:valid?).with(input).and_raise(invalid)
 
       expect { validator.validate(input) }.to raise_exception(invalid)
     end
 
-    it 'raises InvalidLabelSetError for varying label sets' do
-      validator.validate(method: 'get', code: '200')
+    it 'raises an exception if there are unexpected labels' do
+      expect do
+        validator.validate(method: 'get', code: '200', exception: 'NoMethodError')
+      end.to raise_exception(invalid, /keys given: \[:code, :exception, :method\] vs. keys expected: \[:code, :method\]/)
+    end
+
+    it 'raises an exception if there are missing labels' do
+      expect do
+        validator.validate(method: 'get')
+      end.to raise_exception(invalid, /keys given: \[:method\] vs. keys expected: \[:code, :method\]/)
 
       expect do
-        validator.validate(method: 'get', exception: 'NoMethodError')
-      end.to raise_exception(invalid, /keys given: \[:exception, :method\] vs. keys expected: \[:code, :method\]/)
+        validator.validate(code: '200')
+      end.to raise_exception(invalid, /keys given: \[:code\] vs. keys expected: \[:code, :method\]/)
     end
   end
 end

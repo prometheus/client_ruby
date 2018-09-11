@@ -4,8 +4,12 @@ require 'prometheus/client/counter'
 require 'examples/metric_example'
 
 describe Prometheus::Client::Counter do
+  let(:expected_labels) { [] }
+
   let(:counter) do
-    Prometheus::Client::Counter.new(:foo, docstring: 'foo description')
+    Prometheus::Client::Counter.new(:foo,
+                                    docstring: 'foo description',
+                                    labels: expected_labels)
   end
 
   it_behaves_like Prometheus::Client::Metric do
@@ -19,12 +23,22 @@ describe Prometheus::Client::Counter do
       end.to change { counter.get }.by(1.0)
     end
 
-    it 'increments the counter for a given label set' do
+    it 'raises an InvalidLabelSetError if sending unexpected labels' do
       expect do
+        counter.increment(labels: { test: 'label' })
+      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
+    end
+
+    context "with a an expected label set" do
+      let(:expected_labels) { [:test] }
+
+      it 'increments the counter for a given label set' do
         expect do
-          counter.increment(labels: { test: 'label' })
-        end.to change { counter.get(labels: { test: 'label' }) }.by(1.0)
-      end.to_not change { counter.get }
+          expect do
+            counter.increment(labels: { test: 'label' })
+          end.to change { counter.get(labels: { test: 'label' }) }.by(1.0)
+        end.to_not change { counter.get(labels: { test: 'other' }) }
+      end
     end
 
     it 'increments the counter by a given value' do

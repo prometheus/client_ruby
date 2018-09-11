@@ -99,7 +99,7 @@ The following metric types are currently supported.
 Counter is a metric that exposes merely a sum or tally of things.
 
 ```ruby
-counter = Prometheus::Client::Counter.new(:service_requests_total, docstring: '...')
+counter = Prometheus::Client::Counter.new(:service_requests_total, docstring: '...', labels: [:service])
 
 # increment the counter for a given label set
 counter.increment(labels: { service: 'foo' })
@@ -118,7 +118,7 @@ Gauge is a metric that exposes merely an instantaneous value or some snapshot
 thereof.
 
 ```ruby
-gauge = Prometheus::Client::Gauge.new(:room_temperature_celsius, docstring: '...')
+gauge = Prometheus::Client::Gauge.new(:room_temperature_celsius, docstring: '...', labels: [:room])
 
 # set a value
 gauge.set(21.534, labels: { room: 'kitchen' })
@@ -143,7 +143,7 @@ response sizes) and counts them in configurable buckets. It also provides a sum
 of all observed values.
 
 ```ruby
-histogram = Prometheus::Client::Histogram.new(:service_latency_seconds, docstring: '...')
+histogram = Prometheus::Client::Histogram.new(:service_latency_seconds, docstring: '...', labels: [:service])
 
 # record a value
 histogram.observe(Benchmark.realtime { service.call(arg) }, labels: { service: 'users' })
@@ -159,7 +159,7 @@ Summary, similar to histograms, is an accumulator for samples. It captures
 Numeric data and provides an efficient percentile calculation mechanism.
 
 ```ruby
-summary = Prometheus::Client::Summary.new(:service_latency_seconds, docstring: '...')
+summary = Prometheus::Client::Summary.new(:service_latency_seconds, docstring: '...', labels: [:service])
 
 # record a value
 summary.observe(Benchmark.realtime { service.call() }, labels: { service: 'database' })
@@ -168,6 +168,50 @@ summary.observe(Benchmark.realtime { service.call() }, labels: { service: 'datab
 summary.get(labels: { service: 'database' })
 # => { 0.5 => 0.1233122, 0.9 => 3.4323, 0.99 => 5.3428231 }
 ```
+
+## Labels
+
+All metrics can have labels, allowing grouping of related time series.
+
+Labels are an extremely powerful feature, but one that must be used with care.
+Refer to the best practices on [naming](https://prometheus.io/docs/practices/naming/) and 
+[labels](https://prometheus.io/docs/practices/instrumentation/#use-labels).
+
+Most importantly, avoid labels that can have a large number of possible values (high 
+cardinality). For example, an HTTP Status Code is a good label. A User ID is **not**.
+
+Labels are specified optionally when updating metrics, as a hash of `label_name => value`.
+Refer to [the Prometheus documentation](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels) 
+as to what's a valid `label_name`.
+
+In order for a metric to accept labels, their names must be specified when first initializing 
+the metric. Then, when the metric is updated, all the specified labels must be present.
+
+Example:
+
+```ruby
+https_requests_total = Counter.new(:http_requests_total, docstring: '...', labels: [:service, :status_code])
+
+# increment the counter for a given label set
+https_requests_total.increment(labels: { service: "my_service", status_code: response.status_code })
+```
+
+### Pre-set Label Values
+
+You can also "pre-set" some of these label values, if they'll always be the same, so you don't
+need to specify them every time:
+
+```ruby
+https_requests_total = Counter.new(:http_requests_total, 
+                                   docstring: '...', 
+                                   labels: [:service, :status_code],
+                                   preset_labels: { service: "my_service" })
+
+# increment the counter for a given label set
+https_requests_total.increment(labels: { status_code: response.status_code })
+```
+
+
 
 ## Tests
 
