@@ -1,24 +1,24 @@
 # encoding: UTF-8
 
-require 'quantile'
 require 'prometheus/client/metric'
 
 module Prometheus
   module Client
     # Summary is an accumulator for samples. It captures Numeric data and
-    # provides an efficient quantile calculation mechanism.
+    # provides the total count and sum of observations.
     class Summary < Metric
       # Value represents the state of a Summary at a given point.
-      class Value < Hash
+      class Value
         attr_accessor :sum, :total
 
-        def initialize(estimator:)
-          @sum = estimator.sum
-          @total = estimator.observations
+        def initialize
+          @sum = 0.0
+          @total = 0.0
+        end
 
-          estimator.invariants.each do |invariant|
-            self[invariant.quantile] = estimator.query(invariant.quantile)
-          end
+        def observe(value)
+          @sum += value
+          @total += 1
         end
       end
 
@@ -32,24 +32,6 @@ module Prometheus
         synchronize { @values[label_set].observe(value) }
       end
 
-      # Returns the value for the given label set
-      def get(labels: {})
-        @validator.valid?(labels)
-
-        synchronize do
-          Value.new(estimator: @values[labels])
-        end
-      end
-
-      # Returns all label sets with their values
-      def values
-        synchronize do
-          @values.each_with_object({}) do |(labels, value), memo|
-            memo[labels] = Value.new(estimator: value)
-          end
-        end
-      end
-
       private
 
       def reserved_labels
@@ -57,7 +39,7 @@ module Prometheus
       end
 
       def default
-        Quantile::Estimator.new
+        Value.new
       end
     end
   end

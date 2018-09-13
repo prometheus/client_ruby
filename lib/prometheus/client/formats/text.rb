@@ -50,10 +50,6 @@ module Prometheus
           end
 
           def summary(name, set, value)
-            value.each do |q, v|
-              yield metric(name, labels(set.merge(quantile: q)), v)
-            end
-
             l = labels(set)
             yield metric("#{name}_sum", l, value.sum)
             yield metric("#{name}_count", l, value.total)

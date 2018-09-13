@@ -14,6 +14,4 @@ Gem::Specification.new do |s|
 
   s.files             = %w(README.md) + Dir.glob('{lib/**/*}')
   s.require_paths     = ['lib']
-
-  s.add_dependency 'quantile', '~> 0.2.1'
 end
