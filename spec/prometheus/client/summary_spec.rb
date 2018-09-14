@@ -1,9 +1,15 @@
 # encoding: UTF-8
 
+require 'prometheus/client'
 require 'prometheus/client/summary'
 require 'examples/metric_example'
 
 describe Prometheus::Client::Summary do
+  # Reset the data store
+  before do
+    Prometheus::Client.config.data_store = Prometheus::Client::DataStores::Synchronized.new
+  end
+
   let(:expected_labels) { [] }
 
   let(:summary) do
@@ -13,7 +19,7 @@ describe Prometheus::Client::Summary do
   end
 
   it_behaves_like Prometheus::Client::Metric do
-    let(:type) { Prometheus::Client::Summary::Value }
+    let(:type) { Hash }
   end
 
   describe '#initialization' do
@@ -27,10 +33,10 @@ describe Prometheus::Client::Summary do
   describe '#observe' do
     it 'records the given value' do
       expect do
-        expect do
-          summary.observe(5)
-        end.to change { summary.get.sum }.from(0.0).to(5.0)
-      end.to change { summary.get.total }.from(0.0).to(1.0)
+        summary.observe(5)
+      end.to change { summary.get }.
+        from({ "count" => 0.0, "sum" => 0.0 }).
+        to({ "count" => 1.0, "sum" => 5.0 })
     end
 
     it 'raise error for quantile labels' do
@@ -52,8 +58,8 @@ describe Prometheus::Client::Summary do
         expect do
           expect do
             summary.observe(5, labels: { test: 'value' })
-          end.to change { summary.get(labels: { test: 'value' }).total }
-        end.to_not change { summary.get(labels: { test: 'other' }).total }
+          end.to change { summary.get(labels: { test: 'value' })["count"] }
+        end.to_not change { summary.get(labels: { test: 'other' })["count"] }
       end
     end
   end
@@ -69,10 +75,8 @@ describe Prometheus::Client::Summary do
     end
 
     it 'returns a value which responds to #sum and #total' do
-      value = summary.get(labels: { foo: 'bar' })
-
-      expect(value.sum).to eql(25.2)
-      expect(value.total).to eql(4.0)
+      expect(summary.get(labels: { foo: 'bar' })).
+        to eql({ "count" => 4.0, "sum" => 25.2 })
     end
   end
 
@@ -83,8 +87,10 @@ describe Prometheus::Client::Summary do
       summary.observe(3, labels: { status: 'bar' })
       summary.observe(5, labels: { status: 'foo' })
 
-      expect(summary.values[{ status: 'bar' }].sum).to eql(3.0)
-      expect(summary.values[{ status: 'foo' }].sum).to eql(5.0)
+      expect(summary.values).to eql(
+        { status: 'bar' } => { "count" => 1.0, "sum" => 3.0 },
+        { status: 'foo' } => { "count" => 1.0, "sum" => 5.0 },
+      )
     end
   end
 end

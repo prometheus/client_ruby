@@ -1,9 +1,15 @@
 # encoding: UTF-8
 
+require 'prometheus/client'
 require 'prometheus/client/gauge'
 require 'examples/metric_example'
 
 describe Prometheus::Client::Gauge do
+  # Reset the data store
+  before do
+    Prometheus::Client.config.data_store = Prometheus::Client::DataStores::Synchronized.new
+  end
+
   let(:expected_labels) { [] }
 
   let(:gauge) do
@@ -13,14 +19,14 @@ describe Prometheus::Client::Gauge do
   end
 
   it_behaves_like Prometheus::Client::Metric do
-    let(:type) { NilClass }
+    let(:type) { Float }
   end
 
   describe '#set' do
     it 'sets a metric value' do
       expect do
         gauge.set(42)
-      end.to change { gauge.get }.from(nil).to(42)
+      end.to change { gauge.get }.from(0).to(42)
     end
 
     it 'raises an InvalidLabelSetError if sending unexpected labels' do
@@ -36,7 +42,7 @@ describe Prometheus::Client::Gauge do
         expect do
           expect do
             gauge.set(42, labels: { test: 'value' })
-          end.to change { gauge.get(labels: { test: 'value' }) }.from(nil).to(42)
+          end.to change { gauge.get(labels: { test: 'value' }) }.from(0).to(42)
         end.to_not change { gauge.get(labels: { test: 'other' }) }
       end
     end

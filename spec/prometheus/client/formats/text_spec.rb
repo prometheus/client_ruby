@@ -4,13 +4,11 @@ require 'prometheus/client/formats/text'
 
 describe Prometheus::Client::Formats::Text do
   let(:summary_value) do
-    Struct.new(:sum, :total).new(1243.21, 93.0)
+    { "count" => 93.0, "sum" => 1243.21 }
   end
 
   let(:histogram_value) do
-    { 10 => 1.0, 20 => 2.0, 30 => 2.0 }.tap do |value|
-      allow(value).to receive_messages(sum: 15.2, total: 2.0)
-    end
+    { 10 => 1.0, 20 => 2.0, 30 => 2.0, "+Inf" => 2.0, "sum" => 15.2 }
   end
 
   let(:registry) do
