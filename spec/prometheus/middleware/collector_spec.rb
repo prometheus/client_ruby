@@ -6,6 +6,11 @@ require 'prometheus/middleware/collector'
 describe Prometheus::Middleware::Collector do
   include Rack::Test::Methods
 
+  # Reset the data store
+  before do
+    Prometheus::Client.config.data_store = Prometheus::Client::DataStores::Synchronized.new
+  end
+
   let(:registry) do
     Prometheus::Client::Registry.new
   end

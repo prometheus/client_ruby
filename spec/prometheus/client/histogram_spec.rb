@@ -1,9 +1,15 @@
 # encoding: UTF-8
 
+require 'prometheus/client'
 require 'prometheus/client/histogram'
 require 'examples/metric_example'
 
 describe Prometheus::Client::Histogram do
+  # Reset the data store
+  before do
+    Prometheus::Client.config.data_store = Prometheus::Client::DataStores::Synchronized.new
+  end
+
   let(:expected_labels) { [] }
 
   let(:histogram) do
@@ -75,18 +81,22 @@ describe Prometheus::Client::Histogram do
 
     it 'returns a set of buckets values' do
       expect(histogram.get(labels: { foo: 'bar' }))
-        .to eql(2.5 => 0.0, 5 => 2.0, 10 => 3.0)
+        .to eql(
+          2.5 => 0.0, 5 => 2.0, 10 => 3.0, "+Inf" => 4.0, "count" => 4.0, "sum" => 25.2
+        )
     end
 
-    it 'returns a value which responds to #sum and #total' do
+    it 'returns a value which includes sum and count' do
       value = histogram.get(labels: { foo: 'bar' })
 
-      expect(value.sum).to eql(25.2)
-      expect(value.total).to eql(4.0)
+      expect(value["sum"]).to eql(25.2)
+      expect(value["count"]).to eql(4.0)
     end
 
     it 'uses zero as default value' do
-      expect(histogram.get(labels: { foo: '' })).to eql(2.5 => 0.0, 5 => 0.0, 10 => 0.0)
+      expect(histogram.get(labels: { foo: '' })).to eql(
+        2.5 => 0.0, 5 => 0.0, 10 => 0.0, "+Inf" => 0.0, "count" => 0.0, "sum" => 0.0
+      )
     end
   end
 
@@ -98,8 +108,8 @@ describe Prometheus::Client::Histogram do
       histogram.observe(6, labels: { status: 'foo' })
 
       expect(histogram.values).to eql(
-        { status: 'bar' } => { 2.5 => 0.0, 5 => 1.0, 10 => 1.0 },
-        { status: 'foo' } => { 2.5 => 0.0, 5 => 0.0, 10 => 1.0 },
+        { status: 'bar' } => { 2.5 => 0.0, 5 => 1.0, 10 => 1.0, "+Inf" => 1.0, "sum" => 3.0 },
+        { status: 'foo' } => { 2.5 => 0.0, 5 => 0.0, 10 => 1.0, "+Inf" => 1.0, "sum" => 6.0 },
       )
     end
   end

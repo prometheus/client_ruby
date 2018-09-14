@@ -51,20 +51,20 @@ module Prometheus
 
           def summary(name, set, value)
             l = labels(set)
-            yield metric("#{name}_sum", l, value.sum)
-            yield metric("#{name}_count", l, value.total)
+            yield metric("#{name}_sum", l, value["sum"])
+            yield metric("#{name}_count", l, value["count"])
           end
 
           def histogram(name, set, value)
             bucket = "#{name}_bucket"
             value.each do |q, v|
+              next if q == "sum"
               yield metric(bucket, labels(set.merge(le: q)), v)
             end
-            yield metric(bucket, labels(set.merge(le: '+Inf')), value.total)
 
             l = labels(set)
-            yield metric("#{name}_sum", l, value.sum)
-            yield metric("#{name}_count", l, value.total)
+            yield metric("#{name}_sum", l, value["sum"])
+            yield metric("#{name}_count", l, value["+Inf"])
           end
 
           def metric(name, labels, value)

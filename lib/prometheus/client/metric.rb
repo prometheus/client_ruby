@@ -9,45 +9,45 @@ module Prometheus
     class Metric
       attr_reader :name, :docstring, :preset_labels
 
-      def initialize(name, docstring:, labels: [], preset_labels: {})
-        @mutex = Mutex.new
-        @validator = LabelSetValidator.new(expected_labels: labels,
-                                           reserved_labels: reserved_labels)
-        @values = Hash.new { |hash, key| hash[key] = default }
+      def initialize(name,
+                     docstring:,
+                     labels: [],
+                     preset_labels: {},
+                     store_settings: {})
 
         validate_name(name)
         validate_docstring(docstring)
+        @validator = LabelSetValidator.new(expected_labels: labels,
+                                           reserved_labels: reserved_labels)
         @validator.valid?(labels)
         @validator.valid?(preset_labels)
 
         @name = name
         @docstring = docstring
         @preset_labels = preset_labels
+
+        @store = Prometheus::Client.config.data_store.for_metric(
+          name,
+          metric_type: type,
+          metric_settings: store_settings
+        )
       end
 
       # Returns the value for the given label set
       def get(labels: {})
         label_set = label_set_for(labels)
-        @values[label_set]
+        @store.get(labels: label_set)
       end
 
       # Returns all label sets with their values
       def values
-        synchronize do
-          @values.each_with_object({}) do |(labels, value), memo|
-            memo[labels] = value
-          end
-        end
+        @store.all_values
       end
 
       private
 
       def reserved_labels
         []
-      end
-
-      def default
-        nil
       end
 
       def validate_name(name)
@@ -68,10 +68,6 @@ module Prometheus
 
       def label_set_for(labels)
         @validator.validate(preset_labels.merge(labels))
-      end
-
-      def synchronize
-        @mutex.synchronize { yield }
       end
     end
   end
