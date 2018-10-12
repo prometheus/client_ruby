@@ -43,6 +43,32 @@ shared_examples_for Prometheus::Client::Metric do
     end
   end
 
+  describe 'common_lables' do
+    let(:class_labels) do
+      { foo: :bar }
+    end
+    let(:instance_labels) do
+      { bar: :baz }
+    end
+    before(:each) do
+      described_class.common_labels = class_labels
+    end
+
+    it 'propagates common labels to instance base labels' do
+      m = described_class.new(:name, 'desc', instance_labels)
+      expect(m.base_labels).to eq(class_labels.merge(instance_labels))
+    end
+
+    it 'prefers instance labels over common labels' do
+      instance_labels = class_labels
+      key = class_labels.keys.first
+      instance_labels[:key] = 'different value than in the class labels'
+
+      m = described_class.new(:name, 'desc', instance_labels)
+      expect(m.base_labels[key]).to eq(instance_labels[key])
+    end
+  end
+
   describe '#type' do
     it 'returns the metric type as symbol' do
       expect(subject.type).to be_a(Symbol)

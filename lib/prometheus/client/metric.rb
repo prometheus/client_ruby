@@ -9,6 +9,12 @@ module Prometheus
     class Metric
       attr_reader :name, :docstring, :base_labels
 
+      @@common_labels = {}
+
+      def self.common_labels=(labels)
+        @@common_labels = labels
+      end
+
       def initialize(name, docstring, base_labels = {})
         @mutex = Mutex.new
         @validator = LabelSetValidator.new
@@ -20,7 +26,7 @@ module Prometheus
 
         @name = name
         @docstring = docstring
-        @base_labels = base_labels
+        @base_labels = @@common_labels.merge(base_labels)
       end
 
       # Returns the value for the given label set
