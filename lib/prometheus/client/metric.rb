@@ -34,6 +34,11 @@ module Prometheus
           metric_type: type,
           metric_settings: store_settings
         )
+
+        if preset_labels.keys.length == labels.length
+          @validator.validate(preset_labels)
+          @all_labels_preset = true
+        end
       end
 
       # Returns the value for the given label set
@@ -78,6 +83,8 @@ module Prometheus
       end
 
       def label_set_for(labels)
+        # We've already validated, and there's nothing to merge. Save some cycles
+        return preset_labels if @all_labels_preset && labels.empty?
         @validator.validate(preset_labels.merge(labels))
       end
     end
