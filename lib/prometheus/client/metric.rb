@@ -19,8 +19,8 @@ module Prometheus
         validate_docstring(docstring)
         @validator = LabelSetValidator.new(expected_labels: labels,
                                            reserved_labels: reserved_labels)
-        @validator.valid?(labels)
-        @validator.valid?(preset_labels)
+        @validator.validate_symbols!(labels)
+        @validator.validate_symbols!(preset_labels)
 
         @labels = labels
         @store_settings = store_settings
@@ -36,7 +36,7 @@ module Prometheus
         )
 
         if preset_labels.keys.length == labels.length
-          @validator.validate(preset_labels)
+          @validator.validate_labelset!(preset_labels)
           @all_labels_preset = true
         end
       end
@@ -85,7 +85,7 @@ module Prometheus
       def label_set_for(labels)
         # We've already validated, and there's nothing to merge. Save some cycles
         return preset_labels if @all_labels_preset && labels.empty?
-        @validator.validate(preset_labels.merge(labels))
+        @validator.validate_labelset!(preset_labels.merge(labels))
       end
     end
   end

@@ -21,7 +21,7 @@ module Prometheus
         @validated = {}
       end
 
-      def valid?(labels)
+      def validate_symbols!(labels)
         unless labels.respond_to?(:all?)
           raise InvalidLabelSetError, "#{labels} is not a valid label set"
         end
@@ -33,24 +33,24 @@ module Prometheus
         end
       end
 
-      def validate(labels)
-        return labels if @validated.key?(labels.hash)
+      def validate_labelset!(labelset)
+        return labelset if @validated.key?(labelset.hash)
 
-        valid?(labels)
+        validate_symbols!(labelset)
 
-        unless keys_match?(labels)
+        unless keys_match?(labelset)
           raise InvalidLabelSetError, "labels must have the same signature " \
-                                      "(keys given: #{labels.keys.sort} vs." \
+                                      "(keys given: #{labelset.keys.sort} vs." \
                                       " keys expected: #{expected_labels}"
         end
 
-        @validated[labels.hash] = labels
+        @validated[labelset.hash] = labelset
       end
 
       private
 
-      def keys_match?(labels)
-        labels.keys.sort == expected_labels
+      def keys_match?(labelset)
+        labelset.keys.sort == expected_labels
       end
 
       def validate_symbol(key)
