@@ -45,6 +45,12 @@ describe Prometheus::Client::Gauge do
           end.to change { gauge.get(labels: { test: 'value' }) }.from(0).to(42)
         end.to_not change { gauge.get(labels: { test: 'other' }) }
       end
+
+      it 'can pre-set labels using `with_labels`' do
+        expect { gauge.set(10) }
+          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+        expect { gauge.with_labels(test: 'value').set(10) }.not_to raise_error
+      end
     end
 
     context 'given an invalid value' do

@@ -45,6 +45,12 @@ describe Prometheus::Client::Counter do
           end.to change { counter.get(labels: { test: 'label' }) }.by(1.0)
         end.to_not change { counter.get(labels: { test: 'other' }) }
       end
+
+      it 'can pre-set labels using `with_labels`' do
+        expect { counter.increment }
+          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+        expect { counter.with_labels(test: 'label').increment }.not_to raise_error
+      end
     end
 
     it 'increments the counter by a given value' do

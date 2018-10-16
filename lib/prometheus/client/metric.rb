@@ -22,6 +22,9 @@ module Prometheus
         @validator.valid?(labels)
         @validator.valid?(preset_labels)
 
+        @labels = labels
+        @store_settings = store_settings
+
         @name = name
         @docstring = docstring
         @preset_labels = preset_labels
@@ -37,6 +40,14 @@ module Prometheus
       def get(labels: {})
         label_set = label_set_for(labels)
         @store.get(labels: label_set)
+      end
+
+      def with_labels(labels)
+        self.class.new(name,
+                       docstring: docstring,
+                       labels: @labels,
+                       preset_labels: preset_labels.merge(labels),
+                       store_settings: @store_settings)
       end
 
       # Returns all label sets with their values

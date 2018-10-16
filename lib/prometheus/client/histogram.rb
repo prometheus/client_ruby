@@ -33,6 +33,15 @@ module Prometheus
               store_settings: store_settings)
       end
 
+      def with_labels(labels)
+        self.class.new(name,
+                       docstring: docstring,
+                       labels: @labels,
+                       preset_labels: preset_labels.merge(labels),
+                       buckets: @buckets,
+                       store_settings: @store_settings)
+      end
+
       def type
         :histogram
       end
