@@ -66,6 +66,12 @@ describe Prometheus::Client::Histogram do
           end.to change { histogram.get(labels: { test: 'value' }) }
         end.to_not change { histogram.get(labels: { test: 'other' }) }
       end
+
+      it 'can pre-set labels using `with_labels`' do
+        expect { histogram.observe(2) }
+          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+        expect { histogram.with_labels(test: 'value').observe(2) }.not_to raise_error
+      end
     end
   end
 

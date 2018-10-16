@@ -214,7 +214,47 @@ https_requests_total = Counter.new(:http_requests_total,
 https_requests_total.increment(labels: { status_code: response.status_code })
 ```
 
+### `with_labels`
 
+Similar to pre-setting labels, you can get a new instance of an existing metric object,
+with a subset (or full set) of labels set, so that you can increment / observe the metric
+without having to specify the labels for every call.
+
+Moreover, if all the labels the metric can take have been pre-set, validation of the labels
+is done on the call to `with_labels`, and then skipped for each observation, which can 
+lead to performance improvements. If you are incrementing a counter in a fast loop, you
+definitely want to be doing this.
+
+
+Examples:
+
+**Pre-setting labels for ease of use:**
+
+```ruby
+# in the file where you define your metrics:
+records_processed_total = registry.counter.new(:records_processed_total, 
+                                               docstring: '...', 
+                                               labels: [:service, :component],
+                                               preset_labels: { service: "my_service" })
+
+# in one-off calls, you'd specify the missing labels (component in this case)
+records_processed_total.increment(labels: { component: 'a_component' })
+
+# you can also have a "view" on this metric for a specific component where this label is
+# pre-set:
+class MyComponent
+  def metric
+    @metric ||= records_processed_total.with_labels(component: "my_component")
+  end
+  
+  def process
+    records.each do |record|
+      # process the record
+      metric.increment 
+    end
+  end
+end
+```
 
 
 ## Data Stores
