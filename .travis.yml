@@ -5,7 +5,6 @@ before_install:
   - |
     if [[ "$(ruby -e 'puts RUBY_VERSION')" != 1.* ]]; then gem update --system; fi
 rvm:
-  - 1.9.3
   - 2.3.8
   - 2.4.5
   - 2.5.3
