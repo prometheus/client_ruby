@@ -34,6 +34,14 @@ shared_examples_for Prometheus::Client::DataStores do
       metric_store.synchronize{ a += 1 }
       expect(a).to eq(1)
     end
+
+    # This is just a safety check that we're not getting "nested transaction" issues
+    it "allows modifying the store while in synchronized block" do
+      metric_store.synchronize do
+        metric_store.increment(labels: { foo: "bar" })
+        metric_store.increment(labels: { foo: "baz" })
+      end
+    end
   end
 
   describe "MetricStore#all_values" do
