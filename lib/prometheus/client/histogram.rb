@@ -58,7 +58,7 @@ module Prometheus
 
         @store.synchronize do
           all_buckets.each_with_object({}) do |upper_limit, acc|
-            acc[upper_limit] = @store.get(labels: base_label_set.merge(le: upper_limit))
+            acc[upper_limit.to_s] = @store.get(labels: base_label_set.merge(le: upper_limit))
           end.tap do |acc|
             acc["count"] = acc["+Inf"]
           end
@@ -71,8 +71,8 @@ module Prometheus
 
         v.each_with_object({}) do |(label_set, v), acc|
           actual_label_set = label_set.reject{|l| l == :le }
-          acc[actual_label_set] ||= @buckets.map{|b| [b, 0.0]}.to_h
-          acc[actual_label_set][label_set[:le]] = v
+          acc[actual_label_set] ||= @buckets.map{|b| [b.to_s, 0.0]}.to_h
+          acc[actual_label_set][label_set[:le].to_s] = v
         end
       end
 
