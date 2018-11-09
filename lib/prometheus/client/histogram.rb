@@ -39,13 +39,11 @@ module Prometheus
 
       def observe(value, labels: {})
         base_label_set = label_set_for(labels)
+        bucket = buckets.find {|upper_limit| upper_limit > value  }
+        bucket = "+Inf" if bucket.nil?
 
         @store.synchronize do
-          buckets.each do |upper_limit|
-            next if value > upper_limit
-            @store.increment(labels: base_label_set.merge(le: upper_limit), by: 1)
-          end
-          @store.increment(labels: base_label_set.merge(le: "+Inf"), by: 1)
+          @store.increment(labels: base_label_set.merge(le: bucket.to_s), by: 1)
           @store.increment(labels: base_label_set.merge(le: "sum"), by: value)
         end
       end
@@ -58,9 +56,9 @@ module Prometheus
 
         @store.synchronize do
           all_buckets.each_with_object({}) do |upper_limit, acc|
-            acc[upper_limit.to_s] = @store.get(labels: base_label_set.merge(le: upper_limit))
+            acc[upper_limit.to_s] = @store.get(labels: base_label_set.merge(le: upper_limit.to_s))
           end.tap do |acc|
-            acc["count"] = acc["+Inf"]
+            accumulate_buckets(acc)
           end
         end
       end
@@ -69,14 +67,31 @@ module Prometheus
       def values
         v = @store.all_values
 
-        v.each_with_object({}) do |(label_set, v), acc|
+        result = v.each_with_object({}) do |(label_set, v), acc|
           actual_label_set = label_set.reject{|l| l == :le }
           acc[actual_label_set] ||= @buckets.map{|b| [b.to_s, 0.0]}.to_h
           acc[actual_label_set][label_set[:le].to_s] = v
         end
+
+        result.each do |(label_set, v)|
+          accumulate_buckets(v)
+        end
       end
 
       private
+
+      # Modifies the passed in parameter
+      def accumulate_buckets(h)
+        bucket_acc = 0
+        buckets.each do |upper_limit|
+          bucket_value = h[upper_limit.to_s]
+          h[upper_limit.to_s] += bucket_acc
+          bucket_acc += bucket_value
+        end
+
+        inf_value = h["+Inf"] || 0.0
+        h["+Inf"] = inf_value + bucket_acc
+      end
 
       def reserved_labels
         [:le]
