@@ -38,13 +38,20 @@ module Prometheus
       end
 
       def observe(value, labels: {})
-        base_label_set = label_set_for(labels)
         bucket = buckets.find {|upper_limit| upper_limit > value  }
         bucket = "+Inf" if bucket.nil?
 
+        base_label_set = label_set_for(labels)
+
+        # This is basically faster than doing `.merge`
+        bucket_label_set = base_label_set.dup
+        bucket_label_set[:le] = bucket.to_s
+        sum_label_set = base_label_set.dup
+        sum_label_set[:le] = "sum"
+
         @store.synchronize do
-          @store.increment(labels: base_label_set.merge(le: bucket.to_s), by: 1)
-          @store.increment(labels: base_label_set.merge(le: "sum"), by: value)
+          @store.increment(labels: bucket_label_set, by: 1)
+          @store.increment(labels: sum_label_set, by: value)
         end
       end
 
