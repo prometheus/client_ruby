@@ -169,6 +169,27 @@ The tests for `DirectFileStore` have a good example at the top of the file. This
 has some examples on testing multi-process stores, checking that aggregation between 
 processes works correctly.
 
+## Benchmarking your custom data store
+
+If you are developing your own data store, you probably want to benchmark it to see how
+it compares to the built-in ones, and to make sure it achieves the performance you want.
+
+The Prometheus Ruby Client includes some benchmarks (in the `spec/benchmarks` directory)
+to help you with this, and also with validating that your store works correctly.
+
+The `README` in that directory contains more information what these benchmarks are for,
+and how to use them.
+
+## Extra Stores and Research
+
+In the process of abstracting stores away, and creating the built-in ones, GoCardless
+has created a good amount of research, benchmarks, and experimental stores, which 
+weren't useful to include in this repo, but may be a useful resource or starting point 
+if you are building your own store.
+
+Check out the [GoCardless Data Stores Experiments](gocardless/prometheus-client-ruby-data-stores-experiments) 
+repository for these.
+
 ## Sample, imaginary multi-process Data Store
 
 This is just an example of how one could implement a data store, and a clarification on

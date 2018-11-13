@@ -16,4 +16,6 @@ Gem::Specification.new do |s|
   s.require_paths     = ['lib']
 
   s.add_dependency 'concurrent-ruby'
+
+  s.add_development_dependency 'benchmark-ips'
 end
