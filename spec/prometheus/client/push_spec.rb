@@ -61,19 +61,19 @@ describe Prometheus::Client::Push do
     it 'uses the default metrics path if no instance value given' do
       push = Prometheus::Client::Push.new('test-job')
 
-      expect(push.path).to eql('/metrics/jobs/test-job')
+      expect(push.path).to eql('/metrics/job/test-job')
     end
 
     it 'uses the full metrics path if an instance value is given' do
       push = Prometheus::Client::Push.new('bar-job', 'foo')
 
-      expect(push.path).to eql('/metrics/jobs/bar-job/instances/foo')
+      expect(push.path).to eql('/metrics/job/bar-job/instance/foo')
     end
 
     it 'escapes non-URL characters' do
       push = Prometheus::Client::Push.new('bar job', 'foo <my instance>')
 
-      expected = '/metrics/jobs/bar%20job/instances/foo%20%3Cmy%20instance%3E'
+      expected = '/metrics/job/bar%20job/instance/foo%20%3Cmy%20instance%3E'
       expect(push.path).to eql(expected)
     end
   end
@@ -81,7 +81,7 @@ describe Prometheus::Client::Push do
   describe '#request' do
     let(:content_type) { Prometheus::Client::Formats::Text::CONTENT_TYPE }
     let(:data) { Prometheus::Client::Formats::Text.marshal(registry) }
-    let(:uri) { URI.parse("#{gateway}/metrics/jobs/test-job") }
+    let(:uri) { URI.parse("#{gateway}/metrics/job/test-job") }
 
     it 'sends marshalled registry to the specified gateway' do
       request = double(:request)

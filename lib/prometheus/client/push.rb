@@ -14,8 +14,8 @@ module Prometheus
     # Pushgateway.
     class Push
       DEFAULT_GATEWAY = 'http://localhost:9091'.freeze
-      PATH            = '/metrics/jobs/%s'.freeze
-      INSTANCE_PATH   = '/metrics/jobs/%s/instances/%s'.freeze
+      PATH            = '/metrics/job/%s'.freeze
+      INSTANCE_PATH   = '/metrics/job/%s/instance/%s'.freeze
       SUPPORTED_SCHEMES = %w(http https).freeze
 
       attr_reader :job, :instance, :gateway, :path
