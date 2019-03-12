@@ -195,11 +195,11 @@ repository for these.
 This is just an example of how one could implement a data store, and a clarification on
 the "aggregation" point 
 
-Important: This is **VAPORWARE**, intended simply to show how this could work / how to
+Important: This is a **toy example**, intended simply to show how this could work / how to
 implement these interfaces.
 
 There are some key pieces of code missing, which are fairly uninteresting, this only shows
-the parts that illustrate the idea of storing multiple different values, and aggregate
+the parts that illustrate the idea of storing multiple different values, and aggregating
 them
 
 ```ruby
