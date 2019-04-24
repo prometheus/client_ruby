@@ -3,7 +3,8 @@
 require 'prometheus/client/label_set_validator'
 
 describe Prometheus::Client::LabelSetValidator do
-  let(:validator) { Prometheus::Client::LabelSetValidator.new }
+  let(:expected_labels) { [] }
+  let(:validator) { Prometheus::Client::LabelSetValidator.new(expected_labels: expected_labels) }
   let(:invalid) { Prometheus::Client::LabelSetValidator::InvalidLabelSetError }
 
   describe '.new' do
@@ -12,58 +13,68 @@ describe Prometheus::Client::LabelSetValidator do
     end
   end
 
-  describe '#valid?' do
+  describe '#validate_symbols!' do
     it 'returns true for a valid label check' do
-      expect(validator.valid?(version: 'alpha')).to eql(true)
+      expect(validator.validate_symbols!(version: 'alpha')).to eql(true)
     end
 
     it 'raises Invaliddescribed_classError if a label set is not a hash' do
       expect do
-        validator.valid?('invalid')
+        validator.validate_symbols!('invalid')
       end.to raise_exception invalid
     end
 
     it 'raises InvalidLabelError if a label key is not a symbol' do
       expect do
-        validator.valid?('key' => 'value')
+        validator.validate_symbols!('key' => 'value')
       end.to raise_exception(described_class::InvalidLabelError)
     end
 
     it 'raises InvalidLabelError if a label key starts with __' do
       expect do
-        validator.valid?(__reserved__: 'key')
+        validator.validate_symbols!(__reserved__: 'key')
       end.to raise_exception(described_class::ReservedLabelError)
     end
 
     it 'raises ReservedLabelError if a label key is reserved' do
       [:job, :instance].each do |label|
         expect do
-          validator.valid?(label => 'value')
+          validator.validate_symbols!(label => 'value')
         end.to raise_exception(described_class::ReservedLabelError)
       end
     end
   end
 
-  describe '#validate' do
+  describe '#validate_labelset!' do
+    let(:expected_labels) { [:method, :code] }
+
     it 'returns a given valid label set' do
-      hash = { version: 'alpha' }
+      hash = { method: 'get', code: '200' }
 
-      expect(validator.validate(hash)).to eql(hash)
+      expect(validator.validate_labelset!(hash)).to eql(hash)
     end
 
-    it 'raises an exception if a given label set is not valid' do
+    it 'raises an exception if a given label set is not `validate_symbols!`' do
       input = 'broken'
-      expect(validator).to receive(:valid?).with(input).and_raise(invalid)
+      expect(validator).to receive(:validate_symbols!).with(input).and_raise(invalid)
 
-      expect { validator.validate(input) }.to raise_exception(invalid)
+      expect { validator.validate_labelset!(input) }.to raise_exception(invalid)
     end
 
-    it 'raises InvalidLabelSetError for varying label sets' do
-      validator.validate(method: 'get', code: '200')
+    it 'raises an exception if there are unexpected labels' do
+      expect do
+        validator.validate_labelset!(method: 'get', code: '200', exception: 'NoMethodError')
+      end.to raise_exception(invalid, /keys given: \[:code, :exception, :method\] vs. keys expected: \[:code, :method\]/)
+    end
+
+    it 'raises an exception if there are missing labels' do
+      expect do
+        validator.validate_labelset!(method: 'get')
+      end.to raise_exception(invalid, /keys given: \[:method\] vs. keys expected: \[:code, :method\]/)
 
       expect do
-        validator.validate(method: 'get', exception: 'NoMethodError')
-      end.to raise_exception(invalid, /keys given: \[:exception, :method\] vs. keys expected: \[:code, :method\]/)
+        validator.validate_labelset!(code: '200')
+      end.to raise_exception(invalid, /keys given: \[:code\] vs. keys expected: \[:code, :method\]/)
     end
   end
 end

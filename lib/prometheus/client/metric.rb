@@ -7,42 +7,63 @@ module Prometheus
   module Client
     # Metric
     class Metric
-      attr_reader :name, :docstring, :base_labels
+      attr_reader :name, :docstring, :preset_labels
 
-      def initialize(name, docstring, base_labels = {})
-        @mutex = Mutex.new
-        @validator = LabelSetValidator.new
-        @values = Hash.new { |hash, key| hash[key] = default }
+      def initialize(name,
+                     docstring:,
+                     labels: [],
+                     preset_labels: {},
+                     store_settings: {})
 
         validate_name(name)
         validate_docstring(docstring)
-        @validator.valid?(base_labels)
+        @validator = LabelSetValidator.new(expected_labels: labels,
+                                           reserved_labels: reserved_labels)
+        @validator.validate_symbols!(labels)
+        @validator.validate_symbols!(preset_labels)
+
+        @labels = labels
+        @store_settings = store_settings
 
         @name = name
         @docstring = docstring
-        @base_labels = base_labels
+        @preset_labels = preset_labels
+
+        @store = Prometheus::Client.config.data_store.for_metric(
+          name,
+          metric_type: type,
+          metric_settings: store_settings
+        )
+
+        if preset_labels.keys.length == labels.length
+          @validator.validate_labelset!(preset_labels)
+          @all_labels_preset = true
+        end
       end
 
       # Returns the value for the given label set
-      def get(labels = {})
-        @validator.valid?(labels)
+      def get(labels: {})
+        label_set = label_set_for(labels)
+        @store.get(labels: label_set)
+      end
 
-        @values[labels]
+      def with_labels(labels)
+        self.class.new(name,
+                       docstring: docstring,
+                       labels: @labels,
+                       preset_labels: preset_labels.merge(labels),
+                       store_settings: @store_settings)
       end
 
       # Returns all label sets with their values
       def values
-        synchronize do
-          @values.each_with_object({}) do |(labels, value), memo|
-            memo[labels] = value
-          end
-        end
+        @store.all_values
       end
 
       private
 
-      def default
-        nil
+      def reserved_labels
+        []
       end
 
       def validate_name(name)
@@ -62,11 +83,9 @@ module Prometheus
       end
 
       def label_set_for(labels)
-        @validator.validate(labels)
-      end
-
-      def synchronize
-        @mutex.synchronize { yield }
+        # We've already validated, and there's nothing to merge. Save some cycles
+        return preset_labels if @all_labels_preset && labels.empty?
+        @validator.validate_labelset!(preset_labels.merge(labels))
       end
     end
   end

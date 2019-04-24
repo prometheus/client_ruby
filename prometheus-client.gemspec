@@ -15,5 +15,7 @@ Gem::Specification.new do |s|
   s.files             = %w(README.md) + Dir.glob('{lib/**/*}')
   s.require_paths     = ['lib']
 
-  s.add_dependency 'quantile', '~> 0.2.1'
+  s.add_dependency 'concurrent-ruby'
+
+  s.add_development_dependency 'benchmark-ips'
 end

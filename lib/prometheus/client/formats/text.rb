@@ -40,37 +40,31 @@ module Prometheus
           private
 
           def representation(metric, label_set, value, &block)
-            set = metric.base_labels.merge(label_set)
-
             if metric.type == :summary
-              summary(metric.name, set, value, &block)
+              summary(metric.name, label_set, value, &block)
             elsif metric.type == :histogram
-              histogram(metric.name, set, value, &block)
+              histogram(metric.name, label_set, value, &block)
             else
-              yield metric(metric.name, labels(set), value)
+              yield metric(metric.name, labels(label_set), value)
             end
           end
 
           def summary(name, set, value)
-            value.each do |q, v|
-              yield metric(name, labels(set.merge(quantile: q)), v)
-            end
-
             l = labels(set)
-            yield metric("#{name}_sum", l, value.sum)
-            yield metric("#{name}_count", l, value.total)
+            yield metric("#{name}_sum", l, value["sum"])
+            yield metric("#{name}_count", l, value["count"])
           end
 
           def histogram(name, set, value)
             bucket = "#{name}_bucket"
             value.each do |q, v|
+              next if q == "sum"
               yield metric(bucket, labels(set.merge(le: q)), v)
             end
-            yield metric(bucket, labels(set.merge(le: '+Inf')), value.total)
 
             l = labels(set)
-            yield metric("#{name}_sum", l, value.sum)
-            yield metric("#{name}_count", l, value.total)
+            yield metric("#{name}_sum", l, value["sum"])
+            yield metric("#{name}_count", l, value["+Inf"])
           end
 
           def metric(name, labels, value)

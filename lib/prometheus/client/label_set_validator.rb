@@ -6,18 +6,22 @@ module Prometheus
     # Prometheus specification.
     class LabelSetValidator
       # TODO: we might allow setting :instance in the future
-      RESERVED_LABELS = [:job, :instance].freeze
+      BASE_RESERVED_LABELS = [:job, :instance].freeze
 
       class LabelSetError < StandardError; end
       class InvalidLabelSetError < LabelSetError; end
       class InvalidLabelError < LabelSetError; end
       class ReservedLabelError < LabelSetError; end
 
-      def initialize
+      attr_reader :expected_labels, :reserved_labels
+
+      def initialize(expected_labels:, reserved_labels: [])
+        @expected_labels = expected_labels.sort
+        @reserved_labels = BASE_RESERVED_LABELS + reserved_labels
         @validated = {}
       end
 
-      def valid?(labels)
+      def validate_symbols!(labels)
         unless labels.respond_to?(:all?)
           raise InvalidLabelSetError, "#{labels} is not a valid label set"
         end
@@ -29,24 +33,24 @@ module Prometheus
         end
       end
 
-      def validate(labels)
-        return labels if @validated.key?(labels.hash)
+      def validate_labelset!(labelset)
+        return labelset if @validated.key?(labelset.hash)
 
-        valid?(labels)
+        validate_symbols!(labelset)
 
-        unless @validated.empty? || match?(labels, @validated.first.last)
+        unless keys_match?(labelset)
           raise InvalidLabelSetError, "labels must have the same signature " \
-                                      "(keys given: #{labels.keys.sort} vs." \
-                                      " keys expected: #{@validated.first.last.keys.sort}"
+                                      "(keys given: #{labelset.keys.sort} vs." \
+                                      " keys expected: #{expected_labels}"
         end
 
-        @validated[labels.hash] = labels
+        @validated[labelset.hash] = labelset
       end
 
       private
 
-      def match?(a, b)
-        a.keys.sort == b.keys.sort
+      def keys_match?(labelset)
+        labelset.keys.sort == expected_labels
       end
 
       def validate_symbol(key)
@@ -62,7 +66,7 @@ module Prometheus
       end
 
       def validate_reserved_key(key)
-        return true unless RESERVED_LABELS.include?(key)
+        return true unless reserved_labels.include?(key)
 
         raise ReservedLabelError, "#{key} is reserved"
       end

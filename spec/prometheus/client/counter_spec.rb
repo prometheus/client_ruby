@@ -1,10 +1,22 @@
 # encoding: UTF-8
 
+require 'prometheus/client'
 require 'prometheus/client/counter'
 require 'examples/metric_example'
 
 describe Prometheus::Client::Counter do
-  let(:counter) { Prometheus::Client::Counter.new(:foo, 'foo description') }
+  # Reset the data store
+  before do
+    Prometheus::Client.config.data_store = Prometheus::Client::DataStores::Synchronized.new
+  end
+
+  let(:expected_labels) { [] }
+
+  let(:counter) do
+    Prometheus::Client::Counter.new(:foo,
+                                    docstring: 'foo description',
+                                    labels: expected_labels)
+  end
 
   it_behaves_like Prometheus::Client::Metric do
     let(:type) { Float }
@@ -17,23 +29,39 @@ describe Prometheus::Client::Counter do
       end.to change { counter.get }.by(1.0)
     end
 
-    it 'increments the counter for a given label set' do
+    it 'raises an InvalidLabelSetError if sending unexpected labels' do
       expect do
+        counter.increment(labels: { test: 'label' })
+      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
+    end
+
+    context "with a an expected label set" do
+      let(:expected_labels) { [:test] }
+
+      it 'increments the counter for a given label set' do
         expect do
-          counter.increment(test: 'label')
-        end.to change { counter.get(test: 'label') }.by(1.0)
-      end.to_not change { counter.get }
+          expect do
+            counter.increment(labels: { test: 'label' })
+          end.to change { counter.get(labels: { test: 'label' }) }.by(1.0)
+        end.to_not change { counter.get(labels: { test: 'other' }) }
+      end
+
+      it 'can pre-set labels using `with_labels`' do
+        expect { counter.increment }
+          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+        expect { counter.with_labels(test: 'label').increment }.not_to raise_error
+      end
     end
 
     it 'increments the counter by a given value' do
       expect do
-        counter.increment({}, 5)
+        counter.increment(by: 5)
       end.to change { counter.get }.by(5.0)
     end
 
     it 'raises an ArgumentError on negative increments' do
       expect do
-        counter.increment({}, -1)
+        counter.increment(by: -1)
       end.to raise_error ArgumentError
     end
 

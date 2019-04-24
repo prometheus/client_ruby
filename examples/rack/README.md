@@ -49,6 +49,8 @@ something like this:
 
 ```ruby
 use Prometheus::Middleware::Collector, counter_label_builder: ->(env, code) {
+  next { code: nil, method: nil, host: nil, path: nil } if env.empty?
+
   {
     code:         code,
     method:       env['REQUEST_METHOD'].downcase,

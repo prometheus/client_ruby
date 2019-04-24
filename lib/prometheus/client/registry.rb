@@ -37,21 +37,39 @@ module Prometheus
         end
       end
 
-      def counter(name, docstring, base_labels = {})
-        register(Counter.new(name, docstring, base_labels))
+      def counter(name, docstring:, labels: [], preset_labels: {}, store_settings: {})
+        register(Counter.new(name,
+                             docstring: docstring,
+                             labels: labels,
+                             preset_labels: preset_labels,
+                             store_settings: {}))
       end
 
-      def summary(name, docstring, base_labels = {})
-        register(Summary.new(name, docstring, base_labels))
+      def summary(name, docstring:, labels: [], preset_labels: {}, store_settings: {})
+        register(Summary.new(name,
+                             docstring: docstring,
+                             labels: labels,
+                             preset_labels: preset_labels,
+                             store_settings: {}))
       end
 
-      def gauge(name, docstring, base_labels = {})
-        register(Gauge.new(name, docstring, base_labels))
+      def gauge(name, docstring:, labels: [], preset_labels: {}, store_settings: {})
+        register(Gauge.new(name,
+                           docstring: docstring,
+                           labels: labels,
+                           preset_labels: preset_labels,
+                           store_settings: {}))
       end
 
-      def histogram(name, docstring, base_labels = {},
-                    buckets = Histogram::DEFAULT_BUCKETS)
-        register(Histogram.new(name, docstring, base_labels, buckets))
+      def histogram(name, docstring:, labels: [], preset_labels: {},
+                    buckets: Histogram::DEFAULT_BUCKETS,
+                    store_settings: {})
+        register(Histogram.new(name,
+                               docstring: docstring,
+                               labels: labels,
+                               preset_labels: preset_labels,
+                               buckets: buckets,
+                               store_settings: {}))
       end
 
       def exist?(name)
