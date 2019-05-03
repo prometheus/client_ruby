@@ -231,7 +231,7 @@ Examples:
 **Pre-setting labels for ease of use:**
 
 ```ruby
-# in the file where you define your metrics:
+# in the metric definition:
 records_processed_total = registry.counter.new(:records_processed_total, 
                                                docstring: '...', 
                                                labels: [:service, :component],
@@ -304,8 +304,8 @@ whether you want to report the `SUM`, `MAX` or `MIN` value observed across all p
 For almost all other cases, you'd leave the default (`SUM`). More on this on the 
 *Aggregation* section below.
 
-Other custom stores may also require or accept extra parameters besides `:aggregation`.
-See the documentation of each store for more details.
+Other custom stores may also accept extra parameters besides `:aggregation`. See the
+documentation of each store for more details.
 
 ### Built-in stores
 
@@ -334,7 +334,7 @@ There are 3 built-in stores, with different trade-offs:
   
   Even though this store saves data on disk, it's still much faster than would probably be 
   expected, because the files are never actually `fsync`ed, so the store never blocks 
-  while waiting for disk. FS caching is incredibly efficient in this regard.
+  while waiting for disk. The kernel's page cache is incredibly efficient in this regard.
   
   If in doubt, check the benchmark scripts described in the documentation for creating 
   your own stores and run them in your particular runtime environment to make sure this 
