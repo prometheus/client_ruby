@@ -103,31 +103,6 @@ describe Prometheus::Middleware::Collector do
     end
   end
 
-  context 'when using a custom counter label builder' do
-    let(:app) do
-      described_class.new(
-        original_app,
-        registry: registry,
-        counter_label_builder: lambda do |env, code|
-          next { code: nil, method: nil } if env.empty?
-
-          {
-            code:   code,
-            method: env['REQUEST_METHOD'].downcase,
-          }
-        end,
-      )
-    end
-
-    it 'allows labels configuration' do
-      get '/foo/bar'
-
-      metric = :http_server_requests_total
-      labels = { method: 'get', code: '200' }
-      expect(registry.get(metric).get(labels: labels)).to eql(1.0)
-    end
-  end
-
   context 'when provided a custom metrics_prefix' do
     let!(:app) do
       described_class.new(
