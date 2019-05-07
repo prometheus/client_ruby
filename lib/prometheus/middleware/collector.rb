@@ -43,12 +43,6 @@ module Prometheus
 
       protected
 
-      AGGREGATION = lambda do |str|
-        str
-          .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)}, '/:uuid\\1')
-          .gsub(%r{/\d+(/|$)}, '/:id\\1')
-      end
-
       def init_request_metrics
         @requests = @registry.counter(
           :"#{@metrics_prefix}_requests_total",
@@ -85,12 +79,12 @@ module Prometheus
         counter_labels = {
           code:   code,
           method: env['REQUEST_METHOD'].downcase,
-          path:   AGGREGATION.call(env['PATH_INFO']),
+          path:   strip_ids_from_path(env['PATH_INFO']),
         }
 
         duration_labels = {
           method: env['REQUEST_METHOD'].downcase,
-          path:   AGGREGATION.call(env['PATH_INFO']),
+          path:   strip_ids_from_path(env['PATH_INFO']),
         }
 
         @requests.increment(labels: counter_labels)
@@ -98,6 +92,12 @@ module Prometheus
       rescue
         # TODO: log unexpected exception during request recording
         nil
+      end
+
+      def strip_ids_from_path(path)
+        path
+          .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)}, '/:uuid\\1')
+          .gsub(%r{/\d+(/|$)}, '/:id\\1')
       end
     end
   end
