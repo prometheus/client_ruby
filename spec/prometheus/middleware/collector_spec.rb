@@ -23,6 +23,8 @@ describe Prometheus::Middleware::Collector do
     described_class.new(original_app, registry: registry)
   end
 
+  let(:dummy_error) { RuntimeError.new("Dummy error from tests") }
+
   it 'returns the app response' do
     get '/foo'
 
@@ -32,7 +34,7 @@ describe Prometheus::Middleware::Collector do
 
   it 'handles errors in the registry gracefully' do
     counter = registry.get(:http_server_requests_total)
-    expect(counter).to receive(:increment).and_raise(NoMethodError)
+    expect(counter).to receive(:increment).and_raise(dummy_error)
 
     get '/foo'
 
@@ -84,7 +86,7 @@ describe Prometheus::Middleware::Collector do
   context 'when the app raises an exception' do
     let(:original_app) do
       lambda do |env|
-        raise NoMethodError if env['PATH_INFO'] == '/broken'
+        raise dummy_error if env['PATH_INFO'] == '/broken'
 
         [200, { 'Content-Type' => 'text/html' }, ['OK']]
       end
@@ -95,35 +97,10 @@ describe Prometheus::Middleware::Collector do
     end
 
     it 'traces exceptions' do
-      expect { get '/broken' }.to raise_error NoMethodError
+      expect { get '/broken' }.to raise_error RuntimeError
 
       metric = :http_server_exceptions_total
-      labels = { exception: 'NoMethodError' }
-      expect(registry.get(metric).get(labels: labels)).to eql(1.0)
-    end
-  end
-
-  context 'when using a custom counter label builder' do
-    let(:app) do
-      described_class.new(
-        original_app,
-        registry: registry,
-        counter_label_builder: lambda do |env, code|
-          next { code: nil, method: nil } if env.empty?
-
-          {
-            code:   code,
-            method: env['REQUEST_METHOD'].downcase,
-          }
-        end,
-      )
-    end
-
-    it 'allows labels configuration' do
-      get '/foo/bar'
-
-      metric = :http_server_requests_total
-      labels = { method: 'get', code: '200' }
+      labels = { exception: 'RuntimeError' }
       expect(registry.get(metric).get(labels: labels)).to eql(1.0)
     end
   end

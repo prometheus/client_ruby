@@ -32,8 +32,6 @@ module Prometheus
         @app = app
         @registry = options[:registry] || Client.registry
         @metrics_prefix = options[:metrics_prefix] || 'http_server'
-        @counter_lb = options[:counter_label_builder] || COUNTER_LB
-        @duration_lb = options[:duration_label_builder] || DURATION_LB
 
         init_request_metrics
         init_exception_metrics
@@ -45,42 +43,17 @@ module Prometheus
 
       protected
 
-      aggregation = lambda do |str|
-        str
-          .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)}, '/:uuid\\1')
-          .gsub(%r{/\d+(/|$)}, '/:id\\1')
-      end
-
-      COUNTER_LB = proc do |env, code|
-        next { code: nil, method: nil, path: nil } if env.empty?
-
-        {
-          code:   code,
-          method: env['REQUEST_METHOD'].downcase,
-          path:   aggregation.call(env['PATH_INFO']),
-        }
-      end
-
-      DURATION_LB = proc do |env, _|
-        next { method: nil, path: nil } if env.empty?
-
-        {
-          method: env['REQUEST_METHOD'].downcase,
-          path:   aggregation.call(env['PATH_INFO']),
-        }
-      end
-
       def init_request_metrics
         @requests = @registry.counter(
           :"#{@metrics_prefix}_requests_total",
           docstring:
             'The total number of HTTP requests handled by the Rack application.',
-          labels: @counter_lb.call({}, "").keys
+          labels: %i[code method path]
         )
         @durations = @registry.histogram(
           :"#{@metrics_prefix}_request_duration_seconds",
           docstring: 'The HTTP response duration of the Rack application.',
-          labels: @duration_lb.call({}, "").keys
+          labels: %i[method path]
         )
       end
 
@@ -103,11 +76,28 @@ module Prometheus
       end
 
       def record(env, code, duration)
-        @requests.increment(labels: @counter_lb.call(env, code))
-        @durations.observe(duration, labels: @duration_lb.call(env, code))
+        counter_labels = {
+          code:   code,
+          method: env['REQUEST_METHOD'].downcase,
+          path:   strip_ids_from_path(env['PATH_INFO']),
+        }
+
+        duration_labels = {
+          method: env['REQUEST_METHOD'].downcase,
+          path:   strip_ids_from_path(env['PATH_INFO']),
+        }
+
+        @requests.increment(labels: counter_labels)
+        @durations.observe(duration, labels: duration_labels)
       rescue
         # TODO: log unexpected exception during request recording
         nil
+      end
+
+      def strip_ids_from_path(path)
+        path
+          .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)}, '/:uuid\\1')
+          .gsub(%r{/\d+(/|$)}, '/:id\\1')
       end
     end
   end
