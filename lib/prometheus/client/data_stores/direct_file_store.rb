@@ -26,7 +26,7 @@ module Prometheus
 
       class DirectFileStore
         class InvalidStoreSettingsError < StandardError; end
-        AGGREGATION_MODES = [MAX = :max, MIN = :min, SUM = :sum]
+        AGGREGATION_MODES = [MAX = :max, MIN = :min, SUM = :sum, ALL = :all]
         DEFAULT_METRIC_SETTINGS = { aggregation: SUM }
 
         def initialize(dir:)
@@ -140,6 +140,10 @@ module Prometheus
           end
 
           def store_key(labels)
+            if @values_aggregation_mode == ALL
+              labels[:pid] = process_id
+            end
+
             labels.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join('&')
           end
 
@@ -168,6 +172,8 @@ module Prometheus
               values.max
             elsif @values_aggregation_mode == MIN
               values.min
+            elsif @values_aggregation_mode == ALL
+              values.first
             else
               raise InvalidStoreSettingsError,
                     "Invalid Aggregation Mode: #{ @values_aggregation_mode }"
