@@ -44,7 +44,15 @@ Prometheus server can be used to [play around with the metrics][rate-query].
 The example shown in [`config.ru`](config.ru) is a trivial rack application
 using the default collector and exporter middlewares.
 
-Modifying the labels is a subject under development (see #111) but one option is to subclass `Prometheus::Middleware::Collector` and override the methods you need. For example, if you want to [strip IDs from the path](https://github.com/prometheus/client_ruby/blob/982fe2e3c37e2940d281573c7689224152dd791f/lib/prometheus/middleware/collector.rb#L97-L101) you could override the appropriate method:
+Currently, the collector middleware doesn't offer any flexibility around label
+keys or values (see #111). If you have more sophisticated requirements, we
+recommend creating your own collector middleware.
+
+If your requirements are minimal, one option is to subclass
+`Prometheus::Middleware::Collector` and override the methods you need to. For
+example, if you want to [change the way IDs are stripped from the
+path](https://github.com/prometheus/client_ruby/blob/982fe2e3c37e2940d281573c7689224152dd791f/lib/prometheus/middleware/collector.rb#L97-L101)
+you could override the appropriate method:
 
 ```Ruby
 require 'prometheus/middleware/collector'
@@ -60,4 +68,8 @@ module Prometheus
 end
 ```
 
-and in `config.ru` use your class instead.
+and use your class in `config.ru` instead.
+
+**Note:** `Prometheus::Middleware::Collector` isn't explicitly designed to be
+subclassed, so the internals are liable to change at any time, including in
+patch releases. Overriding its methods is done at your own risk!
