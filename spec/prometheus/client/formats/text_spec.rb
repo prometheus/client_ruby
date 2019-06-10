@@ -15,8 +15,12 @@ describe Prometheus::Client::Formats::Text do
   before do
     foo = registry.counter(:foo,
                            docstring: 'foo description',
-                           labels: [:umlauts, :utf, :code],
-                           preset_labels: {umlauts: 'Björn', utf: '佖佥'})
+                           labels: [:umlauts, :utf, :bad_utf, :code],
+                           preset_labels: {
+                             umlauts: 'Björn',
+                             utf: '佖佥',
+                             bad_utf: "a bad UTF8 byte: \255"
+                           })
     foo.increment(labels: { code: 'red'}, by: 42)
     foo.increment(labels: { code: 'green'}, by: 3.14E42)
     foo.increment(labels: { code: 'blue'}, by: 1.23e-45)
@@ -56,9 +60,9 @@ describe Prometheus::Client::Formats::Text do
       expect(subject.marshal(registry)).to eql <<-'TEXT'
 # TYPE foo counter
 # HELP foo foo description
-foo{umlauts="Björn",utf="佖佥",code="red"} 42.0
-foo{umlauts="Björn",utf="佖佥",code="green"} 3.14e+42
-foo{umlauts="Björn",utf="佖佥",code="blue"} 1.23e-45
+foo{umlauts="Björn",utf="佖佥",bad_utf="a bad UTF8 byte: �",code="red"} 42.0
+foo{umlauts="Björn",utf="佖佥",bad_utf="a bad UTF8 byte: �",code="green"} 3.14e+42
+foo{umlauts="Björn",utf="佖佥",bad_utf="a bad UTF8 byte: �",code="blue"} 1.23e-45
 # TYPE bar gauge
 # HELP bar bar description\nwith newline
 bar{status="success",code="pink"} 15.0

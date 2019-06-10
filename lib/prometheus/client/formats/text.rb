@@ -82,7 +82,10 @@ module Prometheus
           end
 
           def escape(string, format = :doc)
-            string.to_s.gsub(REGEX[format], REPLACE)
+            string.
+              to_s.
+              encode("UTF-8", undef: :replace, invalid: :replace).
+              gsub(REGEX[format], REPLACE)
           end
         end
       end
