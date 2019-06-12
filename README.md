@@ -256,6 +256,15 @@ class MyComponent
 end
 ```
 
+### Reserved labels
+
+The following labels are reserved by the client library, and attempting to use them in a
+metric definition will result in a
+`Prometheus::Client::LabelSetValidator::ReservedLabelError` being raised:
+
+  - `:job`
+  - `:instance`
+  - `:pid`
 
 ## Data Stores
 
@@ -362,7 +371,8 @@ summing the values of each process.
 
 For Gauges, however, this may not be the right thing to do, depending on what they're 
 measuring. You might want to take the maximum or minimum value observed in any process,
-rather than the sum of all of them.
+rather than the sum of all of them. You may also want to export each process's individual
+value.
 
 In those cases, you should use the `store_settings` parameter when registering the 
 metric, to specify an `:aggregation` setting. 
