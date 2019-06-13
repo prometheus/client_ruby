@@ -37,7 +37,7 @@ describe Prometheus::Client::LabelSetValidator do
     end
 
     it 'raises ReservedLabelError if a label key is reserved' do
-      [:job, :instance].each do |label|
+      [:job, :instance, :pid].each do |label|
         expect do
           validator.validate_symbols!(label => 'value')
         end.to raise_exception(described_class::ReservedLabelError)

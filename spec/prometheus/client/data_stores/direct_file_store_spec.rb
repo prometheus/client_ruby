@@ -150,6 +150,42 @@ describe Prometheus::Client::DataStores::DirectFileStore do
     end
   end
 
+  context "with a metric that takes ALL instead of SUM" do
+    it "reports all the values from different processes" do
+      allow(Process).to receive(:pid).and_return(12345)
+      metric_store1 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+        metric_settings: { aggregation: :all }
+      )
+      metric_store1.set(labels: { foo: "bar" }, val: 1)
+      metric_store1.set(labels: { foo: "baz" }, val: 7)
+      metric_store1.set(labels: { foo: "yyy" }, val: 3)
+
+      allow(Process).to receive(:pid).and_return(23456)
+      metric_store2 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+        metric_settings: { aggregation: :all }
+      )
+      metric_store2.set(labels: { foo: "bar" }, val: 3)
+      metric_store2.set(labels: { foo: "baz" }, val: 2)
+      metric_store2.set(labels: { foo: "zzz" }, val: 1)
+
+      expect(metric_store1.all_values).to eq(
+        { foo: "bar", pid: "12345" } => 1.0,
+        { foo: "bar", pid: "23456" } => 3.0,
+        { foo: "baz", pid: "12345" } => 7.0,
+        { foo: "baz", pid: "23456" } => 2.0,
+        { foo: "yyy", pid: "12345" } => 3.0,
+        { foo: "zzz", pid: "23456" } => 1.0,
+      )
+
+      # Both processes should return the same value
+      expect(metric_store1.all_values).to eq(metric_store2.all_values)
+    end
+  end
+
   it "resizes the File if metrics get too big" do
      truncate_calls_count = 0
      allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).
