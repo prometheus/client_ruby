@@ -168,8 +168,8 @@ summary.observe(Benchmark.realtime { service.call() }, labels: { service: 'datab
 
 # retrieve the current sum and total values
 summary_value = summary.get(labels: { service: 'database' })
-summary_value.sum # => 123.45
-summary_value.count # => 100
+summary_value['sum'] # => 123.45
+summary_value['count'] # => 100
 ```
 
 ## Labels
