@@ -47,13 +47,15 @@ module Prometheus
           end
 
           def get(labels:)
-            synchronize do
+            @rwlock.with_read_lock do
               @internal_store[labels]
             end
           end
 
           def all_values
-            synchronize { @internal_store.dup }
+            @rwlock.with_read_lock do
+              @internal_store.dup
+            end
           end
         end
 
