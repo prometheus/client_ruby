@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.homepage          = 'https://github.com/prometheus/client_ruby'
   s.license           = 'Apache 2.0'
 
-  s.files             = %w(README.md) + Dir.glob('{lib/**/*}')
+  s.files             = %w(README.md) + Dir.glob('{lib/**/*}') - ['.ruby-version']
   s.require_paths     = ['lib']
 
   s.add_dependency 'concurrent-ruby'
