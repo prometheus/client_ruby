@@ -116,7 +116,7 @@ class TestSetup
 
   def observe!
     start_event.set # Release the threads to process their events
-    threads.each { |thr| thr.join } # Wait for all threads to finish and die
+    threads.each(&:join) # Wait for all threads to finish and die
   end
 
   def export!(expected_output)
