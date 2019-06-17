@@ -31,7 +31,7 @@ shared_examples_for Prometheus::Client::DataStores do
     # it should run the passed block
     it "accepts a block and runs it" do
       a = 0
-      metric_store.synchronize{ a += 1 }
+      metric_store.synchronize { a += 1 }
       expect(a).to eq(1)
     end
 

@@ -112,7 +112,7 @@ module Prometheus
           end
 
           def all_values
-            stores_data = Hash.new{ |hash, key| hash[key] = [] }
+            stores_data = Hash.new { |hash, key| hash[key] = [] }
 
             # There's no need to call `synchronize` here. We're opening a second handle to
             # the file, and `flock`ing it, which prevents inconsistent reads
@@ -151,7 +151,7 @@ module Prometheus
               labels[:pid] = process_id
             end
 
-            labels.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join("&")
+            labels.map {|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join("&")
           end
 
           def internal_store

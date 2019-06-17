@@ -84,8 +84,8 @@ module Prometheus
         v = @store.all_values
 
         result = v.each_with_object({}) do |(label_set, v), acc|
-          actual_label_set = label_set.reject{|l| l == :le }
-          acc[actual_label_set] ||= @buckets.map{|b| [b.to_s, 0.0]}.to_h
+          actual_label_set = label_set.reject {|l| l == :le }
+          acc[actual_label_set] ||= @buckets.map {|b| [b.to_s, 0.0]}.to_h
           acc[actual_label_set][label_set[:le].to_s] = v
         end
 
