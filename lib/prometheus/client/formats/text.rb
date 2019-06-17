@@ -59,6 +59,7 @@ module Prometheus
             bucket = "#{name}_bucket"
             value.each do |q, v|
               next if q == "sum"
+
               yield metric(bucket, labels(set.merge(le: q)), v)
             end
 

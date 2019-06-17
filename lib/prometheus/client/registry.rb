@@ -23,6 +23,7 @@ module Prometheus
           if exist?(name.to_sym)
             raise AlreadyRegisteredError, "#{name} has already been registered"
           end
+
           @metrics[name.to_sym] = metric
         end
 

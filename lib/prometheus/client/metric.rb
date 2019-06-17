@@ -67,6 +67,7 @@ module Prometheus
 
       def validate_name(name)
         raise ArgumentError, "metric name must be a symbol" unless name.is_a?(Symbol)
+
         unless name.to_s =~ /\A[a-zA-Z_:][a-zA-Z0-9_:]*\Z/
           msg = "metric name must match /[a-zA-Z_:][a-zA-Z0-9_:]*/"
           raise ArgumentError, msg
@@ -82,6 +83,7 @@ module Prometheus
       def label_set_for(labels)
         # We've already validated, and there's nothing to merge. Save some cycles
         return preset_labels if @all_labels_preset && labels.empty?
+
         @validator.validate_labelset!(preset_labels.merge(labels))
       end
     end
