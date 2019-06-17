@@ -57,7 +57,7 @@ LAST_ONE_LABELSET = { label2: "b"}
 TWO_LABELS_COUNTER = Prometheus::Client::Counter.new(
   :two_labels,
   docstring: "Counter with 2 labels",
-  labels: [:label1, :label2]
+  labels: %i[label1 label2]
 )
 TWO_LABELS_ONE_CACHED = TWO_LABELS_COUNTER.with_labels(label1: "a")
 TWO_LABELS_ALL_CACHED = TWO_LABELS_COUNTER.with_labels(label1: "a", label2: "b")

@@ -15,7 +15,7 @@ describe Prometheus::Client::Formats::Text do
   before do
     foo = registry.counter(:foo,
                            docstring: "foo description",
-                           labels: [:umlauts, :utf, :code],
+                           labels: %i[umlauts utf code],
                            preset_labels: {umlauts: "Björn", utf: "佖佥"})
     foo.increment(labels: { code: "red"}, by: 42)
     foo.increment(labels: { code: "green"}, by: 3.14E42)
@@ -24,7 +24,7 @@ describe Prometheus::Client::Formats::Text do
 
     bar = registry.gauge(:bar,
                          docstring: "bar description\nwith newline",
-                         labels: [:status, :code])
+                         labels: %i[status code])
     bar.set(15, labels: { status: "success", code: "pink"})
 
 
@@ -36,7 +36,7 @@ describe Prometheus::Client::Formats::Text do
 
     qux = registry.summary(:qux,
                            docstring: "qux description",
-                           labels: [:for, :code],
+                           labels: %i[for code],
                            preset_labels: { for: "sake", code: "1" })
     92.times { qux.observe(0) }
     qux.observe(1243.21)
