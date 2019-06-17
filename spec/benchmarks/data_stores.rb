@@ -171,7 +171,7 @@ class TestSetup
 
     NUM_HISTOGRAMS.times do |i|
       labelset = generate_labelset
-      histogram =  Prometheus::Client::Histogram.new(
+      histogram = Prometheus::Client::Histogram.new(
         "histogram#{ i }".to_sym,
         docstring: "Histogram #{ i }",
         labels: labelset.keys,
