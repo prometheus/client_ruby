@@ -197,11 +197,11 @@ class TestSetup
       thread_id = (thread_id + 1) % num_threads
       metric = random_metric
 
-      if metric.type == :counter
-        data_points[thread_id] << [metric]
+      data_points[thread_id] << if metric.type == :counter
+        [metric]
       else
-        data_points[thread_id] << [metric, random.rand * 10]
-      end
+        [metric, random.rand * 10]
+                                end
     end
   end
 
