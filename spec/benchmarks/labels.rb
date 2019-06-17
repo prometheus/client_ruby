@@ -55,8 +55,8 @@ NO_LABELS_COUNTER = Prometheus::Client::Counter.new(
   docstring: "Counter with no labels",
 )
 
-TWO_LABELSET = { label1: "a", label2: "b"}
-LAST_ONE_LABELSET = { label2: "b"}
+TWO_LABELSET = { label1: "a", label2: "b" }
+LAST_ONE_LABELSET = { label2: "b" }
 TWO_LABELS_COUNTER = Prometheus::Client::Counter.new(
   :two_labels,
   docstring: "Counter with 2 labels",
