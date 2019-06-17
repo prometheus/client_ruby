@@ -13,7 +13,7 @@ describe Prometheus::Client::Counter do
   let(:expected_labels) { [] }
 
   let(:counter) do
-    Prometheus::Client::Counter.new(:foo,
+    described_class.new(:foo,
                                     docstring: "foo description",
                                     labels: expected_labels)
   end

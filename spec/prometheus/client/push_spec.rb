@@ -5,21 +5,21 @@ require "prometheus/client/push"
 describe Prometheus::Client::Push do
   let(:gateway) { "http://localhost:9091" }
   let(:registry) { Prometheus::Client.registry }
-  let(:push) { Prometheus::Client::Push.new("test-job", nil, gateway) }
+  let(:push) { described_class.new("test-job", nil, gateway) }
 
   describe ".new" do
     it "returns a new push instance" do
-      expect(push).to be_a(Prometheus::Client::Push)
+      expect(push).to be_a(described_class)
     end
 
     it "uses localhost as default Pushgateway" do
-      push = Prometheus::Client::Push.new("test-job")
+      push = described_class.new("test-job")
 
       expect(push.gateway).to eql("http://localhost:9091")
     end
 
     it "allows to specify a custom Pushgateway" do
-      push = Prometheus::Client::Push.new("test-job", nil, "http://pu.sh:1234")
+      push = described_class.new("test-job", nil, "http://pu.sh:1234")
 
       expect(push.gateway).to eql("http://pu.sh:1234")
     end
@@ -27,7 +27,7 @@ describe Prometheus::Client::Push do
     it "raises an ArgumentError if the given gateway URL is invalid" do
       ["inva.lid:1233", "http://[invalid]"].each do |url|
         expect do
-          Prometheus::Client::Push.new("test-job", nil, url)
+          described_class.new("test-job", nil, url)
         end.to raise_error ArgumentError
       end
     end
@@ -59,19 +59,19 @@ describe Prometheus::Client::Push do
 
   describe "#path" do
     it "uses the default metrics path if no instance value given" do
-      push = Prometheus::Client::Push.new("test-job")
+      push = described_class.new("test-job")
 
       expect(push.path).to eql("/metrics/job/test-job")
     end
 
     it "uses the full metrics path if an instance value is given" do
-      push = Prometheus::Client::Push.new("bar-job", "foo")
+      push = described_class.new("bar-job", "foo")
 
       expect(push.path).to eql("/metrics/job/bar-job/instance/foo")
     end
 
     it "escapes non-URL characters" do
-      push = Prometheus::Client::Push.new("bar job", "foo <my instance>")
+      push = described_class.new("bar job", "foo <my instance>")
 
       expected = "/metrics/job/bar%20job/instance/foo%20%3Cmy%20instance%3E"
       expect(push.path).to eql(expected)

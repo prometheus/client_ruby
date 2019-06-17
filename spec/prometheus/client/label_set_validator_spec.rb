@@ -4,12 +4,12 @@ require "prometheus/client/label_set_validator"
 
 describe Prometheus::Client::LabelSetValidator do
   let(:expected_labels) { [] }
-  let(:validator) { Prometheus::Client::LabelSetValidator.new(expected_labels: expected_labels) }
+  let(:validator) { described_class.new(expected_labels: expected_labels) }
   let(:invalid) { Prometheus::Client::LabelSetValidator::InvalidLabelSetError }
 
   describe ".new" do
     it "returns an instance of a LabelSetValidator" do
-      expect(validator).to be_a(Prometheus::Client::LabelSetValidator)
+      expect(validator).to be_a(described_class)
     end
   end
 

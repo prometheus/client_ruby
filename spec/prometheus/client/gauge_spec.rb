@@ -13,7 +13,7 @@ describe Prometheus::Client::Gauge do
   let(:expected_labels) { [] }
 
   let(:gauge) do
-    Prometheus::Client::Gauge.new(:foo,
+    described_class.new(:foo,
                                   docstring: "foo description",
                                   labels: expected_labels)
   end

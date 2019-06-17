@@ -3,11 +3,11 @@
 require "prometheus/client/registry"
 
 describe Prometheus::Client::Registry do
-  let(:registry) { Prometheus::Client::Registry.new }
+  let(:registry) { described_class.new }
 
   describe ".new" do
     it "returns a new registry instance" do
-      expect(registry).to be_a(Prometheus::Client::Registry)
+      expect(registry).to be_a(described_class)
     end
   end
 

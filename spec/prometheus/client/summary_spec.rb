@@ -13,7 +13,7 @@ describe Prometheus::Client::Summary do
   let(:expected_labels) { [] }
 
   let(:summary) do
-    Prometheus::Client::Summary.new(:bar,
+    described_class.new(:bar,
                                     docstring: "bar description",
                                     labels: expected_labels)
   end
