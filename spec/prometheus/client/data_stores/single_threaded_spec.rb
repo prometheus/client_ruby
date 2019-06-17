@@ -1,4 +1,5 @@
 # encoding: UTF-8
+# frozen_string_literal: true
 
 require "prometheus/client/data_stores/single_threaded"
 require "examples/data_store_example"

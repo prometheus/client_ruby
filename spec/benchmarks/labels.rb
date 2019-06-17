@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "benchmark/ips"
 require "prometheus/client"
 require "prometheus/client/counter"

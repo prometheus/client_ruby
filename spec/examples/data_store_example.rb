@@ -1,4 +1,5 @@
 # encoding: UTF-8
+# frozen_string_literal: true
 
 shared_examples_for Prometheus::Client::DataStores do
   describe "MetricStore#set and #get" do

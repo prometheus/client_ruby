@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "rack"
 require "prometheus/middleware/collector"
 require "prometheus/middleware/exporter"
