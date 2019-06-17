@@ -133,9 +133,9 @@ class TestSetup
     return output if output == expected_output
 
     # Outputs don't match. Report
-    expected_filename = "data_mismatch_#{ @store.class.name }_#{ num_threads }thr_expected.txt"
-    actual_filename = "data_mismatch_#{ @store.class.name }_#{ num_threads }thr_actual.txt"
-    puts "\nWARNING: Output Mismatch.\nSee #{ expected_filename }\nand #{ actual_filename }"
+    expected_filename = "data_mismatch_#{@store.class.name}_#{num_threads}thr_expected.txt"
+    actual_filename = "data_mismatch_#{@store.class.name}_#{num_threads}thr_actual.txt"
+    puts "\nWARNING: Output Mismatch.\nSee #{expected_filename}\nand #{actual_filename}"
 
     File.open(expected_filename, "w") { |f| f.write(expected_output) }
     File.open(actual_filename, "w") { |f| f.write(output) }
@@ -163,8 +163,8 @@ class TestSetup
     NUM_COUNTERS.times do |i|
       labelset = generate_labelset
       counter =  Prometheus::Client::Counter.new(
-        "counter#{ i }".to_sym,
-        docstring: "Counter #{ i }",
+        "counter#{i}".to_sym,
+        docstring: "Counter #{i}",
         labels: labelset.keys,
         preset_labels: labelset,
       )
@@ -175,8 +175,8 @@ class TestSetup
     NUM_HISTOGRAMS.times do |i|
       labelset = generate_labelset
       histogram = Prometheus::Client::Histogram.new(
-        "histogram#{ i }".to_sym,
-        docstring: "Histogram #{ i }",
+        "histogram#{i}".to_sym,
+        docstring: "Histogram #{i}",
         labels: labelset.keys,
         preset_labels: labelset,
       )
@@ -219,7 +219,7 @@ class TestSetup
 
   def generate_labelset
     num_labels = random.rand(MAX_LABELS - MIN_LABELS + 1) + MIN_LABELS
-    (1..num_labels).map { |j| ["label#{ j }".to_sym, "foo"] }.to_h
+    (1..num_labels).map { |j| ["label#{j}".to_sym, "foo"] }.to_h
   end
 
   def random_metric
@@ -228,7 +228,7 @@ class TestSetup
 end
 
 def cleanup_dir(dir)
-  Dir.glob("#{ dir }/*").each { |file| File.delete(file) }
+  Dir.glob("#{dir}/*").each { |file| File.delete(file) }
 end
 
 #-----------------------------------------------------------------------------------
@@ -276,7 +276,7 @@ Benchmark.bm(45) do |bm|
 
       test_setup = TestSetup.new(store_test[:store], num_threads)
       store_name = store_test[:store].class.name.split("::").last
-      test_name = "#{ (store_test[:name] || store_name).ljust(25) } x#{ num_threads }"
+      test_name = "#{(store_test[:name] || store_name).ljust(25)} x#{num_threads}"
 
       bm.report("Observe #{test_name}") { test_setup.observe! }
       bm.report("Export  #{test_name}") do

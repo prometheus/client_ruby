@@ -232,7 +232,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
      really_long_string = "a" * 500_000
      10.times do |i|
-       metric_store.set(labels: { foo: "#{ really_long_string }#{ i }" }, val: 1)
+       metric_store.set(labels: { foo: "#{really_long_string}#{i}" }, val: 1)
      end
 
      expect(truncate_calls_count).to be >= 3

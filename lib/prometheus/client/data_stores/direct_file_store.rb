@@ -158,12 +158,12 @@ module Prometheus
 
           # Filename for this metric's PStore (one per process)
           def filemap_filename
-            filename = "metric_#{ metric_name }___#{ process_id }.bin"
+            filename = "metric_#{metric_name}___#{process_id}.bin"
             File.join(@store_settings[:dir], filename)
           end
 
           def stores_for_metric
-            Dir.glob(File.join(@store_settings[:dir], "metric_#{ metric_name }___*"))
+            Dir.glob(File.join(@store_settings[:dir], "metric_#{metric_name}___*"))
           end
 
           def process_id
@@ -181,7 +181,7 @@ module Prometheus
               values.first
             else
               raise InvalidStoreSettingsError,
-                    "Invalid Aggregation Mode: #{ @values_aggregation_mode }"
+                    "Invalid Aggregation Mode: #{@values_aggregation_mode}"
             end
           end
         end
