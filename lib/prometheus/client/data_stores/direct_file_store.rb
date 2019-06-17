@@ -271,7 +271,7 @@ module Prometheus
                    end
 
             @f = File.open(filename, mode)
-            resize_file(INITIAL_FILE_SIZE) if @f.size == 0 && !readonly
+            resize_file(INITIAL_FILE_SIZE) if @f.empty? && !readonly
             @capacity = @f.size
           end
 
