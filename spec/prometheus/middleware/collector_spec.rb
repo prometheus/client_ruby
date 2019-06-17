@@ -85,7 +85,7 @@ describe Prometheus::Middleware::Collector do
 
   context "when the app raises an exception" do
     let(:original_app) do
-      lambda do |env|
+      ->(env) do
         raise dummy_error if env["PATH_INFO"] == "/broken"
 
         [200, { "Content-Type" => "text/html" }, ["OK"]]

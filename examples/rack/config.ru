@@ -10,7 +10,7 @@ use Prometheus::Middleware::Exporter
 
 srand
 
-app = lambda do |_|
+app = ->(_) do
   case rand
   when 0..0.8
     [200, { "Content-Type" => "text/html" }, ["OK"]]
