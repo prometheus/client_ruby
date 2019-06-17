@@ -193,7 +193,7 @@ class TestSetup
     end
 
     thread_id = 0
-    DATA_POINTS.times do |i|
+    DATA_POINTS.times do |_i|
       thread_id = (thread_id + 1) % num_threads
       metric = random_metric
 

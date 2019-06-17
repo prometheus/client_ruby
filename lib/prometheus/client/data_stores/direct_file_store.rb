@@ -227,7 +227,7 @@ module Prometheus
           # Yield (key, value, pos). No locking is performed.
           def all_values
             with_file_lock do
-              read_all_values.map { |k, v, p| [k, v] }
+              read_all_values.map { |k, v, _p| [k, v] }
             end
           end
 

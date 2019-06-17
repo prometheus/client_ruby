@@ -89,7 +89,7 @@ module Prometheus
           acc[actual_label_set][label_set[:le].to_s] = v
         end
 
-        result.each do |(label_set, v)|
+        result.each do |(_label_set, v)|
           accumulate_buckets(v)
         end
       end
