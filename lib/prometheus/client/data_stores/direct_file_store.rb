@@ -54,7 +54,7 @@ module Prometheus
 
         def validate_metric_settings(metric_settings)
           unless metric_settings.has_key?(:aggregation) &&
-            AGGREGATION_MODES.include?(metric_settings[:aggregation])
+              AGGREGATION_MODES.include?(metric_settings[:aggregation])
             raise InvalidStoreSettingsError,
                   "Metrics need a valid :aggregation key"
           end
