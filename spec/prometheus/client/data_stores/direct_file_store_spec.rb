@@ -5,6 +5,7 @@ require "examples/data_store_example"
 
 describe Prometheus::Client::DataStores::DirectFileStore do
   subject { described_class.new(dir: "/tmp/prometheus_test") }
+
   let(:metric_store) { subject.for_metric(:metric_name, metric_type: :counter) }
 
   # Reset the PStores

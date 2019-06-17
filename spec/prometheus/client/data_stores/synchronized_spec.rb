@@ -5,6 +5,7 @@ require "examples/data_store_example"
 
 describe Prometheus::Client::DataStores::Synchronized do
   subject { described_class.new }
+
   let(:metric_store) { subject.for_metric(:metric_name, metric_type: :counter) }
 
   it_behaves_like Prometheus::Client::DataStores
