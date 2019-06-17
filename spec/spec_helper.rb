@@ -1,10 +1,10 @@
 # encoding: UTF-8
 
-require 'simplecov'
-require 'coveralls'
+require "simplecov"
+require "coveralls"
 
 SimpleCov.formatter =
-  if ENV['CI']
+  if ENV["CI"]
     Coveralls::SimpleCov::Formatter
   else
     SimpleCov::Formatter::HTMLFormatter

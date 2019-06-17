@@ -1,4 +1,4 @@
-require 'fileutils'
+require "fileutils"
 require "cgi"
 
 module Prometheus
@@ -149,7 +149,7 @@ module Prometheus
               labels[:pid] = process_id
             end
 
-            labels.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join('&')
+            labels.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join("&")
           end
 
           def internal_store
@@ -205,7 +205,7 @@ module Prometheus
             @used = 0
 
             open_file(filename, readonly)
-            @used = @f.read(4).unpack('l')[0] if @capacity > 0
+            @used = @f.read(4).unpack("l")[0] if @capacity > 0
 
             if @used > 0
               # File already has data. Read the existing values
@@ -219,7 +219,7 @@ module Prometheus
               if !readonly
                 @used = 8
                 @f.seek(0)
-                @f.write([@used].pack('l'))
+                @f.write([@used].pack("l"))
               end
             end
           end
@@ -238,7 +238,7 @@ module Prometheus
 
             pos = @positions[key]
             @f.seek(pos)
-            @f.read(8).unpack('d')[0]
+            @f.read(8).unpack("d")[0]
           end
 
           def write_value(key, value)
@@ -248,7 +248,7 @@ module Prometheus
 
             pos = @positions[key]
             @f.seek(pos)
-            @f.write([value].pack('d'))
+            @f.write([value].pack("d"))
             @f.flush
           end
 
@@ -288,7 +288,7 @@ module Prometheus
           # Initialize a value. Lock must be held by caller.
           def init_value(key)
             # Pad to be 8-byte aligned.
-            padded = key + (' ' * (8 - (key.length + 4) % 8))
+            padded = key + (" " * (8 - (key.length + 4) % 8))
             value = [padded.length, padded, 0.0].pack("lA#{padded.length}d")
             while @used + value.length > @capacity
               @capacity *= 2
@@ -298,7 +298,7 @@ module Prometheus
             @f.write(value)
             @used += value.length
             @f.seek(0)
-            @f.write([@used].pack('l'))
+            @f.write([@used].pack("l"))
             @f.flush
             @positions[key] = @used - 8
           end
@@ -308,9 +308,9 @@ module Prometheus
             @f.seek(8)
             values = []
             while @f.pos < @used
-              padded_len = @f.read(4).unpack('l')[0]
+              padded_len = @f.read(4).unpack("l")[0]
               encoded = @f.read(padded_len).unpack("A#{padded_len}")[0]
-              value = @f.read(8).unpack('d')[0]
+              value = @f.read(8).unpack("d")[0]
               values << [encoded.strip, value, @f.pos - 8]
             end
             values
@@ -320,5 +320,3 @@ module Prometheus
     end
   end
 end
-
-

@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
-require 'thread'
-require 'prometheus/client/label_set_validator'
+require "thread"
+require "prometheus/client/label_set_validator"
 
 module Prometheus
   module Client
@@ -68,10 +68,10 @@ module Prometheus
 
       def validate_name(name)
         unless name.is_a?(Symbol)
-          raise ArgumentError, 'metric name must be a symbol'
+          raise ArgumentError, "metric name must be a symbol"
         end
         unless name.to_s =~ /\A[a-zA-Z_:][a-zA-Z0-9_:]*\Z/
-          msg = 'metric name must match /[a-zA-Z_:][a-zA-Z0-9_:]*/'
+          msg = "metric name must match /[a-zA-Z_:][a-zA-Z0-9_:]*/"
           raise ArgumentError, msg
         end
       end
@@ -79,7 +79,7 @@ module Prometheus
       def validate_docstring(docstring)
         return true if docstring.respond_to?(:empty?) && !docstring.empty?
 
-        raise ArgumentError, 'docstring must be given'
+        raise ArgumentError, "docstring must be given"
       end
 
       def label_set_for(labels)

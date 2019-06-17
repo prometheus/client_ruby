@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
-require 'prometheus/client/data_stores/synchronized'
-require 'examples/data_store_example'
+require "prometheus/client/data_stores/synchronized"
+require "examples/data_store_example"
 
 describe Prometheus::Client::DataStores::Synchronized do
   subject { described_class.new }

@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require 'prometheus/client/data_stores/synchronized'
+require "prometheus/client/data_stores/synchronized"
 
 module Prometheus
   module Client

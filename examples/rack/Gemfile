@@ -1,5 +1,5 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
-gem 'prometheus-client', path: '../..'
-gem 'rack'
-gem 'unicorn'
+gem "prometheus-client", path: "../.."
+gem "rack"
+gem "unicorn"

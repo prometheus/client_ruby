@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
-require 'prometheus/client/data_stores/direct_file_store'
-require 'examples/data_store_example'
+require "prometheus/client/data_stores/direct_file_store"
+require "examples/data_store_example"
 
 describe Prometheus::Client::DataStores::DirectFileStore do
   subject { described_class.new(dir: "/tmp/prometheus_test") }
@@ -9,7 +9,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
   # Reset the PStores
   before do
-    Dir.glob('/tmp/prometheus_test/*').each { |file| File.delete(file) }
+    Dir.glob("/tmp/prometheus_test/*").each { |file| File.delete(file) }
   end
 
   it_behaves_like Prometheus::Client::DataStores

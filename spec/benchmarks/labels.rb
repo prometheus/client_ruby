@@ -1,7 +1,7 @@
-require 'benchmark/ips'
-require 'prometheus/client'
-require 'prometheus/client/counter'
-require 'prometheus/client/data_stores/single_threaded'
+require "benchmark/ips"
+require "prometheus/client"
+require "prometheus/client/counter"
+require "prometheus/client/data_stores/single_threaded"
 
 # Compare the time it takes to observe metrics that have labels (disregarding the actual
 # data store)

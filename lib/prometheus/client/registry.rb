@@ -1,11 +1,11 @@
 # encoding: UTF-8
 
-require 'thread'
+require "thread"
 
-require 'prometheus/client/counter'
-require 'prometheus/client/summary'
-require 'prometheus/client/gauge'
-require 'prometheus/client/histogram'
+require "prometheus/client/counter"
+require "prometheus/client/summary"
+require "prometheus/client/gauge"
+require "prometheus/client/histogram"
 
 module Prometheus
   module Client

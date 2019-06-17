@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require 'prometheus/client/metric'
+require "prometheus/client/metric"
 
 module Prometheus
   module Client
@@ -14,7 +14,7 @@ module Prometheus
       # Sets the value for the given label set
       def set(value, labels: {})
         unless value.is_a?(Numeric)
-          raise ArgumentError, 'value must be a number'
+          raise ArgumentError, "value must be a number"
         end
 
         @store.set(labels: label_set_for(labels), val: value)

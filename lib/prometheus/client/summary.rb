@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require 'prometheus/client/metric'
+require "prometheus/client/metric"
 
 module Prometheus
   module Client

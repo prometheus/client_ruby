@@ -5,16 +5,16 @@ module Prometheus
     module Formats
       # Text format is human readable mainly used for manual inspection.
       module Text
-        MEDIA_TYPE   = 'text/plain'.freeze
-        VERSION      = '0.0.4'.freeze
+        MEDIA_TYPE   = "text/plain".freeze
+        VERSION      = "0.0.4".freeze
         CONTENT_TYPE = "#{MEDIA_TYPE}; version=#{VERSION}".freeze
 
-        METRIC_LINE = '%s%s %s'.freeze
-        TYPE_LINE   = '# TYPE %s %s'.freeze
-        HELP_LINE   = '# HELP %s %s'.freeze
+        METRIC_LINE = "%s%s %s".freeze
+        TYPE_LINE   = "# TYPE %s %s".freeze
+        HELP_LINE   = "# HELP %s %s".freeze
 
         LABEL     = '%s="%s"'.freeze
-        SEPARATOR = ','.freeze
+        SEPARATOR = ",".freeze
         DELIMITER = "\n".freeze
 
         REGEX   = { doc: /[\n\\]/, label: /[\n\\"]/ }.freeze

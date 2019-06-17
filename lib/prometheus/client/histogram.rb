@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require 'prometheus/client/metric'
+require "prometheus/client/metric"
 
 module Prometheus
   module Client
@@ -23,7 +23,7 @@ module Prometheus
                      preset_labels: {},
                      buckets: DEFAULT_BUCKETS,
                      store_settings: {})
-        raise ArgumentError, 'Unsorted buckets, typo?' unless sorted?(buckets)
+        raise ArgumentError, "Unsorted buckets, typo?" unless sorted?(buckets)
 
         @buckets = buckets
         super(name,

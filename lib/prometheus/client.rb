@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
-require 'prometheus/client/registry'
-require 'prometheus/client/config'
+require "prometheus/client/registry"
+require "prometheus/client/config"
 
 module Prometheus
   # Client is a ruby implementation for a Prometheus compatible client.

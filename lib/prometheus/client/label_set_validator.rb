@@ -59,7 +59,7 @@ module Prometheus
       end
 
       def validate_name(key)
-        return true unless key.to_s.start_with?('__')
+        return true unless key.to_s.start_with?("__")
 
         raise ReservedLabelError, "label #{key} must not start with __"
       end

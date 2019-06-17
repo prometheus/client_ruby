@@ -1,11 +1,11 @@
 # encoding: UTF-8
 
-require 'thread'
-require 'net/http'
-require 'uri'
+require "thread"
+require "net/http"
+require "uri"
 
-require 'prometheus/client'
-require 'prometheus/client/formats/text'
+require "prometheus/client"
+require "prometheus/client/formats/text"
 
 module Prometheus
   # Client is a ruby implementation for a Prometheus compatible client.
@@ -13,9 +13,9 @@ module Prometheus
     # Push implements a simple way to transmit a given registry to a given
     # Pushgateway.
     class Push
-      DEFAULT_GATEWAY = 'http://localhost:9091'.freeze
-      PATH            = '/metrics/job/%s'.freeze
-      INSTANCE_PATH   = '/metrics/job/%s/instance/%s'.freeze
+      DEFAULT_GATEWAY = "http://localhost:9091".freeze
+      PATH            = "/metrics/job/%s".freeze
+      INSTANCE_PATH   = "/metrics/job/%s/instance/%s".freeze
       SUPPORTED_SCHEMES = %w(http https).freeze
 
       attr_reader :job, :instance, :gateway, :path
@@ -29,7 +29,7 @@ module Prometheus
         @uri = parse("#{@gateway}#{@path}")
 
         @http = Net::HTTP.new(@uri.host, @uri.port)
-        @http.use_ssl = (@uri.scheme == 'https')
+        @http.use_ssl = (@uri.scheme == "https")
       end
 
       def add(registry)
@@ -56,7 +56,7 @@ module Prometheus
         uri = URI.parse(url)
 
         unless SUPPORTED_SCHEMES.include?(uri.scheme)
-          raise ArgumentError, 'only HTTP gateway URLs are supported currently.'
+          raise ArgumentError, "only HTTP gateway URLs are supported currently."
         end
 
         uri

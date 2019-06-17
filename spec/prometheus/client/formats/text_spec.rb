@@ -1,8 +1,8 @@
 # encoding: UTF-8
 
-require 'prometheus/client'
-require 'prometheus/client/registry'
-require 'prometheus/client/formats/text'
+require "prometheus/client"
+require "prometheus/client/registry"
+require "prometheus/client/formats/text"
 
 describe Prometheus::Client::Formats::Text do
   # Reset the data store
@@ -14,18 +14,18 @@ describe Prometheus::Client::Formats::Text do
 
   before do
     foo = registry.counter(:foo,
-                           docstring: 'foo description',
+                           docstring: "foo description",
                            labels: [:umlauts, :utf, :code],
-                           preset_labels: {umlauts: 'Björn', utf: '佖佥'})
-    foo.increment(labels: { code: 'red'}, by: 42)
-    foo.increment(labels: { code: 'green'}, by: 3.14E42)
-    foo.increment(labels: { code: 'blue'}, by: 1.23e-45)
+                           preset_labels: {umlauts: "Björn", utf: "佖佥"})
+    foo.increment(labels: { code: "red"}, by: 42)
+    foo.increment(labels: { code: "green"}, by: 3.14E42)
+    foo.increment(labels: { code: "blue"}, by: 1.23e-45)
 
 
     bar = registry.gauge(:bar,
                          docstring: "bar description\nwith newline",
                          labels: [:status, :code])
-    bar.set(15, labels: { status: 'success', code: 'pink'})
+    bar.set(15, labels: { status: "success", code: "pink"})
 
 
     baz = registry.counter(:baz,
@@ -35,24 +35,24 @@ describe Prometheus::Client::Formats::Text do
 
 
     qux = registry.summary(:qux,
-                           docstring: 'qux description',
+                           docstring: "qux description",
                            labels: [:for, :code],
-                           preset_labels: { for: 'sake', code: '1' })
+                           preset_labels: { for: "sake", code: "1" })
     92.times { qux.observe(0) }
     qux.observe(1243.21)
 
 
     xuq = registry.histogram(:xuq,
-                             docstring: 'xuq description',
+                             docstring: "xuq description",
                              labels: [:code],
-                             preset_labels: {code: 'ah'},
+                             preset_labels: {code: "ah"},
                              buckets: [10, 20, 30])
     xuq.observe(12)
     xuq.observe(3.2)
   end
 
-  describe '.marshal' do
-    it 'returns a Text format version 0.0.4 compatible representation' do
+  describe ".marshal" do
+    it "returns a Text format version 0.0.4 compatible representation" do
       expect(subject.marshal(registry)).to eql <<-'TEXT'
 # TYPE foo counter
 # HELP foo foo description

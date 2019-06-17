@@ -1,12 +1,11 @@
-require 'benchmark'
-require 'concurrent'
-require 'prometheus/client'
-require 'prometheus/client/counter'
-require 'prometheus/client/histogram'
-require 'prometheus/client/formats/text'
-require 'prometheus/client/data_stores/single_threaded'
-require 'prometheus/client/data_stores/synchronized'
-require 'prometheus/client/data_stores/direct_file_store'
+require "benchmark"
+require "prometheus/client"
+require "prometheus/client/counter"
+require "prometheus/client/histogram"
+require "prometheus/client/formats/text"
+require "prometheus/client/data_stores/single_threaded"
+require "prometheus/client/data_stores/synchronized"
+require "prometheus/client/data_stores/direct_file_store"
 
 # Compare the time it takes different stores to observe a large number of data points, in
 # a multi-threaded environment.
@@ -133,8 +132,8 @@ class TestSetup
     actual_filename = "data_mismatch_#{ @store.class.name }_#{ num_threads }thr_actual.txt"
     puts "\nWARNING: Output Mismatch.\nSee #{ expected_filename }\nand #{ actual_filename }"
 
-    File.open(expected_filename, 'w') {|f| f.write(expected_output) }
-    File.open(actual_filename, 'w') {|f| f.write(output) }
+    File.open(expected_filename, "w") {|f| f.write(expected_output) }
+    File.open(actual_filename, "w") {|f| f.write(output) }
 
     return expected_output
   end
@@ -271,7 +270,7 @@ Benchmark.bm(45) do |bm|
       store_test[:before].call if store_test[:before]
 
       test_setup = TestSetup.new(store_test[:store], num_threads)
-      store_name = store_test[:store].class.name.split('::').last
+      store_name = store_test[:store].class.name.split("::").last
       test_name ="#{ (store_test[:name] || store_name).ljust(25) } x#{ num_threads }"
 
       bm.report("Observe #{test_name}") { test_setup.observe! }
