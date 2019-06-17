@@ -69,7 +69,7 @@ module Prometheus
         response = nil
         duration = Benchmark.realtime { response = yield }
         record(env, response.first.to_s, duration)
-        return response
+        response
       rescue => exception
         @exceptions.increment(labels: { exception: exception.class.name })
         raise

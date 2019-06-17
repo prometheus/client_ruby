@@ -140,7 +140,7 @@ class TestSetup
     File.open(expected_filename, "w") { |f| f.write(expected_output) }
     File.open(actual_filename, "w") { |f| f.write(output) }
 
-    return expected_output
+    expected_output
   end
 
   private
