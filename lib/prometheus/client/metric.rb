@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "thread"
 require "prometheus/client/label_set_validator"
 
 module Prometheus

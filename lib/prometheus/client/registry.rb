@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "thread"
-
 require "prometheus/client/counter"
 require "prometheus/client/summary"
 require "prometheus/client/gauge"
