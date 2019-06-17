@@ -49,7 +49,7 @@ Prometheus::Client.config.data_store = NoopStore.new # No data storage
 # Set up of the 3 metrics, plus their half-cached and full-cached versions
 NO_LABELS_COUNTER = Prometheus::Client::Counter.new(
   :no_labels,
-  docstring: "Counter with no labels"
+  docstring: "Counter with no labels",
 )
 
 TWO_LABELSET = { label1: "a", label2: "b"}
@@ -57,7 +57,7 @@ LAST_ONE_LABELSET = { label2: "b"}
 TWO_LABELS_COUNTER = Prometheus::Client::Counter.new(
   :two_labels,
   docstring: "Counter with 2 labels",
-  labels: %i[label1 label2]
+  labels: %i[label1 label2],
 )
 TWO_LABELS_ONE_CACHED = TWO_LABELS_COUNTER.with_labels(label1: "a")
 TWO_LABELS_ALL_CACHED = TWO_LABELS_COUNTER.with_labels(label1: "a", label2: "b")
@@ -71,7 +71,7 @@ LAST_FIFTY_LABELSET = (51..100).map { |i| ["label#{ i }".to_sym, i.to_s] }.to_h
 HUNDRED_LABELS_COUNTER = Prometheus::Client::Counter.new(
   :hundred_labels,
   docstring: "Counter with 100 labels",
-  labels: HUNDRED_LABELS
+  labels: HUNDRED_LABELS,
 )
 HUNDRED_LABELS_HALF_CACHED = HUNDRED_LABELS_COUNTER.with_labels(FIRST_FIFTY_LABELSET)
 HUNDRED_LABELS_ALL_CACHED = HUNDRED_LABELS_COUNTER.with_labels(HUNDRED_LABELSET)

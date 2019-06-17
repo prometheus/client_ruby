@@ -124,7 +124,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       metric_store1 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
-        metric_settings: { aggregation: :max }
+        metric_settings: { aggregation: :max },
       )
       metric_store1.set(labels: { foo: "bar" }, val: 1)
       metric_store1.set(labels: { foo: "baz" }, val: 7)
@@ -134,7 +134,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       metric_store2 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
-        metric_settings: { aggregation: :max }
+        metric_settings: { aggregation: :max },
       )
       metric_store2.set(labels: { foo: "bar" }, val: 3)
       metric_store2.set(labels: { foo: "baz" }, val: 2)
@@ -158,7 +158,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       metric_store1 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
-        metric_settings: { aggregation: :min }
+        metric_settings: { aggregation: :min },
       )
       metric_store1.set(labels: { foo: "bar" }, val: 1)
       metric_store1.set(labels: { foo: "baz" }, val: 7)
@@ -168,7 +168,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       metric_store2 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
-        metric_settings: { aggregation: :min }
+        metric_settings: { aggregation: :min },
       )
       metric_store2.set(labels: { foo: "bar" }, val: 3)
       metric_store2.set(labels: { foo: "baz" }, val: 2)
@@ -226,7 +226,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
      truncate_calls_count = 0
      allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).
        to receive(:resize_file).and_wrap_original do |original_method, *args, &block|
-    
+
        truncate_calls_count += 1
        original_method.call(*args, &block)
      end

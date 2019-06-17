@@ -163,7 +163,7 @@ class TestSetup
         "counter#{ i }".to_sym,
         docstring: "Counter #{ i }",
         labels: labelset.keys,
-        preset_labels: labelset
+        preset_labels: labelset,
       )
 
       metrics << counter
@@ -175,7 +175,7 @@ class TestSetup
         "histogram#{ i }".to_sym,
         docstring: "Histogram #{ i }",
         labels: labelset.keys,
-        preset_labels: labelset
+        preset_labels: labelset,
       )
 
       metrics << histogram

@@ -31,7 +31,7 @@ module Prometheus
         @store = Prometheus::Client.config.data_store.for_metric(
           name,
           metric_type: type,
-          metric_settings: store_settings
+          metric_settings: store_settings,
         )
 
         if preset_labels.keys.length == labels.length
