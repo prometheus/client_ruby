@@ -222,7 +222,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
   end
 
   it "resizes the File if metrics get too big" do
-     truncate_calls_count = 0
+    truncate_calls_count = 0
      allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).
        to receive(:resize_file).and_wrap_original do |original_method, *args, &block|
 
