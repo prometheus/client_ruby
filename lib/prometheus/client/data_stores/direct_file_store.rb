@@ -28,6 +28,7 @@ module Prometheus
         class InvalidStoreSettingsError < StandardError; end
         AGGREGATION_MODES = [MAX = :max, MIN = :min, SUM = :sum, ALL = :all]
         DEFAULT_METRIC_SETTINGS = { aggregation: SUM }
+        DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }
 
         def initialize(dir:)
           @store_settings = { dir: dir }
@@ -35,7 +36,12 @@ module Prometheus
         end
 
         def for_metric(metric_name, metric_type:, metric_settings: {})
-          settings = DEFAULT_METRIC_SETTINGS.merge(metric_settings)
+          default_settings = DEFAULT_METRIC_SETTINGS
+          if metric_type == :gauge
+            default_settings = DEFAULT_GAUGE_SETTINGS
+          end
+
+          settings = default_settings.merge(metric_settings)
           validate_metric_settings(settings)
 
           MetricStore.new(metric_name: metric_name,

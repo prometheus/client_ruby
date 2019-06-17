@@ -58,28 +58,64 @@ describe Prometheus::Client::DataStores::DirectFileStore do
   end
 
 
-  it "sums values from different processes" do
-    allow(Process).to receive(:pid).and_return(12345)
-    metric_store1 = subject.for_metric(:metric_name, metric_type: :counter)
-    metric_store1.set(labels: { foo: "bar" }, val: 1)
-    metric_store1.set(labels: { foo: "baz" }, val: 7)
-    metric_store1.set(labels: { foo: "yyy" }, val: 3)
+  context "for a non-gauge metric" do
+    it "sums values from different processes by default" do
+      allow(Process).to receive(:pid).and_return(12345)
+      metric_store1 = subject.for_metric(:metric_name, metric_type: :counter)
+      metric_store1.set(labels: { foo: "bar" }, val: 1)
+      metric_store1.set(labels: { foo: "baz" }, val: 7)
+      metric_store1.set(labels: { foo: "yyy" }, val: 3)
 
-    allow(Process).to receive(:pid).and_return(23456)
-    metric_store2 = subject.for_metric(:metric_name, metric_type: :counter)
-    metric_store2.set(labels: { foo: "bar" }, val: 3)
-    metric_store2.set(labels: { foo: "baz" }, val: 2)
-    metric_store2.set(labels: { foo: "zzz" }, val: 1)
+      allow(Process).to receive(:pid).and_return(23456)
+      metric_store2 = subject.for_metric(:metric_name, metric_type: :counter)
+      metric_store2.set(labels: { foo: "bar" }, val: 3)
+      metric_store2.set(labels: { foo: "baz" }, val: 2)
+      metric_store2.set(labels: { foo: "zzz" }, val: 1)
 
-    expect(metric_store2.all_values).to eq(
-      { foo: "bar" } => 4.0,
-      { foo: "baz" } => 9.0,
-      { foo: "yyy" } => 3.0,
-      { foo: "zzz" } => 1.0,
-    )
+      expect(metric_store2.all_values).to eq(
+        { foo: "bar" } => 4.0,
+        { foo: "baz" } => 9.0,
+        { foo: "yyy" } => 3.0,
+        { foo: "zzz" } => 1.0,
+      )
 
-    # Both processes should return the same value
-    expect(metric_store1.all_values).to eq(metric_store2.all_values)
+      # Both processes should return the same value
+      expect(metric_store1.all_values).to eq(metric_store2.all_values)
+    end
+  end
+
+  context "for a gauge metric" do
+    it "exposes each process's individual value by default" do
+      allow(Process).to receive(:pid).and_return(12345)
+      metric_store1 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+      )
+      metric_store1.set(labels: { foo: "bar" }, val: 1)
+      metric_store1.set(labels: { foo: "baz" }, val: 7)
+      metric_store1.set(labels: { foo: "yyy" }, val: 3)
+
+      allow(Process).to receive(:pid).and_return(23456)
+      metric_store2 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+      )
+      metric_store2.set(labels: { foo: "bar" }, val: 3)
+      metric_store2.set(labels: { foo: "baz" }, val: 2)
+      metric_store2.set(labels: { foo: "zzz" }, val: 1)
+
+      expect(metric_store1.all_values).to eq(
+        { foo: "bar", pid: "12345" } => 1.0,
+        { foo: "bar", pid: "23456" } => 3.0,
+        { foo: "baz", pid: "12345" } => 7.0,
+        { foo: "baz", pid: "23456" } => 2.0,
+        { foo: "yyy", pid: "12345" } => 3.0,
+        { foo: "zzz", pid: "23456" } => 1.0,
+      )
+
+      # Both processes should return the same value
+      expect(metric_store1.all_values).to eq(metric_store2.all_values)
+    end
   end
 
   context "with a metric that takes MAX instead of SUM" do
@@ -155,7 +191,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       allow(Process).to receive(:pid).and_return(12345)
       metric_store1 = subject.for_metric(
         :metric_name,
-        metric_type: :gauge,
+        metric_type: :counter,
         metric_settings: { aggregation: :all }
       )
       metric_store1.set(labels: { foo: "bar" }, val: 1)
@@ -165,7 +201,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       allow(Process).to receive(:pid).and_return(23456)
       metric_store2 = subject.for_metric(
         :metric_name,
-        metric_type: :gauge,
+        metric_type: :counter,
         metric_settings: { aggregation: :all }
       )
       metric_store2.set(labels: { foo: "bar" }, val: 3)
