@@ -123,7 +123,7 @@ module Prometheus
                   # Labels come as a query string, and CGI::parse returns arrays for each key
                   # "foo=bar&x=y" => { "foo" => ["bar"], "x" => ["y"] }
                   # Turn the keys back into symbols, and remove the arrays
-                  label_set = CGI::parse(labelset_qs).map do |k, vs|
+                  label_set = CGI.parse(labelset_qs).map do |k, vs|
                     [k.to_sym, vs.first]
                   end.to_h
 
@@ -149,7 +149,7 @@ module Prometheus
           def store_key(labels)
             labels[:pid] = process_id if @values_aggregation_mode == ALL
 
-            labels.map { |k, v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}" }.join("&")
+            labels.map { |k, v| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}" }.join("&")
           end
 
           def internal_store
