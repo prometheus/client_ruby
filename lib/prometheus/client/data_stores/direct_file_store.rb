@@ -196,7 +196,7 @@ module Prometheus
         # size of the next field, a utf-8 encoded string key, padding to an 8 byte
         # alignment, and then a 8 byte float which is the value.
         class FileMappedDict
-          INITIAL_FILE_SIZE = 1024*1024
+          INITIAL_FILE_SIZE = 1024 * 1024
 
           attr_reader :capacity, :used, :positions
 

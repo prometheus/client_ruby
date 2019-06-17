@@ -276,7 +276,7 @@ Benchmark.bm(45) do |bm|
 
       test_setup = TestSetup.new(store_test[:store], num_threads)
       store_name = store_test[:store].class.name.split("::").last
-      test_name ="#{ (store_test[:name] || store_name).ljust(25) } x#{ num_threads }"
+      test_name = "#{ (store_test[:name] || store_name).ljust(25) } x#{ num_threads }"
 
       bm.report("Observe #{test_name}") { test_setup.observe! }
       bm.report("Export  #{test_name}") do
