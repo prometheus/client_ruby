@@ -25,7 +25,7 @@ module Prometheus
       def get(labels: {})
         base_label_set = label_set_for(labels)
 
-        internal_counters = ["count", "sum"]
+        internal_counters = %w[count sum]
 
         @store.synchronize do
           internal_counters.each_with_object({}) do |counter, acc|
