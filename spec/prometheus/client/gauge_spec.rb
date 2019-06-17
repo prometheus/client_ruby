@@ -14,8 +14,8 @@ describe Prometheus::Client::Gauge do
 
   let(:gauge) do
     described_class.new(:foo,
-                                  docstring: "foo description",
-                                  labels: expected_labels)
+                        docstring: "foo description",
+                        labels: expected_labels)
   end
 
   it_behaves_like Prometheus::Client::Metric do

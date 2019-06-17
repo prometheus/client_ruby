@@ -16,9 +16,9 @@ require "prometheus/client/data_stores/single_threaded"
 # validation which should be *considerably* faster.
 #
 # This completely disregards the storage of this data in memory, and it's highly likely
-# that more labels will make things slower in the data store, even if the metrics themselves
-# don't add overhead. So the fact that using `with_labels` with all labels adds no overhead
-# to the metric itself doesn't mean labels have no overhead.
+# that more labels will make things slower in the data store, even if the metrics
+# themselves don't add overhead. So the fact that using `with_labels` with all labels adds
+# no overhead to the metric itself doesn't mean labels have no overhead.
 #
 # To see what it looks like with the best-case scenario data store, uncomment the line
 # that sets the `data_store` to `SingleThreaded`
@@ -26,7 +26,7 @@ require "prometheus/client/data_stores/single_threaded"
 # Store that doesn't do anything, so we can focus as much as possible on the timings of
 # the Metric itself
 class NoopStore
-  def for_metric(_metric_name, metric_type:, metric_settings: {})
+  def for_metric(_metric_name, **_kwargs)
     MetricStore.new
   end
 
@@ -45,8 +45,11 @@ class NoopStore
   end
 end
 
-Prometheus::Client.config.data_store = NoopStore.new # No data storage
-# Prometheus::Client.config.data_store = Prometheus::Client::DataStores::SingleThreaded.new # Simple data storage
+Prometheus::Client.config.data_store =
+  case ENV["DATA_STORE"]
+  when "SingleThreaded" then Prometheus::Client::DataStores::SingleThreaded.new
+  else NoopStore.new
+  end
 
 #-------------------------------------------------------------------------------------
 # Set up of the 3 metrics, plus their half-cached and full-cached versions
@@ -88,8 +91,12 @@ Benchmark.ips do |x|
   x.report("2 labels") { TWO_LABELS_COUNTER.increment(labels: TWO_LABELSET) }
   x.report("100 labels") { HUNDRED_LABELS_COUNTER.increment(labels: HUNDRED_LABELSET) }
 
-  x.report("2 lab, half cached") { TWO_LABELS_ONE_CACHED.increment(labels: LAST_ONE_LABELSET) }
-  x.report("100 lab, half cached") { HUNDRED_LABELS_HALF_CACHED.increment(labels: LAST_FIFTY_LABELSET) }
+  x.report("2 lab, half cached") do
+    TWO_LABELS_ONE_CACHED.increment(labels: LAST_ONE_LABELSET)
+  end
+  x.report("100 lab, half cached") do
+    HUNDRED_LABELS_HALF_CACHED.increment(labels: LAST_FIFTY_LABELSET)
+  end
 
   x.report("2 lab, all cached") { TWO_LABELS_ALL_CACHED.increment }
   x.report("100 lab, all cached") { HUNDRED_LABELS_ALL_CACHED.increment }
@@ -113,8 +120,8 @@ end
 # Pre-setting *some* labels, however, has no performance impact. It may still be desirable
 # to avoid repetition, though.
 #
-# So, if observing measurements in a tight loop, it's highly recommended to use `with_labels`
-# and pre-set all labels.
+# So, if observing measurements in a tight loop, it's highly recommended to use
+# `with_labels` and pre-set all labels.
 #
 #
 # With the simplest possible data store:

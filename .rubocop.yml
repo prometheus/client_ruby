@@ -14,6 +14,23 @@ Style/RescueStandardError:
   Exclude:
     - "*/**/*_spec.rb"
 
+# Maximum example length: the default is very restrictive
+RSpec/ExampleLength:
+  Max: 15
+
+# Default is very restrictive
+RSpec/MultipleExpectations:
+  Max: 3
+
+# Several stdlib classes won't support the human-readable predicate names
+# rubocop wants you to use, so auto-correct will cause errors. Disable these
+# checks.
+Style/ZeroLengthPredicate:
+  Enabled: false
+
+Style/NumericPredicate:
+  Enabled: false
+
 Naming/UncommunicativeMethodParamName:
   AllowedNames:
     # These are the default allowed names, set by Rubocop

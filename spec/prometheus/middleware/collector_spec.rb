@@ -6,23 +6,16 @@ require "prometheus/middleware/collector"
 describe Prometheus::Middleware::Collector do
   include Rack::Test::Methods
 
+  subject!(:app) { described_class.new(webapp, registry: registry) }
+
   # Reset the data store
   before do
-    Prometheus::Client.config.data_store = Prometheus::Client::DataStores::Synchronized.new
+    Prometheus::Client.config.data_store =
+      Prometheus::Client::DataStores::Synchronized.new
   end
 
-  let(:registry) do
-    Prometheus::Client::Registry.new
-  end
-
-  let(:original_app) do
-    ->(_) { [200, { "Content-Type" => "text/html" }, ["OK"]] }
-  end
-
-  let!(:app) do
-    described_class.new(original_app, registry: registry)
-  end
-
+  let(:webapp) { ->(_env) { [200, {}, ["OK"]] } }
+  let(:registry) { Prometheus::Client::Registry.new }
   let(:dummy_error) { RuntimeError.new("Dummy error from tests") }
 
   it "returns the app response" do
@@ -84,7 +77,7 @@ describe Prometheus::Middleware::Collector do
   end
 
   context "when the app raises an exception" do
-    let(:original_app) do
+    let(:webapp) do
       ->(env) do
         raise dummy_error if env["PATH_INFO"] == "/broken"
 
@@ -106,9 +99,9 @@ describe Prometheus::Middleware::Collector do
   end
 
   context "when provided a custom metrics_prefix" do
-    let!(:app) do
+    subject do
       described_class.new(
-        original_app,
+        webapp,
         registry: registry,
         metrics_prefix: "lolrus",
       )

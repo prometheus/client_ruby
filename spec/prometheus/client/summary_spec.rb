@@ -14,8 +14,8 @@ describe Prometheus::Client::Summary do
 
   let(:summary) do
     described_class.new(:bar,
-                                    docstring: "bar description",
-                                    labels: expected_labels)
+                        docstring: "bar description",
+                        labels: expected_labels)
   end
 
   it_behaves_like Prometheus::Client::Metric do

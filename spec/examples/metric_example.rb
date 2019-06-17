@@ -1,21 +1,22 @@
 # frozen_string_literal: true
 
 shared_examples_for Prometheus::Client::Metric do
-  subject { described_class.new(:foo, docstring: "foo description") }
+  subject(:metric) do
+    described_class.new(:foo, docstring: "foo description", **kwargs)
+  end
+
+  let(:kwargs) { { preset_labels: preset_labels }.compact }
+  let(:preset_labels) { nil }
 
   describe ".new" do
-    it "returns a new metric" do
-      expect(subject).to be
-    end
+    context "with reserved label" do
+      let(:preset_labels) { { __name__: "reserved" } }
 
-    it "raises an exception if a reserved base label is used" do
-      exception = Prometheus::Client::LabelSetValidator::ReservedLabelError
-
-      expect do
-        described_class.new(:foo,
-                            docstring: "foo docstring",
-                            preset_labels: { __name__: "reserved" })
-      end.to raise_exception exception
+      it "raises an exception" do
+        expect { metric }.to raise_exception(
+          Prometheus::Client::LabelSetValidator::ReservedLabelError,
+        )
+      end
     end
 
     it "raises an exception if the given name is blank" do

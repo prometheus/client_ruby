@@ -41,7 +41,7 @@ describe Prometheus::Client::Registry do
           result = begin
             registry.register(double(name: :test))
                    rescue Prometheus::Client::Registry::AlreadyRegisteredError
-            nil
+                     nil
           end
           mutex.synchronize { containers << result }
         end

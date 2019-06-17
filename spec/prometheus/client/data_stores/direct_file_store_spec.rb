@@ -17,22 +17,32 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
   it "only accepts valid :aggregation as Metric Settings" do
     expect do
-      subject.for_metric(:metric_name,
-                         metric_type: :counter,
-                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::SUM })
+      subject.for_metric(
+        :metric_name,
+        metric_type: :counter,
+        metric_settings: {
+          aggregation: Prometheus::Client::DataStores::DirectFileStore::SUM,
+        },
+      )
     end.to_not raise_error
 
     expect do
-      subject.for_metric(:metric_name,
-                         metric_type: :counter,
-                         metric_settings: { aggregation: :invalid })
-    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+      subject.for_metric(
+        :metric_name,
+        metric_type: :counter,
+        metric_settings: { aggregation: :invalid },
+      )
+    end.to raise_error(
+      Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError,
+    )
 
     expect do
       subject.for_metric(:metric_name,
                          metric_type: :counter,
                          metric_settings: { some_setting: true })
-    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+    end.to raise_error(
+      Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError,
+    )
   end
 
   it "raises when aggregating if we get to that that point with an invalid aggregation mode" do
@@ -224,18 +234,17 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
   it "resizes the File if metrics get too big" do
     truncate_calls_count = 0
-     allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).
-       to receive(:resize_file).and_wrap_original do |original_method, *args, &block|
+    allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).
+      to receive(:resize_file).and_wrap_original do |original_method, *args, &block|
+      truncate_calls_count += 1
+      original_method.call(*args, &block)
+    end
 
-       truncate_calls_count += 1
-       original_method.call(*args, &block)
-     end
+    really_long_string = "a" * 500_000
+    10.times do |i|
+      metric_store.set(labels: { foo: "#{really_long_string}#{i}" }, val: 1)
+    end
 
-     really_long_string = "a" * 500_000
-     10.times do |i|
-       metric_store.set(labels: { foo: "#{really_long_string}#{i}" }, val: 1)
-     end
-
-     expect(truncate_calls_count).to be >= 3
+    expect(truncate_calls_count).to be >= 3
   end
 end
