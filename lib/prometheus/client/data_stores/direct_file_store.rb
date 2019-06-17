@@ -149,7 +149,7 @@ module Prometheus
           def store_key(labels)
             labels[:pid] = process_id if @values_aggregation_mode == ALL
 
-            labels.map { |k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}" }.join("&")
+            labels.map { |k, v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}" }.join("&")
           end
 
           def internal_store
