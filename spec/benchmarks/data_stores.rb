@@ -74,7 +74,7 @@ NUM_HISTOGRAMS = 20
 DATA_POINTS = 1_000_000
 MIN_LABELS = 0
 MAX_LABELS = 4
-THREAD_COUNTS = [1, 2, 4, 8, 12, 16, 20]
+THREAD_COUNTS = [1, 2, 4, 8, 12, 16, 20].freeze
 
 TMP_DIR = "/tmp/prometheus_benchmark"
 
@@ -86,7 +86,7 @@ STORES = [
     store: Prometheus::Client::DataStores::DirectFileStore.new(dir: TMP_DIR),
     before: -> { cleanup_dir(TMP_DIR) },
   }
-]
+].freeze
 
 #-----------------------------------------------------------------------------------
 
