@@ -82,7 +82,7 @@ HUNDRED_LABELS_ALL_CACHED = HUNDRED_LABELS_COUNTER.with_labels(HUNDRED_LABELSET)
 # Actual Benchmark
 
 Benchmark.ips do |x|
-  x.config(:time => 5, :warmup => 2)
+  x.config(time: 5, warmup: 2)
 
   x.report("0 labels") { NO_LABELS_COUNTER.increment }
   x.report("2 labels") { TWO_LABELS_COUNTER.increment(labels: TWO_LABELSET) }
