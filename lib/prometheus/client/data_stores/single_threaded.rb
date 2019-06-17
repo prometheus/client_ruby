@@ -10,7 +10,7 @@ module Prometheus
       class SingleThreaded
         class InvalidStoreSettingsError < StandardError; end
 
-        def for_metric(metric_name, metric_type:, metric_settings: {})
+        def for_metric(_metric_name, metric_type:, metric_settings: {})
           # We don't need `metric_type` or `metric_settings` for this particular store
           validate_metric_settings(metric_settings: metric_settings)
           MetricStore.new

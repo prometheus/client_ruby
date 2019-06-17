@@ -47,7 +47,7 @@ require "prometheus/client/data_stores/direct_file_store"
 # Store class that follows the required interface but does nothing. Used as a baseline
 # of how much time is spent outside the store.
 class NoopStore
-  def for_metric(metric_name, metric_type:, metric_settings: {})
+  def for_metric(_metric_name, metric_type:, metric_settings: {})
     MetricStore.new
   end
 

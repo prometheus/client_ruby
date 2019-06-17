@@ -26,7 +26,7 @@ require "prometheus/client/data_stores/single_threaded"
 # Store that doesn't do anything, so we can focus as much as possible on the timings of
 # the Metric itself
 class NoopStore
-  def for_metric(metric_name, metric_type:, metric_settings: {})
+  def for_metric(_metric_name, metric_type:, metric_settings: {})
     MetricStore.new
   end
 
