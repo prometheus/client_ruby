@@ -21,18 +21,15 @@ describe Prometheus::Client::Formats::Text do
     foo.increment(labels: { code: "green"}, by: 3.14E42)
     foo.increment(labels: { code: "blue"}, by: 1.23e-45)
 
-
     bar = registry.gauge(:bar,
                          docstring: "bar description\nwith newline",
                          labels: %i[status code])
     bar.set(15, labels: { status: "success", code: "pink"})
 
-
     baz = registry.counter(:baz,
                            docstring: 'baz "description" \\escaping',
                            labels: [:text])
     baz.increment(labels: { text: "with \"quotes\", \\escape \n and newline" }, by: 15.0)
-
 
     qux = registry.summary(:qux,
                            docstring: "qux description",
@@ -40,7 +37,6 @@ describe Prometheus::Client::Formats::Text do
                            preset_labels: { for: "sake", code: "1" })
     92.times { qux.observe(0) }
     qux.observe(1243.21)
-
 
     xuq = registry.histogram(:xuq,
                              docstring: "xuq description",

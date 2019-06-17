@@ -57,7 +57,6 @@ describe Prometheus::Client::DataStores::DirectFileStore do
     ms2.increment(labels: {}, by: 1)
   end
 
-
   context "for a non-gauge metric" do
     it "sums values from different processes by default" do
       allow(Process).to receive(:pid).and_return(12345)
