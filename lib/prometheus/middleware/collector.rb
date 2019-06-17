@@ -77,14 +77,14 @@ module Prometheus
 
       def record(env, code, duration)
         counter_labels = {
-          code:   code,
+          code: code,
           method: env["REQUEST_METHOD"].downcase,
-          path:   strip_ids_from_path(env["PATH_INFO"]),
+          path: strip_ids_from_path(env["PATH_INFO"]),
         }
 
         duration_labels = {
           method: env["REQUEST_METHOD"].downcase,
-          path:   strip_ids_from_path(env["PATH_INFO"]),
+          path: strip_ids_from_path(env["PATH_INFO"]),
         }
 
         @requests.increment(labels: counter_labels)
