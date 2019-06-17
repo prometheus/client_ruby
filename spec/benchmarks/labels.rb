@@ -63,10 +63,10 @@ TWO_LABELS_ONE_CACHED = TWO_LABELS_COUNTER.with_labels(label1: "a")
 TWO_LABELS_ALL_CACHED = TWO_LABELS_COUNTER.with_labels(label1: "a", label2: "b")
 
 
-HUNDRED_LABELS = (1..100).map {|i| "label#{ i }".to_sym }
-HUNDRED_LABELSET = (1..100).map {|i| ["label#{ i }".to_sym, i.to_s] }.to_h
-FIRST_FIFTY_LABELSET = (1..50).map {|i| ["label#{ i }".to_sym, i.to_s] }.to_h
-LAST_FIFTY_LABELSET = (51..100).map {|i| ["label#{ i }".to_sym, i.to_s] }.to_h
+HUNDRED_LABELS = (1..100).map { |i| "label#{ i }".to_sym }
+HUNDRED_LABELSET = (1..100).map { |i| ["label#{ i }".to_sym, i.to_s] }.to_h
+FIRST_FIFTY_LABELSET = (1..50).map { |i| ["label#{ i }".to_sym, i.to_s] }.to_h
+LAST_FIFTY_LABELSET = (51..100).map { |i| ["label#{ i }".to_sym, i.to_s] }.to_h
 
 HUNDRED_LABELS_COUNTER = Prometheus::Client::Counter.new(
   :hundred_labels,

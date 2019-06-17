@@ -134,8 +134,8 @@ class TestSetup
     actual_filename = "data_mismatch_#{ @store.class.name }_#{ num_threads }thr_actual.txt"
     puts "\nWARNING: Output Mismatch.\nSee #{ expected_filename }\nand #{ actual_filename }"
 
-    File.open(expected_filename, "w") {|f| f.write(expected_output) }
-    File.open(actual_filename, "w") {|f| f.write(output) }
+    File.open(expected_filename, "w") { |f| f.write(expected_output) }
+    File.open(actual_filename, "w") { |f| f.write(output) }
 
     return expected_output
   end
@@ -216,7 +216,7 @@ class TestSetup
 
   def generate_labelset
     num_labels = random.rand(MAX_LABELS - MIN_LABELS + 1) + MIN_LABELS
-    (1..num_labels).map {|j| ["label#{ j }".to_sym, "foo"] }.to_h
+    (1..num_labels).map { |j| ["label#{ j }".to_sym, "foo"] }.to_h
   end
 
   def random_metric
