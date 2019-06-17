@@ -35,8 +35,8 @@ describe Prometheus::Client::Summary do
       expect do
         summary.observe(5)
       end.to change(summary, :get).
-        from({ "count" => 0.0, "sum" => 0.0 }).
-        to({ "count" => 1.0, "sum" => 5.0 })
+        from("count" => 0.0, "sum" => 0.0).
+        to("count" => 1.0, "sum" => 5.0)
     end
 
     it "raise error for quantile labels" do
@@ -82,7 +82,7 @@ describe Prometheus::Client::Summary do
 
     it "returns a value which responds to #sum and #total" do
       expect(summary.get(labels: { foo: "bar" })).
-        to eql({ "count" => 4.0, "sum" => 25.2 })
+        to eql("count" => 4.0, "sum" => 25.2)
     end
   end
 
