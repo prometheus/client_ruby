@@ -216,7 +216,7 @@ module Prometheus
               end
             else
               # File is empty. Init the `used` counter, if we're in write mode
-              if !readonly
+              unless readonly
                 @used = 8
                 @f.seek(0)
                 @f.write([@used].pack("l"))
@@ -232,7 +232,7 @@ module Prometheus
           end
 
           def read_value(key)
-            init_value(key) if !@positions.has_key?(key)
+            init_value(key) unless @positions.has_key?(key)
 
             pos = @positions[key]
             @f.seek(pos)
@@ -240,7 +240,7 @@ module Prometheus
           end
 
           def write_value(key, value)
-            init_value(key) if !@positions.has_key?(key)
+            init_value(key) unless @positions.has_key?(key)
 
             pos = @positions[key]
             @f.seek(pos)
