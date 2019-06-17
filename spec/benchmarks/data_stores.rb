@@ -251,7 +251,7 @@ module Prometheus
     module Formats
       module Text
         def self.metric(name, labels, value)
-          format(METRIC_LINE, name, labels, value.round(6))
+          sprintf(METRIC_LINE, name, labels, value.round(6))
         end
       end
     end

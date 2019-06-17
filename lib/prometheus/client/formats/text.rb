@@ -24,8 +24,8 @@ module Prometheus
           lines = []
 
           registry.metrics.each do |metric|
-            lines << format(TYPE_LINE, metric.name, metric.type)
-            lines << format(HELP_LINE, metric.name, escape(metric.docstring))
+            lines << sprintf(TYPE_LINE, metric.name, metric.type)
+            lines << sprintf(HELP_LINE, metric.name, escape(metric.docstring))
 
             metric.values.each do |label_set, value|
               representation(metric, label_set, value) { |l| lines << l }
@@ -68,14 +68,14 @@ module Prometheus
           end
 
           def metric(name, labels, value)
-            format(METRIC_LINE, name, labels, value)
+            sprintf(METRIC_LINE, name, labels, value)
           end
 
           def labels(set)
             return if set.empty?
 
             strings = set.each_with_object([]) do |(key, value), memo|
-              memo << format(LABEL, key, escape(value, :label))
+              memo << sprintf(LABEL, key, escape(value, :label))
             end
 
             "{#{strings.join(SEPARATOR)}}"

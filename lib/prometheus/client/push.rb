@@ -65,9 +65,9 @@ module Prometheus
 
       def build_path(job, instance)
         if instance
-          format(INSTANCE_PATH, URI.escape(job), URI.escape(instance))
+          sprintf(INSTANCE_PATH, URI.escape(job), URI.escape(instance))
         else
-          format(PATH, URI.escape(job))
+          sprintf(PATH, URI.escape(job))
         end
       end
 
