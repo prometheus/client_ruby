@@ -95,7 +95,7 @@ describe Prometheus::Client::Histogram do
     it "returns a value which includes sum" do
       value = histogram.get(labels: { foo: "bar" })
 
-      expect(value["sum"]).to eql(25.2)
+      expect(value["sum"]).to be(25.2)
     end
 
     it "uses zero as default value" do

@@ -98,7 +98,7 @@ describe Prometheus::Client::Gauge do
     end
 
     it "returns the new gauge value" do
-      expect(gauge.increment).to eql(1.0)
+      expect(gauge.increment).to be(1.0)
     end
 
     it "is thread safe" do
@@ -148,7 +148,7 @@ describe Prometheus::Client::Gauge do
     end
 
     it "returns the new gauge value" do
-      expect(gauge.decrement).to eql(-1.0)
+      expect(gauge.decrement).to be(-1.0)
     end
 
     it "is thread safe" do

@@ -47,7 +47,7 @@ describe Prometheus::Client::Registry do
         end
       end.each(&:join)
 
-      expect(containers.compact.size).to eql(1)
+      expect(containers.compact.size).to be(1)
     end
   end
 
@@ -55,7 +55,7 @@ describe Prometheus::Client::Registry do
     it "unregister a registered metric" do
       registry.register(double(name: :test))
       registry.unregister(:test)
-      expect(registry.exist?(:test)).to eql(false)
+      expect(registry.exist?(:test)).to be(false)
     end
 
     it "doesn't raise when unregistering a not registered metrics" do
@@ -101,11 +101,11 @@ describe Prometheus::Client::Registry do
     it "returns true if a metric name has been registered" do
       registry.register(double(name: :test))
 
-      expect(registry.exist?(:test)).to eql(true)
+      expect(registry.exist?(:test)).to be(true)
     end
 
     it "returns false if a metric name has not been registered yet" do
-      expect(registry.exist?(:test)).to eql(false)
+      expect(registry.exist?(:test)).to be(false)
     end
   end
 
@@ -117,7 +117,7 @@ describe Prometheus::Client::Registry do
     end
 
     it "returns nil if the metric has not been registered yet" do
-      expect(registry.get(:test)).to eql(nil)
+      expect(registry.get(:test)).to be(nil)
     end
   end
 end

@@ -48,7 +48,7 @@ describe Prometheus::Middleware::Collector do
 
     metric = :http_server_requests_total
     labels = { method: "get", path: "/foo", code: "200" }
-    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+    expect(registry.get(metric).get(labels: labels)).to be(1.0)
 
     metric = :http_server_request_duration_seconds
     labels = { method: "get", path: "/foo" }
@@ -62,7 +62,7 @@ describe Prometheus::Middleware::Collector do
 
     metric = :http_server_requests_total
     labels = { method: "get", path: "/foo/:id/bars", code: "200" }
-    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+    expect(registry.get(metric).get(labels: labels)).to be(1.0)
 
     metric = :http_server_request_duration_seconds
     labels = { method: "get", path: "/foo/:id/bars" }
@@ -76,7 +76,7 @@ describe Prometheus::Middleware::Collector do
 
     metric = :http_server_requests_total
     labels = { method: "get", path: "/foo/:uuid/bars", code: "200" }
-    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+    expect(registry.get(metric).get(labels: labels)).to be(1.0)
 
     metric = :http_server_request_duration_seconds
     labels = { method: "get", path: "/foo/:uuid/bars" }
@@ -101,7 +101,7 @@ describe Prometheus::Middleware::Collector do
 
       metric = :http_server_exceptions_total
       labels = { exception: "RuntimeError" }
-      expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+      expect(registry.get(metric).get(labels: labels)).to be(1.0)
     end
   end
 

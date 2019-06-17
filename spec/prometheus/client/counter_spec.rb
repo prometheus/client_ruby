@@ -66,7 +66,7 @@ describe Prometheus::Client::Counter do
     end
 
     it "returns the new counter value" do
-      expect(counter.increment).to eql(1.0)
+      expect(counter.increment).to be(1.0)
     end
 
     it "is thread safe" do
