@@ -36,8 +36,11 @@ class NoopStore
     end
 
     def set(labels:, val:); end
+
     def increment(labels:, by: 1); end
+
     def get(labels:); end
+
     def all_values; end
   end
 end
