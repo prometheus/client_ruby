@@ -84,7 +84,7 @@ STORES = [
   { store: Prometheus::Client::DataStores::Synchronized.new },
   {
     store: Prometheus::Client::DataStores::DirectFileStore.new(dir: TMP_DIR),
-    before: -> () { cleanup_dir(TMP_DIR) },
+    before: -> { cleanup_dir(TMP_DIR) },
   }
 ]
 
