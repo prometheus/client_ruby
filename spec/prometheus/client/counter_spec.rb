@@ -26,7 +26,7 @@ describe Prometheus::Client::Counter do
     it "increments the counter" do
       expect do
         counter.increment
-      end.to change { counter.get }.by(1.0)
+      end.to change(counter, :get).by(1.0)
     end
 
     it "raises an InvalidLabelSetError if sending unexpected labels" do
@@ -56,7 +56,7 @@ describe Prometheus::Client::Counter do
     it "increments the counter by a given value" do
       expect do
         counter.increment(by: 5)
-      end.to change { counter.get }.by(5.0)
+      end.to change(counter, :get).by(5.0)
     end
 
     it "raises an ArgumentError on negative increments" do
@@ -76,7 +76,7 @@ describe Prometheus::Client::Counter do
             10.times { counter.increment }
           end
         end.each(&:join)
-      end.to change { counter.get }.by(100.0)
+      end.to change(counter, :get).by(100.0)
     end
   end
 end

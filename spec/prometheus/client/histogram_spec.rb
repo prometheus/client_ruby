@@ -41,7 +41,7 @@ describe Prometheus::Client::Histogram do
     it "records the given value" do
       expect do
         histogram.observe(5)
-      end.to change { histogram.get }
+      end.to change(histogram, :get)
     end
 
     it "raise error for le labels" do

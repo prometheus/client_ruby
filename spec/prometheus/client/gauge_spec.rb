@@ -26,7 +26,7 @@ describe Prometheus::Client::Gauge do
     it "sets a metric value" do
       expect do
         gauge.set(42)
-      end.to change { gauge.get }.from(0).to(42)
+      end.to change(gauge, :get).from(0).to(42)
     end
 
     it "raises an InvalidLabelSetError if sending unexpected labels" do
@@ -70,7 +70,7 @@ describe Prometheus::Client::Gauge do
     it "increments the gauge" do
       expect do
         gauge.increment
-      end.to change { gauge.get }.by(1.0)
+      end.to change(gauge, :get).by(1.0)
     end
 
     it "raises an InvalidLabelSetError if sending unexpected labels" do
@@ -94,7 +94,7 @@ describe Prometheus::Client::Gauge do
     it "increments the gauge by a given value" do
       expect do
         gauge.increment(by: 5)
-      end.to change { gauge.get }.by(5.0)
+      end.to change(gauge, :get).by(5.0)
     end
 
     it "returns the new gauge value" do
@@ -108,7 +108,7 @@ describe Prometheus::Client::Gauge do
             10.times { gauge.increment }
           end
         end.each(&:join)
-      end.to change { gauge.get }.by(100.0)
+      end.to change(gauge, :get).by(100.0)
     end
   end
 
@@ -120,7 +120,7 @@ describe Prometheus::Client::Gauge do
     it "decrements the gauge" do
       expect do
         gauge.decrement
-      end.to change { gauge.get }.by(-1.0)
+      end.to change(gauge, :get).by(-1.0)
     end
 
     it "raises an InvalidLabelSetError if sending unexpected labels" do
@@ -144,7 +144,7 @@ describe Prometheus::Client::Gauge do
     it "decrements the gauge by a given value" do
       expect do
         gauge.decrement(by: 5)
-      end.to change { gauge.get }.by(-5.0)
+      end.to change(gauge, :get).by(-5.0)
     end
 
     it "returns the new gauge value" do
@@ -158,7 +158,7 @@ describe Prometheus::Client::Gauge do
             10.times { gauge.decrement }
           end
         end.each(&:join)
-      end.to change { gauge.get }.by(-100.0)
+      end.to change(gauge, :get).by(-100.0)
     end
   end
 end

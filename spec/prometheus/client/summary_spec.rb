@@ -34,7 +34,7 @@ describe Prometheus::Client::Summary do
     it "records the given value" do
       expect do
         summary.observe(5)
-      end.to change { summary.get }.
+      end.to change(summary, :get).
         from({ "count" => 0.0, "sum" => 0.0 }).
         to({ "count" => 1.0, "sum" => 5.0 })
     end
