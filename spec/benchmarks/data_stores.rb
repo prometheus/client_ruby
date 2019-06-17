@@ -62,7 +62,9 @@ class NoopStore
 
     def get(labels:); end
 
-    def all_values; {}; end
+    def all_values; 
+      {}; 
+    end
   end
 end
 
