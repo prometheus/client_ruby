@@ -147,9 +147,7 @@ module Prometheus
           end
 
           def store_key(labels)
-            if @values_aggregation_mode == ALL
-              labels[:pid] = process_id
-            end
+            labels[:pid] = process_id if @values_aggregation_mode == ALL
 
             labels.map { |k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}" }.join("&")
           end
@@ -234,9 +232,7 @@ module Prometheus
           end
 
           def read_value(key)
-            if !@positions.has_key?(key)
-              init_value(key)
-            end
+            init_value(key) if !@positions.has_key?(key)
 
             pos = @positions[key]
             @f.seek(pos)
@@ -244,9 +240,7 @@ module Prometheus
           end
 
           def write_value(key, value)
-            if !@positions.has_key?(key)
-              init_value(key)
-            end
+            init_value(key) if !@positions.has_key?(key)
 
             pos = @positions[key]
             @f.seek(pos)
@@ -277,9 +271,7 @@ module Prometheus
                    end
 
             @f = File.open(filename, mode)
-            if @f.size == 0 && !readonly
-              resize_file(INITIAL_FILE_SIZE)
-            end
+            resize_file(INITIAL_FILE_SIZE) if @f.size == 0 && !readonly
             @capacity = @f.size
           end
 

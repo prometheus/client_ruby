@@ -13,9 +13,7 @@ module Prometheus
 
       # Sets the value for the given label set
       def set(value, labels: {})
-        unless value.is_a?(Numeric)
-          raise ArgumentError, "value must be a number"
-        end
+        raise ArgumentError, "value must be a number" unless value.is_a?(Numeric)
 
         @store.set(labels: label_set_for(labels), val: value)
       end
