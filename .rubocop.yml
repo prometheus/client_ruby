@@ -1,0 +1,26 @@
+---
+inherit_gem:
+  gc_ruboconfig: rubocop.yml
+
+# Set this to be the oldest supported version of Ruby for this library. See
+# COMPATIBILITY.md for our compatibility and deprecation policy.
+AllCops:
+  TargetRubyVersion: 2.4
+
+Metrics/MethodLength:
+  Max: 15
+
+Style/RescueStandardError:
+  Exclude:
+    - "*/**/*_spec.rb"
+
+Naming/UncommunicativeMethodParamName:
+  AllowedNames:
+    # These are the default allowed names, set by Rubocop
+    - io
+    - id
+    # These are some custom names that we want to allow, since they aren't
+    # uncommunicative - they're actually rather meaningful!
+    - as
+    # This is our increment kwarg for Prometheus metrics
+    - by

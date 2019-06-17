@@ -1,4 +1,5 @@
-# -*- encoding: utf-8 -*-
+# frozen_string_literal: true
+
 $LOAD_PATH.push File.expand_path('../lib', __FILE__)
 require 'prometheus/client/version'
 
@@ -16,5 +17,5 @@ Gem::Specification.new do |s|
   s.require_paths     = ['lib']
 
   s.add_development_dependency 'benchmark-ips'
-  s.add_development_dependency 'concurrent-ruby'
+  s.add_development_dependency 'gc_ruboconfig', '= 2.4.0'
 end
