@@ -15,7 +15,7 @@ module Prometheus
       DEFAULT_GATEWAY = "http://localhost:9091"
       PATH            = "/metrics/job/%s"
       INSTANCE_PATH   = "/metrics/job/%s/instance/%s"
-      SUPPORTED_SCHEMES = %w(http https).freeze
+      SUPPORTED_SCHEMES = %w[http https].freeze
 
       attr_reader :job, :instance, :gateway, :path
 
