@@ -61,7 +61,7 @@ describe Prometheus::Client::Registry do
     it "doesn't raise when unregistering a not registered metrics" do
       expect do
         registry.unregister(:test)
-      end.not_to raise_error
+      end.to_not raise_error
     end
   end
 

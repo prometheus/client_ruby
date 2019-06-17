@@ -49,7 +49,7 @@ describe Prometheus::Client::Gauge do
       it "can pre-set labels using `with_labels`" do
         expect { gauge.set(10) }.
           to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
-        expect { gauge.with_labels(test: "value").set(10) }.not_to raise_error
+        expect { gauge.with_labels(test: "value").set(10) }.to_not raise_error
       end
     end
 

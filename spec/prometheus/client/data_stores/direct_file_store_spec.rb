@@ -20,7 +20,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       subject.for_metric(:metric_name,
                          metric_type: :counter,
                          metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::SUM })
-    end.not_to raise_error
+    end.to_not raise_error
 
     expect do
       subject.for_metric(:metric_name,
