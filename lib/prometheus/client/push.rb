@@ -12,9 +12,9 @@ module Prometheus
     # Push implements a simple way to transmit a given registry to a given
     # Pushgateway.
     class Push
-      DEFAULT_GATEWAY = "http://localhost:9091".freeze
-      PATH            = "/metrics/job/%s".freeze
-      INSTANCE_PATH   = "/metrics/job/%s/instance/%s".freeze
+      DEFAULT_GATEWAY = "http://localhost:9091"
+      PATH            = "/metrics/job/%s"
+      INSTANCE_PATH   = "/metrics/job/%s/instance/%s"
       SUPPORTED_SCHEMES = %w(http https).freeze
 
       attr_reader :job, :instance, :gateway, :path
