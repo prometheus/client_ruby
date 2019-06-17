@@ -205,7 +205,7 @@ module Prometheus
             @used = 0
 
             open_file(filename, readonly)
-            @used = @f.read(4).unpack("l")[0] if @capacity > 0
+            @used = @f.read(4).unpack1("l") if @capacity > 0
 
             if @used > 0
               # File already has data. Read the existing values
@@ -236,7 +236,7 @@ module Prometheus
 
             pos = @positions[key]
             @f.seek(pos)
-            @f.read(8).unpack("d")[0]
+            @f.read(8).unpack1("d")
           end
 
           def write_value(key, value)
@@ -302,9 +302,9 @@ module Prometheus
             @f.seek(8)
             values = []
             while @f.pos < @used
-              padded_len = @f.read(4).unpack("l")[0]
-              encoded = @f.read(padded_len).unpack("A#{padded_len}")[0]
-              value = @f.read(8).unpack("d")[0]
+              padded_len = @f.read(4).unpack1("l")
+              encoded = @f.read(padded_len).unpack1("A#{padded_len}")
+              value = @f.read(8).unpack1("d")
               values << [encoded.strip, value, @f.pos - 8]
             end
             values
