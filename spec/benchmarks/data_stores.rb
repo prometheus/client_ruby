@@ -272,7 +272,7 @@ Benchmark.bm(45) do |bm|
       next if store_test[:max_threads] && num_threads > store_test[:max_threads]
 
       # Cleanup before test
-      store_test[:before].call if store_test[:before]
+      store_test[:before]&.call
 
       test_setup = TestSetup.new(store_test[:store], num_threads)
       store_name = store_test[:store].class.name.split("::").last

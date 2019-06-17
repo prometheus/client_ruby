@@ -130,7 +130,7 @@ module Prometheus
                   stores_data[label_set] << v
                 end
               ensure
-                store.close if store
+                store&.close
               end
             end
 
