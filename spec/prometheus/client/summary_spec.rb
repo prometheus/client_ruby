@@ -63,8 +63,8 @@ describe Prometheus::Client::Summary do
       end
 
       it "can pre-set labels using `with_labels`" do
-        expect { summary.observe(2) }
-          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+        expect { summary.observe(2) }.
+          to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
         expect { summary.with_labels(test: "value").observe(2) }.not_to raise_error
       end
     end

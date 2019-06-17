@@ -47,8 +47,8 @@ describe Prometheus::Client::Counter do
       end
 
       it "can pre-set labels using `with_labels`" do
-        expect { counter.increment }
-          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+        expect { counter.increment }.
+          to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
         expect { counter.with_labels(test: "label").increment }.not_to raise_error
       end
     end

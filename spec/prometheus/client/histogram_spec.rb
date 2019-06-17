@@ -68,8 +68,8 @@ describe Prometheus::Client::Histogram do
       end
 
       it "can pre-set labels using `with_labels`" do
-        expect { histogram.observe(2) }
-          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+        expect { histogram.observe(2) }.
+          to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
         expect { histogram.with_labels(test: "value").observe(2) }.not_to raise_error
       end
     end
@@ -86,8 +86,8 @@ describe Prometheus::Client::Histogram do
     end
 
     it "returns a set of buckets values" do
-      expect(histogram.get(labels: { foo: "bar" }))
-        .to eql(
+      expect(histogram.get(labels: { foo: "bar" })).
+        to eql(
           "2.5" => 0.0, "5" => 2.0, "10" => 3.0, "+Inf" => 4.0, "sum" => 25.2,
         )
     end
