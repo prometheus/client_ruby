@@ -70,7 +70,7 @@ module Prometheus
         duration = Benchmark.realtime { response = yield }
         record(env, response.first.to_s, duration)
         response
-      rescue => exception
+      rescue StandardError => exception
         @exceptions.increment(labels: { exception: exception.class.name })
         raise
       end
@@ -89,7 +89,7 @@ module Prometheus
 
         @requests.increment(labels: counter_labels)
         @durations.observe(duration, labels: duration_labels)
-      rescue
+      rescue StandardError
         # TODO: log unexpected exception during request recording
         nil
       end
