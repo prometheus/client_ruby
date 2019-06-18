@@ -42,7 +42,7 @@ module Prometheus
                              docstring: docstring,
                              labels: labels,
                              preset_labels: preset_labels,
-                             store_settings: {}))
+                             store_settings: store_settings))
       end
 
       def summary(name, docstring:, labels: [], preset_labels: {}, store_settings: {})
@@ -50,7 +50,7 @@ module Prometheus
                              docstring: docstring,
                              labels: labels,
                              preset_labels: preset_labels,
-                             store_settings: {}))
+                             store_settings: store_settings))
       end
 
       def gauge(name, docstring:, labels: [], preset_labels: {}, store_settings: {})
@@ -58,7 +58,7 @@ module Prometheus
                            docstring: docstring,
                            labels: labels,
                            preset_labels: preset_labels,
-                           store_settings: {}))
+                           store_settings: store_settings))
       end
 
       def histogram(name, docstring:, labels: [], preset_labels: {},
@@ -69,7 +69,7 @@ module Prometheus
                                labels: labels,
                                preset_labels: preset_labels,
                                buckets: buckets,
-                               store_settings: {}))
+                               store_settings: store_settings))
       end
 
       def exist?(name)
