@@ -1,5 +1,3 @@
-require 'concurrent'
-
 module Prometheus
   module Client
     module DataStores
@@ -27,11 +25,11 @@ module Prometheus
         class MetricStore
           def initialize
             @internal_store = Hash.new { |hash, key| hash[key] = 0.0 }
-            @rwlock = Concurrent::ReentrantReadWriteLock.new
+            @lock = Monitor.new
           end
 
           def synchronize
-            @rwlock.with_write_lock { yield }
+            @lock.synchronize { yield }
           end
 
           def set(labels:, val:)

@@ -1,4 +1,3 @@
-require 'concurrent'
 require 'fileutils'
 require "cgi"
 
@@ -72,7 +71,7 @@ module Prometheus
             @store_settings = store_settings
             @values_aggregation_mode = metric_settings[:aggregation]
 
-            @rwlock = Concurrent::ReentrantReadWriteLock.new
+            @lock = Monitor.new
           end
 
           # Synchronize is used to do a multi-process Mutex, when incrementing multiple
@@ -142,7 +141,7 @@ module Prometheus
           private
 
           def in_process_sync
-            @rwlock.with_write_lock { yield }
+            @lock.synchronize { yield }
           end
 
           def store_key(labels)

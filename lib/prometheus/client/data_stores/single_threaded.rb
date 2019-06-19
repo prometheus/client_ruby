@@ -1,5 +1,3 @@
-require 'concurrent'
-
 module Prometheus
   module Client
     module DataStores

@@ -1,4 +1,5 @@
 require 'benchmark'
+require 'concurrent'
 require 'prometheus/client'
 require 'prometheus/client/counter'
 require 'prometheus/client/histogram'
