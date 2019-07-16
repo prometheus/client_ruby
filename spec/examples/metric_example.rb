@@ -1,5 +1,31 @@
 # encoding: UTF-8
 
+# TODO: Convert these tests to use a fake metric class rather than shared examples
+#
+# Right now, we're using shared examples that we include in every metric type's tests
+# to validate the behaviour of the base metric class.
+#
+# This makes it difficult to test certain behaviour, as the interfaces of those metric
+# types differ and these tests can end up needing to know about them.
+#
+# You can see that in the tests for #get, which depend on `type` which isn't defined in
+# this file. The test files that include these shared examples have to do so with a block
+# that provides the `type` variable.
+#
+# This cropped up in a much worse way when trying to test the code that makes sure label
+# values are all strings. Writing a test here that gets included in all the real metric
+# implementations is near impossible. You need your test to call a different method to
+# alter a metric value (e.g. `set`, `increment` or `observe` depending on the metric type)
+# which means having each concrete metric type's tests passing us a lambda that we can
+# call agnostically of the metric type.
+#
+# The resultant code is confusing to follow, so we opted to duplicate those tests in each
+# metric type's test file.
+#
+# Changing this file to implement a fake metric class (e.g. `FakeTestCounter`) would let
+# us easily test the functionality of the base `Prometheus::Client::Metric` without
+# getting caught up in the specifics of the real metric types.
+
 shared_examples_for Prometheus::Client::Metric do
   subject { described_class.new(:foo, docstring: 'foo description') }
 
