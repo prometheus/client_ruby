@@ -42,7 +42,7 @@ describe Prometheus::Client::Summary do
     it 'raise error for quantile labels' do
       expect do
         summary.observe(5, labels: { quantile: 1 })
-      end.to raise_error Prometheus::Client::LabelSetValidator::ReservedLabelError
+      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
     end
 
     it 'raises an InvalidLabelSetError if sending unexpected labels' do

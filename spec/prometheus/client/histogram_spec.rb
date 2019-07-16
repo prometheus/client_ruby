@@ -47,7 +47,7 @@ describe Prometheus::Client::Histogram do
     it 'raise error for le labels' do
       expect do
         histogram.observe(5, labels: { le: 1 })
-      end.to raise_error Prometheus::Client::LabelSetValidator::ReservedLabelError
+      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
     end
 
     it 'raises an InvalidLabelSetError if sending unexpected labels' do
