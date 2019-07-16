@@ -18,7 +18,6 @@ module Prometheus
       def initialize(expected_labels:, reserved_labels: [])
         @expected_labels = expected_labels.sort
         @reserved_labels = BASE_RESERVED_LABELS + reserved_labels
-        @validated = {}
       end
 
       def validate_symbols!(labels)
@@ -34,8 +33,6 @@ module Prometheus
       end
 
       def validate_labelset!(labelset)
-        return labelset if @validated.key?(labelset.hash)
-
         validate_symbols!(labelset)
 
         unless keys_match?(labelset)
@@ -44,7 +41,7 @@ module Prometheus
                                       " keys expected: #{expected_labels}"
         end
 
-        @validated[labelset.hash] = labelset
+        labelset
       end
 
       private
