@@ -119,7 +119,7 @@ class TestSetup
     threads.each(&:join) # Wait for all threads to finish and die
   end
 
-  def export!(expected_output) # rubocop:disable Metrics/AbcSize
+  def export!(expected_output)
     output = Prometheus::Client::Formats::Text.marshal(registry)
 
     # Output validation doesn't work for NoopStore
@@ -162,7 +162,7 @@ class TestSetup
     latch.wait # Wait for all threads to have started
   end
 
-  def setup_metrics # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+  def setup_metrics # rubocop:disable Metrics/MethodLength
     NUM_COUNTERS.times do |i|
       labelset = generate_labelset
       counter =  Prometheus::Client::Counter.new(
@@ -190,7 +190,7 @@ class TestSetup
     metrics.each { |metric| registry.register(metric) }
   end
 
-  def create_datapoints # rubocop:disable Metrics/AbcSize
+  def create_datapoints
     num_threads.times do |i|
       data_points[i] = []
     end

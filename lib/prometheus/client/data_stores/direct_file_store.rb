@@ -27,9 +27,9 @@ module Prometheus
 
       class DirectFileStore
         class InvalidStoreSettingsError < StandardError; end
-        AGGREGATION_MODES = [MAX = :max, MIN = :min, SUM = :sum, ALL = :all]
-        DEFAULT_METRIC_SETTINGS = { aggregation: SUM }
-        DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }
+        AGGREGATION_MODES = [MAX = :max, MIN = :min, SUM = :sum, ALL = :all].freeze
+        DEFAULT_METRIC_SETTINGS = { aggregation: SUM }.freeze
+        DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }.freeze
 
         def initialize(dir:)
           @store_settings = { dir: dir }
@@ -38,9 +38,7 @@ module Prometheus
 
         def for_metric(metric_name, metric_type:, metric_settings: {})
           default_settings = DEFAULT_METRIC_SETTINGS
-          if metric_type == :gauge
-            default_settings = DEFAULT_GAUGE_SETTINGS
-          end
+          default_settings = DEFAULT_GAUGE_SETTINGS if metric_type == :gauge
 
           settings = default_settings.merge(metric_settings)
           validate_metric_settings(settings)
