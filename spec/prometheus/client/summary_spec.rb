@@ -68,6 +68,33 @@ describe Prometheus::Client::Summary do
         expect { summary.with_labels(test: 'value').observe(2) }.not_to raise_error
       end
     end
+
+    context "with non-string label values" do
+      let(:summary) do
+        described_class.new(:foo,
+                            docstring: 'foo description',
+                            labels: [:foo])
+      end
+
+      it "converts labels to strings for consistent storage" do
+        summary.observe(5, labels: { foo: :label })
+        expect(summary.get(labels: { foo: 'label' })["count"]).to eq(1.0)
+      end
+
+      context "and some labels preset" do
+        let(:summary) do
+          described_class.new(:foo,
+                              docstring: 'foo description',
+                              labels: [:foo, :bar],
+                              preset_labels: { foo: :label })
+        end
+
+        it "converts labels to strings for consistent storage" do
+          summary.observe(5, labels: { bar: :label })
+          expect(summary.get(labels: { foo: 'label', bar: 'label' })["count"]).to eq(1.0)
+        end
+      end
+    end
   end
 
   describe '#get' do

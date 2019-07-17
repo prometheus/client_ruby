@@ -73,6 +73,35 @@ describe Prometheus::Client::Histogram do
         expect { histogram.with_labels(test: 'value').observe(2) }.not_to raise_error
       end
     end
+
+    context "with non-string label values" do
+      let(:histogram) do
+        described_class.new(:foo,
+                            docstring: 'foo description',
+                            labels: [:foo],
+                            buckets: [2.5, 5, 10])
+      end
+
+      it "converts labels to strings for consistent storage" do
+        histogram.observe(5, labels: { foo: :label })
+        expect(histogram.get(labels: { foo: 'label' })["10"]).to eq(1.0)
+      end
+
+      context "and some labels preset" do
+        let(:histogram) do
+          described_class.new(:foo,
+                              docstring: 'foo description',
+                              labels: [:foo, :bar],
+                              preset_labels: { foo: :label },
+                              buckets: [2.5, 5, 10])
+        end
+
+        it "converts labels to strings for consistent storage" do
+          histogram.observe(5, labels: { bar: :label })
+          expect(histogram.get(labels: { foo: 'label', bar: 'label' })["10"]).to eq(1.0)
+        end
+      end
+    end
   end
 
   describe '#get' do

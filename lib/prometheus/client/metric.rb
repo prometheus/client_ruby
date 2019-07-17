@@ -27,7 +27,7 @@ module Prometheus
 
         @name = name
         @docstring = docstring
-        @preset_labels = preset_labels
+        @preset_labels = stringify_values(preset_labels)
 
         @store = Prometheus::Client.config.data_store.for_metric(
           name,
@@ -85,7 +85,15 @@ module Prometheus
       def label_set_for(labels)
         # We've already validated, and there's nothing to merge. Save some cycles
         return preset_labels if @all_labels_preset && labels.empty?
+        labels = stringify_values(labels)
         @validator.validate_labelset!(preset_labels.merge(labels))
+      end
+
+      def stringify_values(labels)
+        stringified = {}
+        labels.each { |k,v| stringified[k] = v.to_s }
+
+        stringified
       end
     end
   end

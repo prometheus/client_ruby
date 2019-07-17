@@ -78,5 +78,28 @@ describe Prometheus::Client::Counter do
         end.each(&:join)
       end.to change { counter.get }.by(100.0)
     end
+
+    context "with non-string label values" do
+      subject { described_class.new(:foo, docstring: 'Labels', labels: [:foo]) }
+
+      it "converts labels to strings for consistent storage" do
+        subject.increment(labels: { foo: :label })
+        expect(subject.get(labels: { foo: 'label' })).to eq(1.0)
+      end
+
+      context "and some labels preset" do
+        subject do
+          described_class.new(:foo,
+                              docstring: 'Labels',
+                              labels: [:foo, :bar],
+                              preset_labels: { foo: :label })
+        end
+
+        it "converts labels to strings for consistent storage" do
+          subject.increment(labels: { bar: :label })
+          expect(subject.get(labels: { foo: 'label', bar: 'label' })).to eq(1.0)
+        end
+      end
+    end
   end
 end
