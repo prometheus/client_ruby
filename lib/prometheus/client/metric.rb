@@ -90,7 +90,10 @@ module Prometheus
       end
 
       def stringify_values(labels)
-        labels.map { |k,v| [k, v.to_s] }.to_h
+        stringified = {}
+        labels.each { |k,v| stringified[k] = v.to_s }
+
+        stringified
       end
     end
   end
