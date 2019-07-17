@@ -54,17 +54,17 @@ describe Prometheus::Client::LabelSetValidator do
       expect(validator.validate_labelset!(hash)).to eql(hash)
     end
 
-    it 'raises an exception if a given label set is not `validate_symbols!`' do
-      input = 'broken'
-      expect(validator).to receive(:validate_symbols!).with(input).and_raise(invalid)
+    it 'returns an exception if there are malformed labels' do
+      expect do
+        validator.validate_labelset!('method' => 'get', :code => '200')
+      end.to raise_exception(invalid, /keys given: \["method", :code\] vs. keys expected: \[:code, :method\]/)
 
-      expect { validator.validate_labelset!(input) }.to raise_exception(invalid)
     end
 
     it 'raises an exception if there are unexpected labels' do
       expect do
         validator.validate_labelset!(method: 'get', code: '200', exception: 'NoMethodError')
-      end.to raise_exception(invalid, /keys given: \[:code, :exception, :method\] vs. keys expected: \[:code, :method\]/)
+      end.to raise_exception(invalid, /keys given: \[:method, :code, :exception\] vs. keys expected: \[:code, :method\]/)
     end
 
     it 'raises an exception if there are missing labels' do

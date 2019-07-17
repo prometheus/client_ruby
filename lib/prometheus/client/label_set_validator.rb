@@ -18,7 +18,6 @@ module Prometheus
       def initialize(expected_labels:, reserved_labels: [])
         @expected_labels = expected_labels.sort
         @reserved_labels = BASE_RESERVED_LABELS + reserved_labels
-        @validated = {}
       end
 
       def validate_symbols!(labels)
@@ -34,17 +33,17 @@ module Prometheus
       end
 
       def validate_labelset!(labelset)
-        return labelset if @validated.key?(labelset.hash)
-
-        validate_symbols!(labelset)
-
-        unless keys_match?(labelset)
-          raise InvalidLabelSetError, "labels must have the same signature " \
-                                      "(keys given: #{labelset.keys.sort} vs." \
-                                      " keys expected: #{expected_labels}"
+        begin
+          return labelset if keys_match?(labelset)
+        rescue ArgumentError
+          # If labelset contains keys that are a mixture of strings and symbols, this will
+          # raise when trying to sort them, but the error should be the same:
+          # InvalidLabelSetError
         end
 
-        @validated[labelset.hash] = labelset
+        raise InvalidLabelSetError, "labels must have the same signature " \
+                                    "(keys given: #{labelset.keys} vs." \
+                                    " keys expected: #{expected_labels}"
       end
 
       private
