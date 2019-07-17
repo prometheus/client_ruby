@@ -1,7 +1,6 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
-require 'thread'
-require 'prometheus/client/label_set_validator'
+require "prometheus/client/label_set_validator"
 
 module Prometheus
   module Client
@@ -32,7 +31,7 @@ module Prometheus
         @store = Prometheus::Client.config.data_store.for_metric(
           name,
           metric_type: type,
-          metric_settings: store_settings
+          metric_settings: store_settings,
         )
 
         if preset_labels.keys.length == labels.length
@@ -67,11 +66,10 @@ module Prometheus
       end
 
       def validate_name(name)
-        unless name.is_a?(Symbol)
-          raise ArgumentError, 'metric name must be a symbol'
-        end
+        raise ArgumentError, "metric name must be a symbol" unless name.is_a?(Symbol)
+
         unless name.to_s =~ /\A[a-zA-Z_:][a-zA-Z0-9_:]*\Z/
-          msg = 'metric name must match /[a-zA-Z_:][a-zA-Z0-9_:]*/'
+          msg = "metric name must match /[a-zA-Z_:][a-zA-Z0-9_:]*/"
           raise ArgumentError, msg
         end
       end
@@ -79,12 +77,13 @@ module Prometheus
       def validate_docstring(docstring)
         return true if docstring.respond_to?(:empty?) && !docstring.empty?
 
-        raise ArgumentError, 'docstring must be given'
+        raise ArgumentError, "docstring must be given"
       end
 
       def label_set_for(labels)
         # We've already validated, and there's nothing to merge. Save some cycles
         return preset_labels if @all_labels_preset && labels.empty?
+
         @validator.validate_labelset!(preset_labels.merge(labels))
       end
     end

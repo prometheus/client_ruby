@@ -1,6 +1,6 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
-require 'prometheus/client/metric'
+require "prometheus/client/metric"
 
 module Prometheus
   module Client
@@ -23,7 +23,7 @@ module Prometheus
                      preset_labels: {},
                      buckets: DEFAULT_BUCKETS,
                      store_settings: {})
-        raise ArgumentError, 'Unsorted buckets, typo?' unless sorted?(buckets)
+        raise ArgumentError, "Unsorted buckets, typo?" unless sorted?(buckets)
 
         @buckets = buckets
         super(name,
@@ -47,7 +47,7 @@ module Prometheus
       end
 
       def observe(value, labels: {})
-        bucket = buckets.find {|upper_limit| upper_limit > value  }
+        bucket = buckets.find { |upper_limit| upper_limit > value }
         bucket = "+Inf" if bucket.nil?
 
         base_label_set = label_set_for(labels)
@@ -84,12 +84,12 @@ module Prometheus
         v = @store.all_values
 
         result = v.each_with_object({}) do |(label_set, v), acc|
-          actual_label_set = label_set.reject{|l| l == :le }
-          acc[actual_label_set] ||= @buckets.map{|b| [b.to_s, 0.0]}.to_h
+          actual_label_set = label_set.reject { |l| l == :le }
+          acc[actual_label_set] ||= @buckets.map { |b| [b.to_s, 0.0] }.to_h
           acc[actual_label_set][label_set[:le].to_s] = v
         end
 
-        result.each do |(label_set, v)|
+        result.each do |(_label_set, v)|
           accumulate_buckets(v)
         end
       end

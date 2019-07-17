@@ -1,21 +1,21 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
 module Prometheus
   module Client
     module Formats
       # Text format is human readable mainly used for manual inspection.
       module Text
-        MEDIA_TYPE   = 'text/plain'.freeze
-        VERSION      = '0.0.4'.freeze
-        CONTENT_TYPE = "#{MEDIA_TYPE}; version=#{VERSION}".freeze
+        MEDIA_TYPE   = "text/plain"
+        VERSION      = "0.0.4"
+        CONTENT_TYPE = "#{MEDIA_TYPE}; version=#{VERSION}"
 
-        METRIC_LINE = '%s%s %s'.freeze
-        TYPE_LINE   = '# TYPE %s %s'.freeze
-        HELP_LINE   = '# HELP %s %s'.freeze
+        METRIC_LINE = "%s%s %s"
+        TYPE_LINE   = "# TYPE %s %s"
+        HELP_LINE   = "# HELP %s %s"
 
-        LABEL     = '%s="%s"'.freeze
-        SEPARATOR = ','.freeze
-        DELIMITER = "\n".freeze
+        LABEL     = '%s="%s"'
+        SEPARATOR = ","
+        DELIMITER = "\n"
 
         REGEX   = { doc: /[\n\\]/, label: /[\n\\"]/ }.freeze
         REPLACE = { "\n" => '\n', '\\' => '\\\\', '"' => '\"' }.freeze
@@ -24,8 +24,8 @@ module Prometheus
           lines = []
 
           registry.metrics.each do |metric|
-            lines << format(TYPE_LINE, metric.name, metric.type)
-            lines << format(HELP_LINE, metric.name, escape(metric.docstring))
+            lines << sprintf(TYPE_LINE, metric.name, metric.type)
+            lines << sprintf(HELP_LINE, metric.name, escape(metric.docstring))
 
             metric.values.each do |label_set, value|
               representation(metric, label_set, value) { |l| lines << l }
@@ -59,6 +59,7 @@ module Prometheus
             bucket = "#{name}_bucket"
             value.each do |q, v|
               next if q == "sum"
+
               yield metric(bucket, labels(set.merge(le: q)), v)
             end
 
@@ -68,14 +69,14 @@ module Prometheus
           end
 
           def metric(name, labels, value)
-            format(METRIC_LINE, name, labels, value)
+            sprintf(METRIC_LINE, name, labels, value)
           end
 
           def labels(set)
             return if set.empty?
 
             strings = set.each_with_object([]) do |(key, value), memo|
-              memo << format(LABEL, key, escape(value, :label))
+              memo << sprintf(LABEL, key, escape(value, :label))
             end
 
             "{#{strings.join(SEPARATOR)}}"

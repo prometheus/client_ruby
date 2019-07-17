@@ -1,7 +1,7 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
-require 'benchmark'
-require 'prometheus/client'
+require "benchmark"
+require "prometheus/client"
 
 module Prometheus
   module Middleware
@@ -31,7 +31,7 @@ module Prometheus
       def initialize(app, options = {})
         @app = app
         @registry = options[:registry] || Client.registry
-        @metrics_prefix = options[:metrics_prefix] || 'http_server'
+        @metrics_prefix = options[:metrics_prefix] || "http_server"
 
         init_request_metrics
         init_exception_metrics
@@ -47,21 +47,21 @@ module Prometheus
         @requests = @registry.counter(
           :"#{@metrics_prefix}_requests_total",
           docstring:
-            'The total number of HTTP requests handled by the Rack application.',
-          labels: %i[code method path]
+            "The total number of HTTP requests handled by the Rack application.",
+          labels: %i[code method path],
         )
         @durations = @registry.histogram(
           :"#{@metrics_prefix}_request_duration_seconds",
-          docstring: 'The HTTP response duration of the Rack application.',
-          labels: %i[method path]
+          docstring: "The HTTP response duration of the Rack application.",
+          labels: %i[method path],
         )
       end
 
       def init_exception_metrics
         @exceptions = @registry.counter(
           :"#{@metrics_prefix}_exceptions_total",
-          docstring: 'The total number of exceptions raised by the Rack application.',
-          labels: [:exception]
+          docstring: "The total number of exceptions raised by the Rack application.",
+          labels: [:exception],
         )
       end
 
@@ -69,35 +69,35 @@ module Prometheus
         response = nil
         duration = Benchmark.realtime { response = yield }
         record(env, response.first.to_s, duration)
-        return response
-      rescue => exception
-        @exceptions.increment(labels: { exception: exception.class.name })
+        response
+      rescue StandardError => e
+        @exceptions.increment(labels: { exception: e.class.name })
         raise
       end
 
       def record(env, code, duration)
         counter_labels = {
-          code:   code,
-          method: env['REQUEST_METHOD'].downcase,
-          path:   strip_ids_from_path(env['PATH_INFO']),
+          code: code,
+          method: env["REQUEST_METHOD"].downcase,
+          path: strip_ids_from_path(env["PATH_INFO"]),
         }
 
         duration_labels = {
-          method: env['REQUEST_METHOD'].downcase,
-          path:   strip_ids_from_path(env['PATH_INFO']),
+          method: env["REQUEST_METHOD"].downcase,
+          path: strip_ids_from_path(env["PATH_INFO"]),
         }
 
         @requests.increment(labels: counter_labels)
         @durations.observe(duration, labels: duration_labels)
-      rescue
+      rescue StandardError
         # TODO: log unexpected exception during request recording
         nil
       end
 
       def strip_ids_from_path(path)
-        path
-          .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)}, '/:uuid\\1')
-          .gsub(%r{/\d+(/|$)}, '/:id\\1')
+        path.
+          gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)}, '/:uuid\\1').
+          gsub(%r{/\d+(/|$)}, '/:id\\1')
       end
     end
   end

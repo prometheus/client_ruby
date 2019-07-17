@@ -1,6 +1,6 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
-require 'prometheus/client/metric'
+require "prometheus/client/metric"
 
 module Prometheus
   module Client
@@ -25,7 +25,7 @@ module Prometheus
       def get(labels: {})
         base_label_set = label_set_for(labels)
 
-        internal_counters = ["count", "sum"]
+        internal_counters = %w[count sum]
 
         @store.synchronize do
           internal_counters.each_with_object({}) do |counter, acc|
@@ -39,7 +39,7 @@ module Prometheus
         v = @store.all_values
 
         v.each_with_object({}) do |(label_set, v), acc|
-          actual_label_set = label_set.reject{|l| l == :quantile }
+          actual_label_set = label_set.reject { |l| l == :quantile }
           acc[actual_label_set] ||= { "count" => 0.0, "sum" => 0.0 }
           acc[actual_label_set][label_set[:quantile]] = v
         end

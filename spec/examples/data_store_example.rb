@@ -1,10 +1,11 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
 shared_examples_for Prometheus::Client::DataStores do
-  describe "MetricStore#set and #get" do
+  describe "MetricStore#set and #get", :aggregate_failures do
     it "returns the value set for each labelset" do
       metric_store.set(labels: { foo: "bar" }, val: 5)
       metric_store.set(labels: { foo: "baz" }, val: 2)
+
       expect(metric_store.get(labels: { foo: "bar" })).to eq(5)
       expect(metric_store.get(labels: { foo: "baz" })).to eq(2)
       expect(metric_store.get(labels: { foo: "bat" })).to eq(0)
@@ -12,7 +13,7 @@ shared_examples_for Prometheus::Client::DataStores do
   end
 
   describe "MetricStore#increment" do
-    it "returns the value set for each labelset" do
+    it "returns the value set for each labelset", :aggregate_failures do
       metric_store.set(labels: { foo: "bar" }, val: 5)
       metric_store.set(labels: { foo: "baz" }, val: 2)
 
@@ -31,7 +32,7 @@ shared_examples_for Prometheus::Client::DataStores do
     # it should run the passed block
     it "accepts a block and runs it" do
       a = 0
-      metric_store.synchronize{ a += 1 }
+      metric_store.synchronize { a += 1 }
       expect(a).to eq(1)
     end
 

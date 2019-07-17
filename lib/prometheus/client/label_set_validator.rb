@@ -1,4 +1,4 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
 module Prometheus
   module Client
@@ -6,7 +6,7 @@ module Prometheus
     # Prometheus specification.
     class LabelSetValidator
       # TODO: we might allow setting :instance in the future
-      BASE_RESERVED_LABELS = [:job, :instance, :pid].freeze
+      BASE_RESERVED_LABELS = %i[job instance pid].freeze
 
       class LabelSetError < StandardError; end
       class InvalidLabelSetError < LabelSetError; end
@@ -59,7 +59,7 @@ module Prometheus
       end
 
       def validate_name(key)
-        return true unless key.to_s.start_with?('__')
+        return true unless key.to_s.start_with?("__")
 
         raise ReservedLabelError, "label #{key} must not start with __"
       end

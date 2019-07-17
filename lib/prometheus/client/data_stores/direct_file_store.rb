@@ -1,4 +1,6 @@
-require 'fileutils'
+# frozen_string_literal: true
+
+require "fileutils"
 require "cgi"
 
 module Prometheus
@@ -25,9 +27,9 @@ module Prometheus
 
       class DirectFileStore
         class InvalidStoreSettingsError < StandardError; end
-        AGGREGATION_MODES = [MAX = :max, MIN = :min, SUM = :sum, ALL = :all]
-        DEFAULT_METRIC_SETTINGS = { aggregation: SUM }
-        DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }
+        AGGREGATION_MODES = [MAX = :max, MIN = :min, SUM = :sum, ALL = :all].freeze
+        DEFAULT_METRIC_SETTINGS = { aggregation: SUM }.freeze
+        DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }.freeze
 
         def initialize(dir:)
           @store_settings = { dir: dir }
@@ -36,9 +38,7 @@ module Prometheus
 
         def for_metric(metric_name, metric_type:, metric_settings: {})
           default_settings = DEFAULT_METRIC_SETTINGS
-          if metric_type == :gauge
-            default_settings = DEFAULT_GAUGE_SETTINGS
-          end
+          default_settings = DEFAULT_GAUGE_SETTINGS if metric_type == :gauge
 
           settings = default_settings.merge(metric_settings)
           validate_metric_settings(settings)
@@ -51,8 +51,8 @@ module Prometheus
         private
 
         def validate_metric_settings(metric_settings)
-          unless metric_settings.has_key?(:aggregation) &&
-            AGGREGATION_MODES.include?(metric_settings[:aggregation])
+          unless metric_settings.key?(:aggregation) &&
+              AGGREGATION_MODES.include?(metric_settings[:aggregation])
             raise InvalidStoreSettingsError,
                   "Metrics need a valid :aggregation key"
           end
@@ -110,7 +110,7 @@ module Prometheus
           end
 
           def all_values
-            stores_data = Hash.new{ |hash, key| hash[key] = [] }
+            stores_data = Hash.new { |hash, key| hash[key] = [] }
 
             # There's no need to call `synchronize` here. We're opening a second handle to
             # the file, and `flock`ing it, which prevents inconsistent reads
@@ -121,14 +121,14 @@ module Prometheus
                   # Labels come as a query string, and CGI::parse returns arrays for each key
                   # "foo=bar&x=y" => { "foo" => ["bar"], "x" => ["y"] }
                   # Turn the keys back into symbols, and remove the arrays
-                  label_set = CGI::parse(labelset_qs).map do |k, vs|
+                  label_set = CGI.parse(labelset_qs).map do |k, vs|
                     [k.to_sym, vs.first]
                   end.to_h
 
                   stores_data[label_set] << v
                 end
               ensure
-                store.close if store
+                store&.close
               end
             end
 
@@ -145,11 +145,9 @@ module Prometheus
           end
 
           def store_key(labels)
-            if @values_aggregation_mode == ALL
-              labels[:pid] = process_id
-            end
+            labels[:pid] = process_id if @values_aggregation_mode == ALL
 
-            labels.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join('&')
+            labels.map { |k, v| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}" }.join("&")
           end
 
           def internal_store
@@ -158,12 +156,12 @@ module Prometheus
 
           # Filename for this metric's PStore (one per process)
           def filemap_filename
-            filename = "metric_#{ metric_name }___#{ process_id }.bin"
+            filename = "metric_#{metric_name}___#{process_id}.bin"
             File.join(@store_settings[:dir], filename)
           end
 
           def stores_for_metric
-            Dir.glob(File.join(@store_settings[:dir], "metric_#{ metric_name }___*"))
+            Dir.glob(File.join(@store_settings[:dir], "metric_#{metric_name}___*"))
           end
 
           def process_id
@@ -181,7 +179,7 @@ module Prometheus
               values.first
             else
               raise InvalidStoreSettingsError,
-                    "Invalid Aggregation Mode: #{ @values_aggregation_mode }"
+                    "Invalid Aggregation Mode: #{@values_aggregation_mode}"
             end
           end
         end
@@ -196,7 +194,7 @@ module Prometheus
         # size of the next field, a utf-8 encoded string key, padding to an 8 byte
         # alignment, and then a 8 byte float which is the value.
         class FileMappedDict
-          INITIAL_FILE_SIZE = 1024*1024
+          INITIAL_FILE_SIZE = 1024 * 1024
 
           attr_reader :capacity, :used, :positions
 
@@ -205,7 +203,7 @@ module Prometheus
             @used = 0
 
             open_file(filename, readonly)
-            @used = @f.read(4).unpack('l')[0] if @capacity > 0
+            @used = @f.read(4).unpack1("l") if @capacity > 0
 
             if @used > 0
               # File already has data. Read the existing values
@@ -216,10 +214,10 @@ module Prometheus
               end
             else
               # File is empty. Init the `used` counter, if we're in write mode
-              if !readonly
+              unless readonly
                 @used = 8
                 @f.seek(0)
-                @f.write([@used].pack('l'))
+                @f.write([@used].pack("l"))
               end
             end
           end
@@ -227,28 +225,24 @@ module Prometheus
           # Yield (key, value, pos). No locking is performed.
           def all_values
             with_file_lock do
-              read_all_values.map { |k, v, p| [k, v] }
+              read_all_values.map { |k, v, _p| [k, v] }
             end
           end
 
           def read_value(key)
-            if !@positions.has_key?(key)
-              init_value(key)
-            end
+            init_value(key) unless @positions.key?(key)
 
             pos = @positions[key]
             @f.seek(pos)
-            @f.read(8).unpack('d')[0]
+            @f.read(8).unpack1("d")
           end
 
           def write_value(key, value)
-            if !@positions.has_key?(key)
-              init_value(key)
-            end
+            init_value(key) unless @positions.key?(key)
 
             pos = @positions[key]
             @f.seek(pos)
-            @f.write([value].pack('d'))
+            @f.write([value].pack("d"))
             @f.flush
           end
 
@@ -275,9 +269,7 @@ module Prometheus
                    end
 
             @f = File.open(filename, mode)
-            if @f.size == 0 && !readonly
-              resize_file(INITIAL_FILE_SIZE)
-            end
+            resize_file(INITIAL_FILE_SIZE) if @f.size == 0 && !readonly
             @capacity = @f.size
           end
 
@@ -288,7 +280,7 @@ module Prometheus
           # Initialize a value. Lock must be held by caller.
           def init_value(key)
             # Pad to be 8-byte aligned.
-            padded = key + (' ' * (8 - (key.length + 4) % 8))
+            padded = key + (" " * (8 - (key.length + 4) % 8))
             value = [padded.length, padded, 0.0].pack("lA#{padded.length}d")
             while @used + value.length > @capacity
               @capacity *= 2
@@ -298,7 +290,7 @@ module Prometheus
             @f.write(value)
             @used += value.length
             @f.seek(0)
-            @f.write([@used].pack('l'))
+            @f.write([@used].pack("l"))
             @f.flush
             @positions[key] = @used - 8
           end
@@ -308,9 +300,9 @@ module Prometheus
             @f.seek(8)
             values = []
             while @f.pos < @used
-              padded_len = @f.read(4).unpack('l')[0]
-              encoded = @f.read(padded_len).unpack("A#{padded_len}")[0]
-              value = @f.read(8).unpack('d')[0]
+              padded_len = @f.read(4).unpack1("l")
+              encoded = @f.read(padded_len).unpack1("A#{padded_len}")
+              value = @f.read(8).unpack1("d")
               values << [encoded.strip, value, @f.pos - 8]
             end
             values
@@ -320,5 +312,3 @@ module Prometheus
     end
   end
 end
-
-

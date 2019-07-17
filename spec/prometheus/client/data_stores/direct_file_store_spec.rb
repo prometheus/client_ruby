@@ -1,37 +1,48 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
-require 'prometheus/client/data_stores/direct_file_store'
-require 'examples/data_store_example'
+require "prometheus/client/data_stores/direct_file_store"
+require "examples/data_store_example"
 
 describe Prometheus::Client::DataStores::DirectFileStore do
   subject { described_class.new(dir: "/tmp/prometheus_test") }
+
   let(:metric_store) { subject.for_metric(:metric_name, metric_type: :counter) }
 
   # Reset the PStores
   before do
-    Dir.glob('/tmp/prometheus_test/*').each { |file| File.delete(file) }
+    Dir.glob("/tmp/prometheus_test/*").each { |file| File.delete(file) }
   end
 
   it_behaves_like Prometheus::Client::DataStores
 
   it "only accepts valid :aggregation as Metric Settings" do
     expect do
-      subject.for_metric(:metric_name,
-                         metric_type: :counter,
-                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::SUM })
-    end.not_to raise_error
+      subject.for_metric(
+        :metric_name,
+        metric_type: :counter,
+        metric_settings: {
+          aggregation: Prometheus::Client::DataStores::DirectFileStore::SUM,
+        },
+      )
+    end.to_not raise_error
 
     expect do
-      subject.for_metric(:metric_name,
-                         metric_type: :counter,
-                         metric_settings: { aggregation: :invalid })
-    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+      subject.for_metric(
+        :metric_name,
+        metric_type: :counter,
+        metric_settings: { aggregation: :invalid },
+      )
+    end.to raise_error(
+      Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError,
+    )
 
     expect do
       subject.for_metric(:metric_name,
                          metric_type: :counter,
                          metric_settings: { some_setting: true })
-    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+    end.to raise_error(
+      Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError,
+    )
   end
 
   it "raises when aggregating if we get to that that point with an invalid aggregation mode" do
@@ -56,7 +67,6 @@ describe Prometheus::Client::DataStores::DirectFileStore do
     ms2 = subject.for_metric(:metric_name, metric_type: :counter)
     ms2.increment(labels: {}, by: 1)
   end
-
 
   context "for a non-gauge metric" do
     it "sums values from different processes by default" do
@@ -124,7 +134,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       metric_store1 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
-        metric_settings: { aggregation: :max }
+        metric_settings: { aggregation: :max },
       )
       metric_store1.set(labels: { foo: "bar" }, val: 1)
       metric_store1.set(labels: { foo: "baz" }, val: 7)
@@ -134,7 +144,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       metric_store2 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
-        metric_settings: { aggregation: :max }
+        metric_settings: { aggregation: :max },
       )
       metric_store2.set(labels: { foo: "bar" }, val: 3)
       metric_store2.set(labels: { foo: "baz" }, val: 2)
@@ -158,7 +168,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       metric_store1 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
-        metric_settings: { aggregation: :min }
+        metric_settings: { aggregation: :min },
       )
       metric_store1.set(labels: { foo: "bar" }, val: 1)
       metric_store1.set(labels: { foo: "baz" }, val: 7)
@@ -168,7 +178,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       metric_store2 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
-        metric_settings: { aggregation: :min }
+        metric_settings: { aggregation: :min },
       )
       metric_store2.set(labels: { foo: "bar" }, val: 3)
       metric_store2.set(labels: { foo: "baz" }, val: 2)
@@ -223,17 +233,16 @@ describe Prometheus::Client::DataStores::DirectFileStore do
   end
 
   it "resizes the File if metrics get too big" do
-     truncate_calls_count = 0
-     allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).
-       to receive(:resize_file).and_wrap_original do |original_method, *args, &block|
-    
-       truncate_calls_count += 1
-       original_method.call(*args, &block)
-     end
+    truncate_calls_count = 0
+    allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).
+      to receive(:resize_file).and_wrap_original do |original_method, *args, &block|
+      truncate_calls_count += 1
+      original_method.call(*args, &block)
+    end
 
     really_long_string = "a" * 500_000
     10.times do |i|
-      metric_store.set(labels: { foo: "#{ really_long_string }#{ i }" }, val: 1)
+      metric_store.set(labels: { foo: "#{really_long_string}#{i}" }, val: 1)
     end
 
     expect(truncate_calls_count).to be >= 3

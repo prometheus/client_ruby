@@ -1,11 +1,9 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
-require 'thread'
-
-require 'prometheus/client/counter'
-require 'prometheus/client/summary'
-require 'prometheus/client/gauge'
-require 'prometheus/client/histogram'
+require "prometheus/client/counter"
+require "prometheus/client/summary"
+require "prometheus/client/gauge"
+require "prometheus/client/histogram"
 
 module Prometheus
   module Client
@@ -25,6 +23,7 @@ module Prometheus
           if exist?(name.to_sym)
             raise AlreadyRegisteredError, "#{name} has already been registered"
           end
+
           @metrics[name.to_sym] = metric
         end
 

@@ -396,7 +396,7 @@ Install necessary development gems with `bundle install` and run tests with
 rspec:
 
 ```bash
-rake
+bundle exec rspec
 ```
 
 [1]: https://github.com/prometheus/prometheus
