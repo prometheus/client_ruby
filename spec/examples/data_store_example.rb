@@ -1,9 +1,15 @@
 # encoding: UTF-8
 
+# NOTE: Do not change instances of `eql` to `eq` in this file.
+#
+# The interface of a store is a labelset (hash of hashes) to a double. It's important
+# that we check the values are doubles rather than integers. `==`, which is what `eq`
+# calls allows conversion between floats and integers (i.e. `5 == 5.0`). `eql` enforces
+# that the two numbers are of the same type.
 shared_examples_for Prometheus::Client::DataStores do
   describe "MetricStore#set and #get" do
     it "returns the value set for each labelset" do
-      expect(metric_store.get(labels: { foo: "bar" })).to eq(0.0)
+      expect(metric_store.get(labels: { foo: "bar" })).to eql(0.0)
     end
   end
 
@@ -11,9 +17,9 @@ shared_examples_for Prometheus::Client::DataStores do
     it "returns the value set for each labelset" do
       metric_store.set(labels: { foo: "bar" }, val: 5)
       metric_store.set(labels: { foo: "baz" }, val: 2)
-      expect(metric_store.get(labels: { foo: "bar" })).to eq(5)
-      expect(metric_store.get(labels: { foo: "baz" })).to eq(2)
-      expect(metric_store.get(labels: { foo: "bat" })).to eq(0)
+      expect(metric_store.get(labels: { foo: "bar" })).to eql(5.0)
+      expect(metric_store.get(labels: { foo: "baz" })).to eql(2.0)
+      expect(metric_store.get(labels: { foo: "bat" })).to eql(0.0)
     end
   end
 
@@ -26,9 +32,9 @@ shared_examples_for Prometheus::Client::DataStores do
       metric_store.increment(labels: { foo: "baz" }, by: 7)
       metric_store.increment(labels: { foo: "zzz" }, by: 3)
 
-      expect(metric_store.get(labels: { foo: "bar" })).to eq(6)
-      expect(metric_store.get(labels: { foo: "baz" })).to eq(9)
-      expect(metric_store.get(labels: { foo: "zzz" })).to eq(3)
+      expect(metric_store.get(labels: { foo: "bar" })).to eql(6.0)
+      expect(metric_store.get(labels: { foo: "baz" })).to eql(9.0)
+      expect(metric_store.get(labels: { foo: "zzz" })).to eql(3.0)
     end
   end
 
@@ -55,7 +61,7 @@ shared_examples_for Prometheus::Client::DataStores do
       metric_store.set(labels: { foo: "bar" }, val: 5)
       metric_store.set(labels: { foo: "baz" }, val: 2)
 
-      expect(metric_store.all_values).to eq(
+      expect(metric_store.all_values).to eql(
         { foo: "bar" } => 5.0,
         { foo: "baz" } => 2.0,
       )
@@ -63,7 +69,7 @@ shared_examples_for Prometheus::Client::DataStores do
 
     context "for a combination of labels that hasn't had a value set" do
       it "returns 0.0" do
-        expect(metric_store.all_values[{ foo: "bar" }]).to eq(0.0)
+        expect(metric_store.all_values[{ foo: "bar" }]).to eql(0.0)
       end
     end
   end
