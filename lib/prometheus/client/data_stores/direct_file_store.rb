@@ -133,7 +133,8 @@ module Prometheus
             end
 
             # Aggregate all the different values for each label_set
-            stores_data.each_with_object({}) do |(label_set, values), acc|
+            aggregate_hash = Hash.new { |hash, key| hash[key] = 0.0 }
+            stores_data.each_with_object(aggregate_hash) do |(label_set, values), acc|
               acc[label_set] = aggregate_values(values)
             end
           end
