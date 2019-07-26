@@ -154,7 +154,12 @@ module Prometheus
           end
 
           def internal_store
-            @internal_store ||= FileMappedDict.new(filemap_filename)
+            if @store_opened_by_pid != process_id
+              @store_opened_by_pid = process_id
+              @internal_store = FileMappedDict.new(filemap_filename)
+            else
+              @internal_store
+            end
           end
 
           # Filename for this metric's PStore (one per process)
