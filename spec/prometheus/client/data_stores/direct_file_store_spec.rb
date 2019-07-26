@@ -57,6 +57,18 @@ describe Prometheus::Client::DataStores::DirectFileStore do
     ms2.increment(labels: {}, by: 1)
   end
 
+  context "when process is forked" do
+    it "opens a new internal store to avoid two processes using the same file" do
+      allow(Process).to receive(:pid).and_return(12345)
+      metric_store = subject.for_metric(:metric_name, metric_type: :counter)
+      metric_store.increment(labels: {}, by: 1)
+
+      allow(Process).to receive(:pid).and_return(23456)
+      metric_store.increment(labels: {}, by: 1)
+      expect(Dir.glob('/tmp/prometheus_test/*').size).to eq(2)
+      expect(metric_store.all_values).to eq({} => 2.0)
+    end
+  end
 
   context "for a non-gauge metric" do
     it "sums values from different processes by default" do
