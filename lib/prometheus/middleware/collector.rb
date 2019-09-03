@@ -44,22 +44,27 @@ module Prometheus
       protected
 
       def init_request_metrics
-        @requests = @registry.counter(
-          :"#{@metrics_prefix}_requests_total",
+        counter_name    = "#{@metrics_prefix}_requests_total"
+        histogram_name  = "#{@metrics_prefix}_request_duration_seconds"
+
+        @requests = @registry.get(counter_name) || @registry.counter(
+          counter_name.to_sym,
           docstring:
             'The total number of HTTP requests handled by the Rack application.',
           labels: %i[code method path]
         )
-        @durations = @registry.histogram(
-          :"#{@metrics_prefix}_request_duration_seconds",
+        @durations = @registry.get(histogram_name) || @registry.histogram(
+          histogram_name.to_sym,
           docstring: 'The HTTP response duration of the Rack application.',
           labels: %i[method path]
         )
       end
 
       def init_exception_metrics
-        @exceptions = @registry.counter(
-          :"#{@metrics_prefix}_exceptions_total",
+        exception_counter_name = "#{@metrics_prefix}_exceptions_total"
+
+        @exceptions = @registry.get(exception_counter_name) || @registry.counter(
+          exception_counter_name.to_sym,
           docstring: 'The total number of exceptions raised by the Rack application.',
           labels: [:exception]
         )
