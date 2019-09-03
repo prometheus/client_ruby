@@ -1,6 +1,7 @@
 # encoding: UTF-8
 
 require 'thread'
+require 'prometheus/client'
 require 'prometheus/client/label_set_validator'
 
 module Prometheus
