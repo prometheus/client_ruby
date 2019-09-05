@@ -1,11 +1,10 @@
 # encoding: UTF-8
 
-require 'thread'
-
 require 'prometheus/client/counter'
 require 'prometheus/client/summary'
 require 'prometheus/client/gauge'
 require 'prometheus/client/histogram'
+require 'concurrent'
 
 module Prometheus
   module Client
@@ -15,16 +14,15 @@ module Prometheus
 
       def initialize
         @metrics = {}
-        @mutex = Mutex.new
+        @lock    = Concurrent::ReentrantReadWriteLock.new
       end
 
       def register(metric)
         name = metric.name
 
-        @mutex.synchronize do
-          if exist?(name.to_sym)
-            raise AlreadyRegisteredError, "#{name} has already been registered"
-          end
+        @lock.with_write_lock do
+          return metric if exist?(name.to_sym)
+
           @metrics[name.to_sym] = metric
         end
 
@@ -32,7 +30,7 @@ module Prometheus
       end
 
       def unregister(name)
-        @mutex.synchronize do
+        @lock.with_write_lock do
           @metrics.delete(name.to_sym)
         end
       end
@@ -73,15 +71,21 @@ module Prometheus
       end
 
       def exist?(name)
-        @metrics.key?(name)
+        @lock.with_read_lock do
+          @metrics.key?(name)
+        end
       end
 
       def get(name)
-        @metrics[name.to_sym]
+        @lock.with_read_lock do
+          @metrics[name.to_sym]
+        end
       end
 
       def metrics
-        @metrics.values
+        @lock.with_read_lock do
+          @metrics.values
+        end
       end
     end
   end
