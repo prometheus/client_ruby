@@ -19,36 +19,26 @@ describe Prometheus::Client::Registry do
       expect(registry.register(metric)).to eql(metric)
     end
 
-    it 'raises an exception if a metric name gets registered twice' do
+    it 'returns a metric if a metric name tries to register twice' do
       metric = double(name: :test)
 
       registry.register(metric)
 
-      expect do
-        registry.register(metric)
-      end.to raise_exception described_class::AlreadyRegisteredError
+      expect(registry.metrics.size).to eq 1
     end
 
     it 'is thread safe' do
-      mutex = Mutex.new
-      containers = []
-
       def registry.exist?(*args)
         super.tap { sleep(0.01) }
       end
 
       Array.new(5) do
         Thread.new do
-          result = begin
-            registry.register(double(name: :test))
-          rescue Prometheus::Client::Registry::AlreadyRegisteredError
-            nil
-          end
-          mutex.synchronize { containers << result }
+          registry.register(double(name: :test))
         end
       end.each(&:join)
 
-      expect(containers.compact.size).to eql(1)
+      expect(registry.metrics.size).to eql(1)
     end
   end
 
