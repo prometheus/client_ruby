@@ -27,26 +27,33 @@ describe API do
 
       t1 = Thread.new do
         latch.wait
-        get '/metrics'
+        res = get '/metrics'
+
+        expect(res.body).not_to be_empty
       end
 
       t2 = Thread.new do
         latch.wait
+        res = get '/metrics'
 
-        get '/metrics'
+        expect(res.body).not_to be_empty
       end
 
       t3 = Thread.new do
         latch.wait
+        res = get '/metrics'
+        expect(res.body).not_to be_empty
+      end
 
-        get '/metrics'
+      t4 = Thread.new do
+        latch.wait
+        res = get '/metrics'
+        expect(res.body).not_to be_empty
       end
 
       latch.count_down
 
-      [t1, t2, t3].each(&:join)
-
-      expect { last_response }.not_to raise_error
+      [t1, t2, t3, t4].each(&:join)
     end
   end
 end
