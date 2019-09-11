@@ -8,7 +8,7 @@ module Prometheus
   module Client
     # Returns a default registry object
     def self.registry
-      @registry ||= Registry.new
+      Registry.instance
     end
 
     def self.config

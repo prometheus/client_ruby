@@ -5,12 +5,15 @@ require 'prometheus/client/summary'
 require 'prometheus/client/gauge'
 require 'prometheus/client/histogram'
 require 'concurrent'
+require 'singleton'
 
 module Prometheus
   module Client
     # Registry
     class Registry
       class AlreadyRegisteredError < StandardError; end
+
+      include Singleton
 
       def initialize
         @metrics = {}

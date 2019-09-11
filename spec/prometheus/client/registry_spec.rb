@@ -4,7 +4,7 @@ require 'thread'
 require 'prometheus/client/registry'
 
 describe Prometheus::Client::Registry do
-  let(:registry) { Prometheus::Client::Registry.new }
+  let(:registry) { Prometheus::Client::Registry.instance }
 
   describe '.new' do
     it 'returns a new registry instance' do
@@ -13,6 +13,8 @@ describe Prometheus::Client::Registry do
   end
 
   describe '#register' do
+    let(:registry) { Prometheus::Client::Registry.clone.instance }
+
     it 'registers a new metric container and returns it' do
       metric = double(name: :test)
 
@@ -89,6 +91,8 @@ describe Prometheus::Client::Registry do
   end
 
   describe '#exist?' do
+    let(:registry) { Prometheus::Client::Registry.clone.instance }
+
     it 'returns true if a metric name has been registered' do
       registry.register(double(name: :test))
 
@@ -101,6 +105,8 @@ describe Prometheus::Client::Registry do
   end
 
   describe '#get' do
+    let(:registry) { Prometheus::Client::Registry.clone.instance }
+
     it 'returns a previously registered metric container' do
       registry.register(double(name: :test))
 

@@ -12,7 +12,7 @@ describe Prometheus::Middleware::Collector do
   end
 
   let(:registry) do
-    Prometheus::Client::Registry.new
+    Prometheus::Client::Registry.instance
   end
 
   let(:original_app) do
@@ -41,18 +41,22 @@ describe Prometheus::Middleware::Collector do
     expect(last_response).to be_ok
   end
 
-  it 'traces request information' do
-    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.2)
+  context 'trace' do
+    let(:registry) { Prometheus::Client::Registry.clone.instance }
 
-    get '/foo'
+    it 'traces request information' do
+      expect(Benchmark).to receive(:realtime).and_yield.and_return(0.2)
 
-    metric = :http_server_requests_total
-    labels = { method: 'get', path: '/foo', code: '200' }
-    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+      get '/foo'
 
-    metric = :http_server_request_duration_seconds
-    labels = { method: 'get', path: '/foo' }
-    expect(registry.get(metric).get(labels: labels)).to include("0.1" => 0, "0.25" => 1)
+      metric = :http_server_requests_total
+      labels = { method: 'get', path: '/foo', code: '200' }
+      expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+
+      metric = :http_server_request_duration_seconds
+      labels = { method: 'get', path: '/foo' }
+      expect(registry.get(metric).get(labels: labels)).to include("0.1" => 0, "0.25" => 1)
+    end
   end
 
   it 'normalizes paths containing numeric IDs by default' do
@@ -113,6 +117,7 @@ describe Prometheus::Middleware::Collector do
         metrics_prefix: 'lolrus',
       )
     end
+    let(:registry) { Prometheus::Client::Registry.clone.instance }
 
     it 'provides alternate metric names' do
       expect(
