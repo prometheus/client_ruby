@@ -7,7 +7,7 @@ describe Prometheus::Middleware::Exporter do
   include Rack::Test::Methods
 
   let(:registry) do
-    Prometheus::Client::Registry.new
+    Prometheus::Client::Registry.instance
   end
 
   let(:app) do

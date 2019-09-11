@@ -10,7 +10,7 @@ describe Prometheus::Client::Formats::Text do
     Prometheus::Client.config.data_store = Prometheus::Client::DataStores::Synchronized.new
   end
 
-  let(:registry) { Prometheus::Client::Registry.new }
+  let(:registry) { Prometheus::Client::Registry.instance }
 
   before do
     foo = registry.counter(:foo,
