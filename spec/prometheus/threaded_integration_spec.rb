@@ -40,7 +40,7 @@ describe API do
       t4 = Thread.new do
         latch.wait
         res = get '/metrics'
-
+        
         expect(res.body).not_to be_empty
       end
 
