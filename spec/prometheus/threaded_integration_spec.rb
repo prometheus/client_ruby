@@ -6,15 +6,7 @@ require 'prometheus/middleware/collector'
 require 'prometheus/middleware/exporter'
 require "concurrent"
 
-API = Rack::Builder.new do
-  use Rack::Deflater
-  use Prometheus::Middleware::Collector
-  use Prometheus::Middleware::Exporter
-
-  map "/" do
-    run ->(_) { [200, {'Content-Type' => 'text/html'}, ['OK']] }
-  end
-end
+require_relative "../support/api"
 
 describe API do
   include Rack::Test::Methods
@@ -48,6 +40,7 @@ describe API do
       t4 = Thread.new do
         latch.wait
         res = get '/metrics'
+
         expect(res.body).not_to be_empty
       end
 
