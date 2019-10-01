@@ -161,4 +161,16 @@ describe Prometheus::Client::Gauge do
       end.to change { gauge.get }.by(-100.0)
     end
   end
+
+  describe '#init_label_set' do
+    let(:expected_labels) { [:test] }
+
+    it 'initializes the metric for a given label set' do
+      expect(gauge.values).to eql({})
+
+      gauge.init_label_set(test: 'value')
+
+      expect(gauge.values).to eql({test: 'value'} => 0.0)
+    end
+  end
 end

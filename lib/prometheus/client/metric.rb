@@ -55,6 +55,10 @@ module Prometheus
                        store_settings: @store_settings)
       end
 
+      def init_label_set(labels)
+        @store.set(labels: label_set_for(labels), val: 0)
+      end
+
       # Returns all label sets with their values
       def values
         @store.all_values

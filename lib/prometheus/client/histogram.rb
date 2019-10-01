@@ -94,6 +94,16 @@ module Prometheus
         end
       end
 
+      def init_label_set(labels)
+        base_label_set = label_set_for(labels)
+
+        @store.synchronize do
+          (buckets + ["+Inf", "sum"]).each do |bucket|
+            @store.set(labels: base_label_set.merge(le: bucket.to_s), val: 0)
+          end
+        end
+      end
+
       private
 
       # Modifies the passed in parameter

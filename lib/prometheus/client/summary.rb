@@ -45,6 +45,15 @@ module Prometheus
         end
       end
 
+      def init_label_set(labels)
+        base_label_set = label_set_for(labels)
+
+        @store.synchronize do
+          @store.set(labels: base_label_set.merge(quantile: "count"), val: 0)
+          @store.set(labels: base_label_set.merge(quantile: "sum"), val: 0)
+        end
+      end
+
       private
 
       def reserved_labels
