@@ -1,5 +1,8 @@
 # Custom Data Stores
 
+_Note: this page documents the general idea of custom data stores. For store-specific
+documentation, see the contents of the [`docs`](docs) folder._
+
 Stores are basically an abstraction over a Hash, whose keys are in turn a Hash of labels
 plus a metric name. The intention behind having different data stores is solving 
 different requirements for different production scenarios, or performance trade-offs.
