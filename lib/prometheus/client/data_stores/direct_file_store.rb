@@ -67,6 +67,11 @@ module Prometheus
         class MetricStore
           attr_reader :metric_name, :store_settings
 
+          class << self
+            attr_accessor :shared_store_opened_by_pid
+            attr_accessor :shared_internal_store
+          end
+
           def initialize(metric_name:, store_settings:, metric_settings:)
             @metric_name = metric_name
             @store_settings = store_settings
@@ -164,11 +169,28 @@ module Prometheus
           end
 
           def internal_store
+            if @store_settings[:separate_files_per_metric]
+              individual_metric_internal_store
+            else
+              all_metrics_shared_internal_store
+            end
+          end
+
+          def individual_metric_internal_store
             if @store_opened_by_pid != process_id
               @store_opened_by_pid = process_id
               @internal_store = FileMappedDict.new(filemap_filename)
             else
               @internal_store
+            end
+          end
+
+          def all_metrics_shared_internal_store
+            if self.class.shared_store_opened_by_pid != process_id
+              self.class.shared_store_opened_by_pid = process_id
+              self.class.shared_internal_store = FileMappedDict.new(filemap_filename)
+            else
+              self.class.shared_internal_store
             end
           end
 

@@ -10,6 +10,8 @@ describe Prometheus::Client::DataStores::DirectFileStore do
   # Reset the PStores
   before do
     Dir.glob('/tmp/prometheus_test/*').each { |file| File.delete(file) }
+    # This doesn't actually work, btw, but it's what would have to be done.
+    Prometheus::Client::DataStores::DirectFileStore::MetricStore.shared_store_opened_by_pid = nil
   end
 
   it_behaves_like Prometheus::Client::DataStores
