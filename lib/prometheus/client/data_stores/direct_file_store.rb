@@ -29,8 +29,9 @@ module Prometheus
         DEFAULT_METRIC_SETTINGS = { aggregation: SUM }
         DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }
 
-        def initialize(dir:)
-          @store_settings = { dir: dir }
+        def initialize(dir:, separate_files_per_metric: true)
+          @store_settings = { dir: dir,
+                              separate_files_per_metric: separate_files_per_metric }
           FileUtils.mkdir_p(dir)
         end
 
@@ -125,6 +126,12 @@ module Prometheus
                     [k.to_sym, vs.first]
                   end.to_h
 
+                  unless @store_settings[:separate_files_per_metric]
+                    # All metrics are in the same file. Ignore entries for other metrics
+                    next unless label_set[:__metric_name] == metric_name.to_s
+                    label_set.delete(:__metric_name)
+                  end
+
                   stores_data[label_set] << v
                 end
               ensure
@@ -149,6 +156,9 @@ module Prometheus
             if @values_aggregation_mode == ALL
               labels[:pid] = process_id
             end
+            unless @store_settings[:separate_files_per_metric]
+              labels[:__metric_name] = metric_name.to_s
+            end
 
             labels.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join('&')
           end
@@ -164,12 +174,21 @@ module Prometheus
 
           # Filename for this metric's PStore (one per process)
           def filemap_filename
-            filename = "metric_#{ metric_name }___#{ process_id }.bin"
+            filename = if @store_settings[:separate_files_per_metric]
+                         "metric_#{ metric_name }___#{ process_id }.bin"
+                       else
+                         "metric___all_metrics___#{ process_id }.bin"
+                       end
             File.join(@store_settings[:dir], filename)
           end
 
           def stores_for_metric
-            Dir.glob(File.join(@store_settings[:dir], "metric_#{ metric_name }___*"))
+            base_filename = if @store_settings[:separate_files_per_metric]
+                              "metric_#{ metric_name }___*"
+                            else
+                              "metric___all_metrics___*"
+                            end
+            Dir.glob(File.join(@store_settings[:dir], base_filename))
           end
 
           def process_id

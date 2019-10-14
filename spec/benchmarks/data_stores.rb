@@ -81,6 +81,12 @@ STORES = [
   {
     store: Prometheus::Client::DataStores::DirectFileStore.new(dir: TMP_DIR),
     before: -> () { cleanup_dir(TMP_DIR) },
+  },
+  {
+    store: Prometheus::Client::DataStores::DirectFileStore.new(dir: TMP_DIR,
+                                                               separate_files_per_metric: false),
+    before: -> () { cleanup_dir(TMP_DIR) },
+    name: "DirectFileStore Single File"
   }
 ]
 
