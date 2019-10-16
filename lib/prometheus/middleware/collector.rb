@@ -11,20 +11,11 @@ module Prometheus
     # By default metrics are registered on the global registry. Set the
     # `:registry` option to use a custom registry.
     #
-    # By default metrics all have the prefix "http_server". Set to something
-    # else if you like.
+    # By default metrics all have the prefix "http_server". Set
+    # `:metrics_prefix` to something else if you like.
     #
-    # The request counter metric is broken down by code, method and path by
-    # default. Set the `:counter_label_builder` option to use a custom label
-    # builder.
-    #
-    # The request duration metric is broken down by method and path by default.
-    # Set the `:duration_label_builder` option to use a custom label builder.
-    #
-    # Label Builder functions will receive a Rack env and a status code, and must
-    # return a hash with the labels for that request. They must also accept an empty
-    # env, and return a hash with the correct keys. This is necessary to initialize
-    # the metrics with the correct set of labels.
+    # The request counter metric is broken down by code, method and path.
+    # The request duration metric is broken down by method and path.
     class Collector
       attr_reader :app, :registry
 
