@@ -66,8 +66,6 @@ The Ruby client can also be used to push its collected metrics to a
 where it's not possible or feasible to let a Prometheus server scrape a Ruby
 process. TLS and basic access authentication are supported.
 
-**Attention**: The implementation still uses the legacy API of the pushgateway.
-
 ```ruby
 require 'prometheus/client'
 require 'prometheus/client/push'
