@@ -150,7 +150,7 @@ module Prometheus
               labels[:pid] = process_id
             end
 
-            labels.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join('&')
+            labels.to_a.sort.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join('&')
           end
 
           def internal_store

@@ -70,6 +70,22 @@ describe Prometheus::Client::DataStores::DirectFileStore do
     end
   end
 
+  it "coalesces values irrespective of the order of labels" do
+    metric_store1 = subject.for_metric(:metric_name, metric_type: :counter)
+    metric_store1.increment(labels: { foo: "1", bar: "1" }, by: 1)
+    metric_store1.increment(labels: { foo: "1", bar: "2" }, by: 7)
+    metric_store1.increment(labels: { foo: "2", bar: "1" }, by: 3)
+
+    metric_store1.increment(labels: { foo: "1", bar: "1" }, by: 10)
+    metric_store1.increment(labels: { bar: "1", foo: "1" }, by: 10)
+
+    expect(metric_store1.all_values).to eq(
+                                          { foo: "1", bar: "1" } => 21.0,
+                                          { foo: "1", bar: "2" } => 7.0,
+                                          { foo: "2", bar: "1" } => 3.0,
+                                          )
+  end
+
   context "for a non-gauge metric" do
     it "sums values from different processes by default" do
       allow(Process).to receive(:pid).and_return(12345)
@@ -127,6 +143,23 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
       # Both processes should return the same value
       expect(metric_store1.all_values).to eq(metric_store2.all_values)
+    end
+
+    it "coalesces values irrespective of the order of labels" do
+      allow(Process).to receive(:pid).and_return(12345)
+      metric_store1 = subject.for_metric(:metric_name, metric_type: :gauge)
+      metric_store1.set(labels: { foo: "1", bar: "1" }, val: 1)
+      metric_store1.set(labels: { foo: "1", bar: "2" }, val: 7)
+      metric_store1.set(labels: { foo: "2", bar: "1" }, val: 3)
+
+      metric_store1.set(labels: { bar: "1", foo: "1" }, val: 10)
+
+      expect(metric_store1.all_values).to eq(
+                                            { foo: "1", bar: "1", pid: "12345" } => 10.0,
+                                            { foo: "1", bar: "2", pid: "12345" } => 7.0,
+                                            { foo: "2", bar: "1", pid: "12345" } => 3.0,
+                                            )
+
     end
   end
 
