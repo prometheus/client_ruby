@@ -18,10 +18,14 @@ module Prometheus
       #
       # In order to do this, each Metric needs an `:aggregation` setting, specifying how
       # to aggregate the multiple possible values we can get for each labelset. By default,
-      # they are `SUM`med, which is what most use cases call for (counters and histograms,
-      # for example).
-      # However, for Gauges, it's possible to set `MAX` or `MIN` as aggregation, to get
-      # the highest value of all the processes / threads.
+      # Counters, Histograms and Summaries get `SUM`med, and Gauges will report `ALL`
+      # values, tagging each one with a `pid` label.
+      # For Gauges, it's also possible to set `SUM`, MAX` or `MIN` as aggregation, to get
+      # the highest / lowest value / or the sum of all the processes / threads.
+      #
+      # Before using this Store, please read the "`DirectFileStore` caveats and things to
+      # keep in mind" section of the main README in this repository. It includes a number
+      # of important things to keep in mind.
 
       class DirectFileStore
         class InvalidStoreSettingsError < StandardError; end

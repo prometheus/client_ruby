@@ -271,7 +271,7 @@ is stored in a global Data Store object, rather than in the metric objects thems
 (This "storage" is ephemeral, generally in-memory, it's not "long-term storage")
 
 The main reason to do this is that different applications may have different requirements
-for their metrics storage. Application running in pre-fork servers (like Unicorn, for
+for their metrics storage. Applications running in pre-fork servers (like Unicorn, for
 example), require a shared store between all the processes, to be able to report coherent
 numbers. At the same time, other applications may not have this requirement but be very
 sensitive to performance, and would prefer instead a simpler, faster store.
@@ -311,7 +311,7 @@ whether you want to report the `SUM`, `MAX` or `MIN` value observed across all p
 For almost all other cases, you'd leave the default (`SUM`). More on this on the 
 *Aggregation* section below.
 
-Other custom stores may also accept extra parameters besides `:aggregation`. See the
+Custom stores may also accept extra parameters besides `:aggregation`. See the
 documentation of each store for more details.
 
 ### Built-in stores
@@ -326,26 +326,46 @@ There are 3 built-in stores, with different trade-offs:
   it's absolutely not thread safe.
 - **DirectFileStore**: Stores data in binary files, one file per process and per metric.
   This is generally the recommended store to use with pre-fork servers and other 
-  "multi-process" scenarios.
+  "multi-process" scenarios. There are some important caveats to using this store, so
+  please read on the section below.
 
-  Each metric gets a file for each process, and manages its contents by storing keys and
-  binary floats next to them, and updating the offsets of those Floats directly. When 
-  exporting metrics, it will find all the files that apply to each metric, read them, 
-  and aggregate them.
+### `DirectFileStore` caveats and things to keep in mind
 
-  In order to do this, each Metric needs an `:aggregation` setting, specifying how
-  to aggregate the multiple possible values we can get for each labelset. By default,
-  they are `SUM`med, which is what most use-cases call for (counters and histograms,
-  for example). However, for Gauges, it's possible to set `MAX` or `MIN` as aggregation, 
-  to get the highest/lowest value of all the processes / threads.
-  
-  Even though this store saves data on disk, it's still much faster than would probably be 
-  expected, because the files are never actually `fsync`ed, so the store never blocks 
-  while waiting for disk. The kernel's page cache is incredibly efficient in this regard.
-  
-  If in doubt, check the benchmark scripts described in the documentation for creating 
-  your own stores and run them in your particular runtime environment to make sure this 
-  provides adequate performance.
+Each metric gets a file for each process, and manages its contents by storing keys and
+binary floats next to them, and updating the offsets of those Floats directly. When 
+exporting metrics, it will find all the files that apply to each metric, read them, 
+and aggregate them.
+
+**Aggregation of metrics**: Since there will be several files per metrics (one per process),
+these need to be aggregated to present a coherent view to Prometheus. Depending on your
+use case, you may need to control how this works. When using this store, 
+each Metric allows you to specify an `:aggregation` setting, defining how
+to aggregate the multiple possible values we can get for each labelset. By default,
+Counters, Histograms and Summaries are `SUM`med, and Gauges report all their values (one
+for each process), tagged with a `pid` label. You can also select `SUM`, `MAX` or `MIN`
+for your gauges, depending on your use case.
+
+**Memory Usage**: When scraped by Prometheus, this store will read all these files, get all
+the values and aggregate them. We have notice this can have a noticeable effect on memory
+usage for your app. We recommend you test this in a realistic usage scenario to make sure
+you won't hit any memory limits your app may have.
+
+**Resetting your metrics on each run**: You should also make sure that the directory where 
+you store your metric files (specified when initializing the `DirectFileStore`) is emptied 
+when your app starts. Otherwise, each app run will continue exporting the metrics from the 
+previous run.  
+
+**Large numbers of files**: Because there is an individual file per metric and per process 
+(which is done to optimize for observation performance), you may end up with a large number 
+of files. We don't currently have a solution for this problem, but we're working on it.
+
+**Performance**: Even though this store saves data on disk, it's still much faster than 
+would probably be expected, because the files are never actually `fsync`ed, so the store 
+never blocks while waiting for disk. The kernel's page cache is incredibly efficient in 
+this regard. If in doubt, check the benchmark scripts described in the documentation for 
+creating your own stores and run them in your particular runtime environment to make sure 
+this provides adequate performance.
+
 
 ### Building your own store, and stores other than the built-in ones.
 
@@ -364,16 +384,16 @@ If you are in a multi-process environment (such as pre-fork servers like Unicorn
 process will probably keep their own counters, which need to be aggregated when receiving
 a Prometheus scrape, to report coherent total numbers.
 
-For Counters and Histograms (and quantile-less Summaries), this is simply a matter of 
+For Counters, Histograms and quantile-less Summaries this is simply a matter of 
 summing the values of each process.
 
 For Gauges, however, this may not be the right thing to do, depending on what they're 
 measuring. You might want to take the maximum or minimum value observed in any process,
-rather than the sum of all of them. You may also want to export each process's individual
-value.
+rather than the sum of all of them. By default, we export each process's individual
+value, with a `pid` label identifying each one.
 
-In those cases, you should use the `store_settings` parameter when registering the 
-metric, to specify an `:aggregation` setting. 
+If these defaults don't work for your use case, you should use the `store_settings` 
+parameter when registering the metric, to specify an `:aggregation` setting. 
 
 ```ruby
 free_disk_space = registry.gauge(:free_disk_space_bytes,
