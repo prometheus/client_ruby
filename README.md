@@ -254,6 +254,12 @@ class MyComponent
 end
 ```
 
+### `init_label_set`
+
+The time series of a metric are not initialized until something happens. For counters, for example, this means that the time series do not exist until the counter is incremented for the first time.
+
+To get around this problem the client provides the `init_label_set` method that can be used to initialise the time series of a metric for a given label set.
+
 ### Reserved labels
 
 The following labels are reserved by the client library, and attempting to use them in a
