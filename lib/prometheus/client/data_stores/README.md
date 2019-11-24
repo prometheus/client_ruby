@@ -187,7 +187,7 @@ has created a good amount of research, benchmarks, and experimental stores, whic
 weren't useful to include in this repo, but may be a useful resource or starting point 
 if you are building your own store.
 
-Check out the [GoCardless Data Stores Experiments](gocardless/prometheus-client-ruby-data-stores-experiments) 
+Check out the [GoCardless Data Stores Experiments](https://github.com/gocardless/prometheus-client-ruby-data-stores-experiments) 
 repository for these.
 
 ## Sample, imaginary multi-process Data Store
