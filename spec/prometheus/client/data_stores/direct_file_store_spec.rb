@@ -267,6 +267,41 @@ describe Prometheus::Client::DataStores::DirectFileStore do
     end
   end
 
+  context "with a metric that takes MOST_RECENT instead of SUM" do
+    it "reports the most recently written value from different processes" do
+      metric_store1 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+        metric_settings: { aggregation: :most_recent }
+      )
+      metric_store2 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+        metric_settings: { aggregation: :most_recent }
+      )
+
+      allow(Process).to receive(:pid).and_return(12345)
+      metric_store1.set(labels: { foo: "bar" }, val: 1)
+
+      allow(Process).to receive(:pid).and_return(23456)
+      metric_store2.set(labels: { foo: "bar" }, val: 3) # Supercedes 'bar' in PID 12345
+      metric_store2.set(labels: { foo: "baz" }, val: 2)
+      metric_store2.set(labels: { foo: "zzz" }, val: 1)
+
+      allow(Process).to receive(:pid).and_return(12345)
+      metric_store1.set(labels: { foo: "baz" }, val: 4) # Supercedes 'baz' in PID 23456
+
+      expect(metric_store1.all_values).to eq(
+        { foo: "bar" } => 3.0,
+        { foo: "baz" } => 4.0,
+        { foo: "zzz" } => 1.0,
+      )
+
+      # Both processes should return the same value
+      expect(metric_store1.all_values).to eq(metric_store2.all_values)
+    end
+  end
+
   it "resizes the File if metrics get too big" do
      truncate_calls_count = 0
      allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).

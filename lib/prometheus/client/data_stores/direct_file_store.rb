@@ -29,7 +29,7 @@ module Prometheus
 
       class DirectFileStore
         class InvalidStoreSettingsError < StandardError; end
-        AGGREGATION_MODES = [MAX = :max, MIN = :min, SUM = :sum, ALL = :all]
+        AGGREGATION_MODES = [MAX = :max, MIN = :min, SUM = :sum, ALL = :all, MOST_RECENT = :most_recent]
         DEFAULT_METRIC_SETTINGS = { aggregation: SUM }
         DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }
 
@@ -121,7 +121,7 @@ module Prometheus
             stores_for_metric.each do |file_path|
               begin
                 store = FileMappedDict.new(file_path, true)
-                store.all_values.each do |(labelset_qs, v)|
+                store.all_values.each do |(labelset_qs, v, ts)|
                   # Labels come as a query string, and CGI::parse returns arrays for each key
                   # "foo=bar&x=y" => { "foo" => ["bar"], "x" => ["y"] }
                   # Turn the keys back into symbols, and remove the arrays
@@ -129,7 +129,7 @@ module Prometheus
                     [k.to_sym, vs.first]
                   end.to_h
 
-                  stores_data[label_set] << v
+                  stores_data[label_set] << [v, ts]
                 end
               ensure
                 store.close if store
@@ -181,30 +181,41 @@ module Prometheus
           end
 
           def aggregate_values(values)
-            if @values_aggregation_mode == SUM
-              values.inject { |sum, element| sum + element }
-            elsif @values_aggregation_mode == MAX
-              values.max
-            elsif @values_aggregation_mode == MIN
-              values.min
-            elsif @values_aggregation_mode == ALL
-              values.first
+            # Each entry in the `values` array is a tuple of `value` and `timestamp`,
+            # so for all aggregations except `MOST_RECENT`, we need to only take the
+            # first value in each entry and ignore the second.
+            if @values_aggregation_mode == MOST_RECENT
+              latest_tuple = values.max { |a,b| a[1] <=> b[1] }
+              latest_tuple.first # return the value without the timestamp
             else
-              raise InvalidStoreSettingsError,
-                    "Invalid Aggregation Mode: #{ @values_aggregation_mode }"
+              values = values.map(&:first) # Discard timestamps
+
+              if @values_aggregation_mode == SUM
+                values.inject { |sum, element| sum + element }
+              elsif @values_aggregation_mode == MAX
+                values.max
+              elsif @values_aggregation_mode == MIN
+                values.min
+              elsif @values_aggregation_mode == ALL
+                values.first
+              else
+                raise InvalidStoreSettingsError,
+                      "Invalid Aggregation Mode: #{ @values_aggregation_mode }"
+              end
             end
           end
         end
 
         private_constant :MetricStore
 
-        # A dict of doubles, backed by an file we access directly a a byte array.
+        # A dict of doubles, backed by an file we access directly as a byte array.
         #
         # The file starts with a 4 byte int, indicating how much of it is used.
         # Then 4 bytes of padding.
         # There's then a number of entries, consisting of a 4 byte int which is the
         # size of the next field, a utf-8 encoded string key, padding to an 8 byte
-        # alignment, and then a 8 byte float which is the value.
+        # alignment, and then a 8 byte float which is the value, and then a 8 byte
+        # float which is the unix timestamp when the value was set.
         class FileMappedDict
           INITIAL_FILE_SIZE = 1024*1024
 
@@ -236,7 +247,8 @@ module Prometheus
               @positions.map do |key, pos|
                 @f.seek(pos)
                 value = @f.read(8).unpack('d')[0]
-                [key, value]
+                timestamp = @f.read(8).unpack('d')[0]
+                [key, value, timestamp]
               end
             end
           end
@@ -258,7 +270,7 @@ module Prometheus
 
             pos = @positions[key]
             @f.seek(pos)
-            @f.write([value].pack('d'))
+            @f.write([value, Time.now.to_f].pack('dd'))
             @f.flush
           end
 
@@ -299,7 +311,7 @@ module Prometheus
           def init_value(key)
             # Pad to be 8-byte aligned.
             padded = key + (' ' * (8 - (key.length + 4) % 8))
-            value = [padded.length, padded, 0.0].pack("lA#{padded.length}d")
+            value = [padded.length, padded, 0.0, 0.0].pack("lA#{padded.length}dd")
             while @used + value.length > @capacity
               @capacity *= 2
               resize_file(@capacity)
@@ -310,7 +322,7 @@ module Prometheus
             @f.seek(0)
             @f.write([@used].pack('l'))
             @f.flush
-            @positions[key] = @used - 8
+            @positions[key] = @used - 16
           end
 
           # Read position of all keys. No locking is performed.
@@ -320,7 +332,7 @@ module Prometheus
               padded_len = @f.read(4).unpack('l')[0]
               key = @f.read(padded_len).unpack("A#{padded_len}")[0].strip
               @positions[key] = @f.pos
-              @f.seek(8, :CUR)
+              @f.seek(16, :CUR)
             end
           end
         end
