@@ -4,13 +4,8 @@ require 'prometheus/client/data_stores/direct_file_store'
 require 'examples/data_store_example'
 
 describe Prometheus::Client::DataStores::DirectFileStore do
-  subject { described_class.new(dir: "/tmp/prometheus_test") }
+  subject { described_class.new(dir: "/tmp/prometheus_test", clean_dir: true) }
   let(:metric_store) { subject.for_metric(:metric_name, metric_type: :counter) }
-
-  # Reset the PStores
-  before do
-    Dir.glob('/tmp/prometheus_test/*').each { |file| File.delete(file) }
-  end
 
   it_behaves_like Prometheus::Client::DataStores
 
@@ -55,6 +50,15 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
     ms2 = subject.for_metric(:metric_name, metric_type: :counter)
     ms2.increment(labels: {}, by: 1)
+  end
+
+  it "can clean files from old processes" do
+    allow(Process).to receive(:pid).and_return(12345)
+    ms = metric_store
+    ms.increment(labels: {}, by: 1)
+    expect(ms.all_values).to eq({} => 1.0)
+    subject.clean_pid(12345)
+    expect(ms.all_values).to be_empty
   end
 
   context "when process is forked" do

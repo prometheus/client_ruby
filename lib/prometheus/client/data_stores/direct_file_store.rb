@@ -1,6 +1,8 @@
 require 'fileutils'
 require "cgi"
 
+require 'prometheus/client/version'
+
 module Prometheus
   module Client
     module DataStores
@@ -33,9 +35,15 @@ module Prometheus
         DEFAULT_METRIC_SETTINGS = { aggregation: SUM }
         DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }
 
-        def initialize(dir:)
+        def initialize(dir:, clean_dir: false)
           @store_settings = { dir: dir }
           FileUtils.mkdir_p(dir)
+
+          if clean_dir
+            Dir.glob(File.join(dir, "#{ MetricStore::FILENAME_PREFIX }_*___*.bin")).each do |file_path|
+              File.unlink(file_path)
+            end
+          end
         end
 
         def for_metric(metric_name, metric_type:, metric_settings: {})
@@ -50,6 +58,12 @@ module Prometheus
           MetricStore.new(metric_name: metric_name,
                           store_settings: @store_settings,
                           metric_settings: settings)
+        end
+
+        def clean_pid(pid)
+          Dir.glob(File.join(@store_settings[:dir], "#{ MetricStore::FILENAME_PREFIX }_*___#{pid}.bin")).each do |file_path|
+            File.unlink(file_path)
+          end
         end
 
         private
@@ -68,6 +82,7 @@ module Prometheus
         end
 
         class MetricStore
+          FILENAME_PREFIX = "prometheus_#{ Prometheus::Client::VERSION }"
           attr_reader :metric_name, :store_settings
 
           def initialize(metric_name:, store_settings:, metric_settings:)
@@ -168,12 +183,12 @@ module Prometheus
 
           # Filename for this metric's PStore (one per process)
           def filemap_filename
-            filename = "metric_#{ metric_name }___#{ process_id }.bin"
+            filename = "#{ FILENAME_PREFIX }_#{ metric_name }___#{ process_id }.bin"
             File.join(@store_settings[:dir], filename)
           end
 
           def stores_for_metric
-            Dir.glob(File.join(@store_settings[:dir], "metric_#{ metric_name }___*"))
+            Dir.glob(File.join(@store_settings[:dir], "#{ FILENAME_PREFIX }_#{ metric_name }___*.bin"))
           end
 
           def process_id
