@@ -13,9 +13,11 @@ module Prometheus
     class Registry
       class AlreadyRegisteredError < StandardError; end
 
-      def initialize
+      def initialize(labels: [], preset_labels: {})
         @metrics = {}
         @mutex = Mutex.new
+        @labels = labels
+        @preset_labels = preset_labels
       end
 
       def register(metric)
@@ -40,24 +42,24 @@ module Prometheus
       def counter(name, docstring:, labels: [], preset_labels: {}, store_settings: {})
         register(Counter.new(name,
                              docstring: docstring,
-                             labels: labels,
-                             preset_labels: preset_labels,
+                             labels: @labels + labels,
+                             preset_labels: @preset_labels.merge(preset_labels),
                              store_settings: store_settings))
       end
 
       def summary(name, docstring:, labels: [], preset_labels: {}, store_settings: {})
         register(Summary.new(name,
                              docstring: docstring,
-                             labels: labels,
-                             preset_labels: preset_labels,
+                             labels: @labels + labels,
+                             preset_labels: @preset_labels.merge(preset_labels),
                              store_settings: store_settings))
       end
 
       def gauge(name, docstring:, labels: [], preset_labels: {}, store_settings: {})
         register(Gauge.new(name,
                            docstring: docstring,
-                           labels: labels,
-                           preset_labels: preset_labels,
+                           labels: @labels + labels,
+                           preset_labels: @preset_labels.merge(preset_labels),
                            store_settings: store_settings))
       end
 
@@ -66,8 +68,8 @@ module Prometheus
                     store_settings: {})
         register(Histogram.new(name,
                                docstring: docstring,
-                               labels: labels,
-                               preset_labels: preset_labels,
+                               labels: @labels + labels,
+                               preset_labels: @preset_labels.merge(preset_labels),
                                buckets: buckets,
                                store_settings: store_settings))
       end
