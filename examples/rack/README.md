@@ -23,7 +23,7 @@ output of `/metrics` and terminate.
 Start a Prometheus server with the provided config:
 
 ```bash
-prometheus -config.file ./prometheus.yml
+prometheus --config.file ./prometheus.yml
 ```
 
 In another terminal, start the application server:
