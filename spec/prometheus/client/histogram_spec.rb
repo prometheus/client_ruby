@@ -140,10 +140,12 @@ describe Prometheus::Client::Histogram do
     it 'returns a hash of all recorded summaries' do
       histogram.observe(3, labels: { status: 'bar' })
       histogram.observe(6, labels: { status: 'foo' })
+      histogram.observe(10, labels: { status: 'baz' })
 
       expect(histogram.values).to eql(
         { status: 'bar' } => { "2.5" => 0.0, "5" => 1.0, "10" => 1.0, "+Inf" => 1.0, "sum" => 3.0 },
         { status: 'foo' } => { "2.5" => 0.0, "5" => 0.0, "10" => 1.0, "+Inf" => 1.0, "sum" => 6.0 },
+        { status: 'baz' } => { "2.5" => 0.0, "5" => 0.0, "10" => 1.0, "+Inf" => 1.0, "sum" => 10.0 },
       )
     end
   end
