@@ -33,6 +33,14 @@ module Prometheus
               store_settings: store_settings)
       end
 
+      def self.linear_buckets(start:, width:, count:)
+        count.times.map { |idx| start.to_f + idx * width }
+      end
+
+      def self.exponential_buckets(start:, factor: 2, count:)
+        count.times.map { |idx| start.to_f * factor ** idx }
+      end
+
       def with_labels(labels)
         self.class.new(name,
                        docstring: docstring,

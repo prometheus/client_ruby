@@ -37,6 +37,20 @@ describe Prometheus::Client::Histogram do
     end
   end
 
+  describe ".linear_buckets" do
+    it "generates buckets" do
+      expect(described_class.linear_buckets(start: 1, width: 2, count: 5)).
+        to eql([1.0, 3.0, 5.0, 7.0, 9.0])
+    end
+  end
+
+  describe ".exponential_buckets" do
+    it "generates buckets" do
+      expect(described_class.exponential_buckets(start: 1, factor: 2, count: 5)).
+        to eql([1.0, 2.0, 4.0, 8.0, 16.0])
+    end
+  end
+
   describe '#observe' do
     it 'records the given value' do
       expect do
