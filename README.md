@@ -10,6 +10,13 @@ through a HTTP interface. Intended to be used together with a
 
 ## Usage
 
+### Installation
+
+For a global installation run `gem install prometheus-client`.
+
+If you're using [Bundler](https://bundler.io/) add `gem "prometheus-client"` to your `Gemfile`.
+Make sure to run `bundle install` afterwards.
+
 ### Overview
 
 ```ruby
