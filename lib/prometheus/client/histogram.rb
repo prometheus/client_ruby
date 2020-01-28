@@ -47,7 +47,7 @@ module Prometheus
       end
 
       def observe(value, labels: {})
-        bucket = buckets.find {|upper_limit| upper_limit > value  }
+        bucket = buckets.find {|upper_limit| upper_limit >= value  }
         bucket = "+Inf" if bucket.nil?
 
         base_label_set = label_set_for(labels)
