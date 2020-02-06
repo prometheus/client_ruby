@@ -132,4 +132,26 @@ describe Prometheus::Middleware::Collector do
       expect(registry.get(:http_server_exceptions_total)).to be(nil)
     end
   end
+
+  context 'when provided custom labels' do
+    let!(:app) do
+      custom_labels = {env: "valid_env"}
+      described_class.new(
+        original_app,
+        registry: registry,
+        labels: custom_labels,
+      )
+    end
+
+    it 'provides metric with the custom label' do
+      get '/foo'
+      metric = :http_server_request_duration_seconds
+      correct_labels = { method: 'get', path: '/foo', env: 'valid_env'}
+      expect(registry.get(metric).get(labels: correct_labels)).to include("0.1" => 1, "0.25" => 1.0)
+
+      incorrect_labels = { method: 'get', path: '/foo', env: 'invalid_env'}
+      expect(registry.get(metric).get(labels: incorrect_labels)).to include("0.1" => 0, "0.25" => 0.0)
+    end
+
+  end
 end
