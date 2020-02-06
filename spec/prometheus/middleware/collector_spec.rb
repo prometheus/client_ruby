@@ -143,7 +143,7 @@ describe Prometheus::Middleware::Collector do
       )
     end
 
-    it 'provides metric with the custom label' do
+    it 'can find metrics with custom labels' do
       get '/foo'
       metric = :http_server_request_duration_seconds
       correct_labels = { method: 'get', path: '/foo', env: 'valid_env'}
