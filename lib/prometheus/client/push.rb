@@ -20,7 +20,7 @@ module Prometheus
 
       attr_reader :job, :instance, :gateway, :path
 
-      def initialize(job, instance = nil, gateway = nil)
+      def initialize(job, instance = nil, gateway = nil, opt = {})
         @mutex = Mutex.new
         @job = job
         @instance = instance
@@ -28,8 +28,7 @@ module Prometheus
         @path = build_path(job, instance)
         @uri = parse("#{@gateway}#{@path}")
 
-        @http = Net::HTTP.new(@uri.host, @uri.port)
-        @http.use_ssl = (@uri.scheme == 'https')
+        @http_opt = opt.merge(use_ssl: @uri.scheme == 'https')
       end
 
       def add(registry)
@@ -78,7 +77,9 @@ module Prometheus
         req.basic_auth(@uri.user, @uri.password) if @uri.user
         req.body = Formats::Text.marshal(registry) if registry
 
-        @http.request(req)
+        Net::HTTP.start(@uri.host, @uri.port, @http_opt) do |http|
+          http.request(req)
+        end
       end
 
       def synchronize

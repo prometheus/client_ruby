@@ -90,10 +90,11 @@ describe Prometheus::Client::Push do
       expect(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
 
       http = double(:http)
-      expect(http).to receive(:use_ssl=).with(false)
-      expect(http).to receive(:request).with(request)
-      expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+      expect(Net::HTTP).to receive(:start).with('localhost', 9091, { use_ssl: false }) do |&block|
+        block.call(http)
+      end
 
+      expect(http).to receive(:request).with(request)
       push.send(:request, Net::HTTP::Post, registry)
     end
 
@@ -103,10 +104,11 @@ describe Prometheus::Client::Push do
       expect(Net::HTTP::Delete).to receive(:new).with(uri).and_return(request)
 
       http = double(:http)
-      expect(http).to receive(:use_ssl=).with(false)
-      expect(http).to receive(:request).with(request)
-      expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+      expect(Net::HTTP).to receive(:start).with('localhost', 9091, { use_ssl: false }) do |&block|
+        block.call(http)
+      end
 
+      expect(http).to receive(:request).with(request)
       push.send(:request, Net::HTTP::Delete)
     end
 
@@ -120,10 +122,10 @@ describe Prometheus::Client::Push do
         expect(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
 
         http = double(:http)
-        expect(http).to receive(:use_ssl=).with(true)
+        expect(Net::HTTP).to receive(:start).with('localhost', 9091, { use_ssl: true }) do |&block|
+          block.call(http)
+        end
         expect(http).to receive(:request).with(request)
-        expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
-
         push.send(:request, Net::HTTP::Post, registry)
       end
     end
@@ -139,11 +141,33 @@ describe Prometheus::Client::Push do
         expect(Net::HTTP::Put).to receive(:new).with(uri).and_return(request)
 
         http = double(:http)
-        expect(http).to receive(:use_ssl=).with(true)
+        expect(Net::HTTP).to receive(:start).with('localhost', 9091, { use_ssl: true }) do |&block|
+          block.call(http)
+        end
         expect(http).to receive(:request).with(request)
-        expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
         push.send(:request, Net::HTTP::Put, registry)
+      end
+    end
+
+    context 'with ssl version' do
+      let(:gateway) { 'https://super:secret@localhost:9091' }
+      let(:push) { Prometheus::Client::Push.new('test-job', nil, gateway, { ssl_version: :TLS1_2 }) }
+
+      it 'sets set ssl version when requested' do
+        request = double(:request)
+        expect(request).to receive(:content_type=).with(content_type)
+        expect(request).to receive(:basic_auth).with('super', 'secret')
+        expect(request).to receive(:body=).with(data)
+        expect(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
+
+        http = double(:http)
+        expect(Net::HTTP).to receive(:start).with('localhost', 9091, { use_ssl: true, ssl_version: :TLS1_2 }) do |&block|
+          block.call(http)
+        end
+        expect(http).to receive(:request).with(request)
+
+        push.send(:request, Net::HTTP::Post, registry)
       end
     end
   end
