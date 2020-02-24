@@ -45,7 +45,7 @@ module Prometheus
           end
 
           settings = default_settings.merge(metric_settings)
-          validate_metric_settings(settings)
+          validate_metric_settings(metric_type, settings)
 
           MetricStore.new(metric_name: metric_name,
                           store_settings: @store_settings,
@@ -54,7 +54,7 @@ module Prometheus
 
         private
 
-        def validate_metric_settings(metric_settings)
+        def validate_metric_settings(metric_type, metric_settings)
           unless metric_settings.has_key?(:aggregation) &&
             AGGREGATION_MODES.include?(metric_settings[:aggregation])
             raise InvalidStoreSettingsError,
@@ -64,6 +64,11 @@ module Prometheus
           unless (metric_settings.keys - [:aggregation]).empty?
             raise InvalidStoreSettingsError,
                   "Only :aggregation setting can be specified"
+          end
+
+          if metric_settings[:aggregation] == MOST_RECENT && metric_type != :gauge
+            raise InvalidStoreSettingsError,
+                  "Only :gauge metrics support :most_recent aggregation"
           end
         end
 

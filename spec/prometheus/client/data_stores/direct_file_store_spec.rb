@@ -14,7 +14,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
   it_behaves_like Prometheus::Client::DataStores
 
-  it "only accepts valid :aggregation as Metric Settings" do
+  it "only accepts valid :aggregation values as Metric Settings" do
     expect do
       subject.for_metric(:metric_name,
                          metric_type: :counter,
@@ -26,11 +26,40 @@ describe Prometheus::Client::DataStores::DirectFileStore do
                          metric_type: :counter,
                          metric_settings: { aggregation: :invalid })
     end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+  end
 
+  it "only accepts valid keys as Metric Settings" do
+    # the only valid key at the moment is :aggregation
     expect do
       subject.for_metric(:metric_name,
                          metric_type: :counter,
                          metric_settings: { some_setting: true })
+    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+  end
+
+  it "only accepts :most_recent aggregation for gauges" do
+    expect do
+      subject.for_metric(:metric_name,
+                         metric_type: :gauge,
+                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::MOST_RECENT })
+    end.not_to raise_error
+
+    expect do
+      subject.for_metric(:metric_name,
+                         metric_type: :counter,
+                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::MOST_RECENT })
+    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+
+    expect do
+      subject.for_metric(:metric_name,
+                         metric_type: :histogram,
+                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::MOST_RECENT })
+    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+
+    expect do
+      subject.for_metric(:metric_name,
+                         metric_type: :summary,
+                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::MOST_RECENT })
     end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
   end
 
