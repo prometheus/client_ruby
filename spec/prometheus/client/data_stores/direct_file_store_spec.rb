@@ -329,6 +329,18 @@ describe Prometheus::Client::DataStores::DirectFileStore do
       # Both processes should return the same value
       expect(metric_store1.all_values).to eq(metric_store2.all_values)
     end
+
+    it "does now allow `increment`, only `set`" do
+      metric_store1 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+        metric_settings: { aggregation: :most_recent }
+      )
+
+      expect do
+        metric_store1.increment(labels: {})
+      end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+    end
   end
 
   it "resizes the File if metrics get too big" do

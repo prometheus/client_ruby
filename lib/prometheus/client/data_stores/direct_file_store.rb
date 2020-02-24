@@ -105,6 +105,12 @@ module Prometheus
           end
 
           def increment(labels:, by: 1)
+            if @values_aggregation_mode == DirectFileStore::MOST_RECENT
+              raise InvalidStoreSettingsError,
+                    "The :most_recent aggregation does not support the use of increment"\
+                      "/decrement"
+            end
+
             key = store_key(labels)
             in_process_sync do
               value = internal_store.read_value(key)
