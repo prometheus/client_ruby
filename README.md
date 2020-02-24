@@ -368,6 +368,19 @@ you store your metric files (specified when initializing the `DirectFileStore`) 
 when your app starts. Otherwise, each app run will continue exporting the metrics from the 
 previous run.  
 
+If you have this issue, one way to do this is to run code similar to this as part of you
+initialization:
+
+```ruby
+Dir["#{app_path}/tmp/prometheus/*.bin"].each do |file_path|
+  File.unlink(file_path)
+end
+```
+
+If you are running in pre-fork servers (such as Unicorn or Puma with multiple processes),
+make sure you do this **before** the server forks. Otherwise, each child process may delete
+files created by other processes on *this* run, instead of deleting old files.
+
 **Large numbers of files**: Because there is an individual file per metric and per process 
 (which is done to optimize for observation performance), you may end up with a large number 
 of files. We don't currently have a solution for this problem, but we're working on it.
