@@ -279,9 +279,10 @@ module Prometheus
               init_value(key)
             end
 
+            now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
             pos = @positions[key]
             @f.seek(pos)
-            @f.write([value, Time.now.to_f].pack('dd'))
+            @f.write([value, now].pack('dd'))
             @f.flush
           end
 
