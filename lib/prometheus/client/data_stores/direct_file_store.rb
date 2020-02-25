@@ -257,8 +257,7 @@ module Prometheus
             with_file_lock do
               @positions.map do |key, pos|
                 @f.seek(pos)
-                value = @f.read(8).unpack('d')[0]
-                timestamp = @f.read(8).unpack('d')[0]
+                value, timestamp = @f.read(16).unpack('dd')
                 [key, value, timestamp]
               end
             end
