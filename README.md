@@ -158,6 +158,11 @@ histogram.get(labels: { service: 'users' })
 # => { 0.005 => 3, 0.01 => 15, 0.025 => 18, ..., 2.5 => 42, 5 => 42, 10 = >42 }
 ```
 
+Histograms provide default buckets of `[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]`
+
+You can specify your own buckets, either explicitly, or using the `Histogram.linear_buckets`
+or `Histogram.exponential_buckets` methods to define regularly spaced buckets.
+
 ### Summary
 
 Summary, similar to histograms, is an accumulator for samples. It captures
