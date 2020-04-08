@@ -83,6 +83,10 @@ module Prometheus
       def metrics
         @metrics.values
       end
+
+      def clear
+        @metrics.clear
+      end
     end
   end
 end

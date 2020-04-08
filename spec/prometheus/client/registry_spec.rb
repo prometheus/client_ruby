@@ -121,4 +121,14 @@ describe Prometheus::Client::Registry do
       expect(registry.get(:test)).to eql(nil)
     end
   end
+
+  describe '#clear' do
+    it 'clears the registry' do
+      registry.register(double(name: :test))
+
+      expect(registry.get(:test)).to_not be_nil
+      registry.clear
+      expect(registry.get(:test)).to be_nil
+    end
+  end
 end
