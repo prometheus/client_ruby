@@ -3,6 +3,10 @@
 require 'simplecov'
 require 'coveralls'
 
+RSpec.configure do |c|
+  c.warnings = true
+end
+
 SimpleCov.formatter =
   if ENV['CI']
     Coveralls::SimpleCov::Formatter
