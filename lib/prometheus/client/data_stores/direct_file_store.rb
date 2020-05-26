@@ -74,6 +74,7 @@ module Prometheus
             @metric_name = metric_name
             @store_settings = store_settings
             @values_aggregation_mode = metric_settings[:aggregation]
+            @store_opened_by_pid = nil
 
             @lock = Monitor.new
           end

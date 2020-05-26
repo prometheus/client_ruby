@@ -29,16 +29,17 @@ module Prometheus
         @docstring = docstring
         @preset_labels = stringify_values(preset_labels)
 
+        @all_labels_preset = false
+        if preset_labels.keys.length == labels.length
+          @validator.validate_labelset!(preset_labels)
+          @all_labels_preset = true
+        end
+
         @store = Prometheus::Client.config.data_store.for_metric(
           name,
           metric_type: type,
           metric_settings: store_settings
         )
-
-        if preset_labels.keys.length == labels.length
-          @validator.validate_labelset!(preset_labels)
-          @all_labels_preset = true
-        end
       end
 
       # Returns the value for the given label set
