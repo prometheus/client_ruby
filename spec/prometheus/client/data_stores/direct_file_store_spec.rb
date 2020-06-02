@@ -10,6 +10,8 @@ describe Prometheus::Client::DataStores::DirectFileStore do
   # Reset the PStores
   before do
     Dir.glob('/tmp/prometheus_test/*').each { |file| File.delete(file) }
+    # This doesn't actually work, btw, but it's what would have to be done.
+    Prometheus::Client::DataStores::DirectFileStore::MetricStore.shared_store_opened_by_pid = nil
   end
 
   it_behaves_like Prometheus::Client::DataStores
@@ -282,5 +284,61 @@ describe Prometheus::Client::DataStores::DirectFileStore do
     end
 
     expect(truncate_calls_count).to be >= 3
+  end
+
+  context "with all metrics in one single file" do
+    subject { described_class.new(dir: "/tmp/prometheus_test", separate_files_per_metric: false) }
+
+    let(:metric_store1) { subject.for_metric(:metric_name, metric_type: :counter) }
+    let(:metric_store2) { subject.for_metric(:metric_name2, metric_type: :counter) }
+
+    it "stores all metrics into one file" do
+      metric_store1.increment(labels: {a: "x", b: "x"}, by: 1)
+      metric_store1.increment(labels: {a: "x", b: "zzz"}, by: 2)
+      metric_store2.increment(labels: {a: "x", b: "x"}, by: 3)
+
+      expect(Dir.glob('/tmp/prometheus_test/*').length).to eq(1)
+    end
+
+    it "exports values correctly" do
+      metric_store1.increment(labels: {a: "x", b: "x"}, by: 1)
+      metric_store1.increment(labels: {a: "x", b: "zzz"}, by: 2)
+      metric_store2.increment(labels: {a: "x", b: "x"}, by: 3)
+
+      expect(metric_store1.all_values).to eq(
+        {a: "x", b: "x"} => 1.0,
+        {a: "x", b: "zzz"} => 2.0,
+      )
+
+      expect(metric_store2.all_values).to eq(
+        {a: "x", b: "x"} => 3.0,
+      )
+    end
+
+    it "exports values correctly from multiple processes" do
+      metric_store1.increment(labels: {a: "x", b: "x"}, by: 1)
+      metric_store1.increment(labels: {a: "x", b: "zzz"}, by: 2)
+      metric_store2.increment(labels: {a: "x", b: "x"}, by: 3)
+
+      # 2nd process
+      allow(Process).to receive(:pid).and_return(23456)
+      metric_store1.increment(labels: {a: "x", b: "x"}, by: 4)
+      metric_store1.increment(labels: {a: "x", b: "yyy"}, by: 5)
+      metric_store2.increment(labels: {a: "x", b: "x"}, by: 6)
+
+      # Make sure we actually have 2 files to sup together
+      expect(Dir.glob('/tmp/prometheus_test/metric___all_metrics___*').length).to eq(2)
+
+      expect(metric_store1.all_values).to eq(
+        {a: "x", b: "x"} => 5.0,
+        {a: "x", b: "zzz"} => 2.0,
+        {a: "x", b: "yyy"} => 5.0,
+      )
+
+      expect(metric_store2.all_values).to eq(
+        {a: "x", b: "x"} => 9.0,
+      )
+    end
+
   end
 end
