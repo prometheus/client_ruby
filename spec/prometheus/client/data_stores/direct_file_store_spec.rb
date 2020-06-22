@@ -14,7 +14,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
   it_behaves_like Prometheus::Client::DataStores
 
-  it "only accepts valid :aggregation as Metric Settings" do
+  it "only accepts valid :aggregation values as Metric Settings" do
     expect do
       subject.for_metric(:metric_name,
                          metric_type: :counter,
@@ -26,11 +26,40 @@ describe Prometheus::Client::DataStores::DirectFileStore do
                          metric_type: :counter,
                          metric_settings: { aggregation: :invalid })
     end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+  end
 
+  it "only accepts valid keys as Metric Settings" do
+    # the only valid key at the moment is :aggregation
     expect do
       subject.for_metric(:metric_name,
                          metric_type: :counter,
                          metric_settings: { some_setting: true })
+    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+  end
+
+  it "only accepts :most_recent aggregation for gauges" do
+    expect do
+      subject.for_metric(:metric_name,
+                         metric_type: :gauge,
+                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::MOST_RECENT })
+    end.not_to raise_error
+
+    expect do
+      subject.for_metric(:metric_name,
+                         metric_type: :counter,
+                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::MOST_RECENT })
+    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+
+    expect do
+      subject.for_metric(:metric_name,
+                         metric_type: :histogram,
+                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::MOST_RECENT })
+    end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
+
+    expect do
+      subject.for_metric(:metric_name,
+                         metric_type: :summary,
+                         metric_settings: { aggregation: Prometheus::Client::DataStores::DirectFileStore::MOST_RECENT })
     end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
   end
 
@@ -264,6 +293,53 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
       # Both processes should return the same value
       expect(metric_store1.all_values).to eq(metric_store2.all_values)
+    end
+  end
+
+  context "with a metric that takes MOST_RECENT instead of SUM" do
+    it "reports the most recently written value from different processes" do
+      metric_store1 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+        metric_settings: { aggregation: :most_recent }
+      )
+      metric_store2 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+        metric_settings: { aggregation: :most_recent }
+      )
+
+      allow(Process).to receive(:pid).and_return(12345)
+      metric_store1.set(labels: { foo: "bar" }, val: 1)
+
+      allow(Process).to receive(:pid).and_return(23456)
+      metric_store2.set(labels: { foo: "bar" }, val: 3) # Supercedes 'bar' in PID 12345
+      metric_store2.set(labels: { foo: "baz" }, val: 2)
+      metric_store2.set(labels: { foo: "zzz" }, val: 1)
+
+      allow(Process).to receive(:pid).and_return(12345)
+      metric_store1.set(labels: { foo: "baz" }, val: 4) # Supercedes 'baz' in PID 23456
+
+      expect(metric_store1.all_values).to eq(
+        { foo: "bar" } => 3.0,
+        { foo: "baz" } => 4.0,
+        { foo: "zzz" } => 1.0,
+      )
+
+      # Both processes should return the same value
+      expect(metric_store1.all_values).to eq(metric_store2.all_values)
+    end
+
+    it "does now allow `increment`, only `set`" do
+      metric_store1 = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+        metric_settings: { aggregation: :most_recent }
+      )
+
+      expect do
+        metric_store1.increment(labels: {})
+      end.to raise_error(Prometheus::Client::DataStores::DirectFileStore::InvalidStoreSettingsError)
     end
   end
 

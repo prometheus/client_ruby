@@ -325,9 +325,9 @@ When instantiating metrics, there is an optional `store_settings` attribute. Thi
 to set up store-specific settings for each metric. For most stores, this is not used, but
 for multi-process stores, this is used to specify how to aggregate the values of each
 metric across multiple processes. For the most part, this is used for Gauges, to specify
-whether you want to report the `SUM`, `MAX` or `MIN` value observed across all processes.
-For almost all other cases, you'd leave the default (`SUM`). More on this on the 
-*Aggregation* section below.
+whether you want to report the `SUM`, `MAX`, `MIN`, or `MOST_RECENT` value observed across
+all processes. For almost all other cases, you'd leave the default (`SUM`). More on this
+on the *Aggregation* section below.
 
 Custom stores may also accept extra parameters besides `:aggregation`. See the
 documentation of each store for more details.
@@ -360,8 +360,11 @@ use case, you may need to control how this works. When using this store,
 each Metric allows you to specify an `:aggregation` setting, defining how
 to aggregate the multiple possible values we can get for each labelset. By default,
 Counters, Histograms and Summaries are `SUM`med, and Gauges report all their values (one
-for each process), tagged with a `pid` label. You can also select `SUM`, `MAX` or `MIN`
-for your gauges, depending on your use case.
+for each process), tagged with a `pid` label. You can also select `SUM`, `MAX`, `MIN`, or
+`MOST_RECENT` for your gauges, depending on your use case.
+
+Please note that that the `MOST_RECENT` aggregation only works for gauges, and it does not
+allow the use of `increment` / `decrement`, you can only use `set`. 
 
 **Memory Usage**: When scraped by Prometheus, this store will read all these files, get all
 the values and aggregate them. We have notice this can have a noticeable effect on memory
