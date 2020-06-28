@@ -36,9 +36,9 @@ module Prometheus
 
       # Returns all label sets with their values expressed as hashes with their sum/count
       def values
-        v = @store.all_values
+        values = @store.all_values
 
-        v.each_with_object({}) do |(label_set, v), acc|
+        values.each_with_object({}) do |(label_set, v), acc|
           actual_label_set = label_set.reject{|l| l == :quantile }
           acc[actual_label_set] ||= { "count" => 0.0, "sum" => 0.0 }
           acc[actual_label_set][label_set[:quantile]] = v
