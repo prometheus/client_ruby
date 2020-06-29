@@ -1,5 +1,18 @@
 # CHANGELOG
 
+# 2.1.0 / 2020-06-29
+
+## New Features
+
+- [#177](https://github.com/prometheus/client_ruby/pull/177) Added Histogram helpers to 
+    generate linear and exponential buckets, as the Client Library Guidelines recommend.
+- [#172](https://github.com/prometheus/client_ruby/pull/172) Added :most_recent 
+    aggregation for gauges on DirectFileStore.
+    
+## Code improvements
+
+- Fixed several warnings that started firing in the latest versions of Ruby.
+
 # 2.0.0 / 2020-01-28
 
 ## Breaking changes
