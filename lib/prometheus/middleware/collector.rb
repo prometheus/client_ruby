@@ -68,20 +68,10 @@ module Prometheus
 
       def record(env, code, duration)
         path = env[Rack::SCRIPT_NAME] + env[Rack::PATH_INFO]
+        shared_labels = { method: env['REQUEST_METHOD'].downcase, path: strip_ids_from_path(path) }
 
-        counter_labels = {
-          code:   code,
-          method: env['REQUEST_METHOD'].downcase,
-          path:   strip_ids_from_path(path),
-        }
-
-        duration_labels = {
-          method: env['REQUEST_METHOD'].downcase,
-          path:   strip_ids_from_path(path),
-        }
-
-        @requests.increment(labels: counter_labels)
-        @durations.observe(duration, labels: duration_labels)
+        @requests.increment(labels: { code: code, **shared_labels })
+        @durations.observe(duration, labels: shared_labels)
       rescue
         # TODO: log unexpected exception during request recording
         nil
