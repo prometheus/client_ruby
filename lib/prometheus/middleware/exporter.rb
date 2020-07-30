@@ -21,11 +21,12 @@ module Prometheus
         @app = app
         @registry = options[:registry] || Client.registry
         @path = options[:path] || '/metrics'
+        @port = options[:port]
         @acceptable = build_dictionary(FORMATS, FALLBACK)
       end
 
       def call(env)
-        if env['PATH_INFO'] == @path
+        if metrics_port?(env['SERVER_PORT']) && env['PATH_INFO'] == @path
           format = negotiate(env, @acceptable)
           format ? respond_with(format) : not_acceptable(FORMATS)
         else
@@ -85,6 +86,10 @@ module Prometheus
           memo[format::CONTENT_TYPE] = format
           memo[format::MEDIA_TYPE] = format
         end
+      end
+
+      def metrics_port?(request_port)
+        @port.nil? || @port.to_s == request_port
       end
     end
   end
