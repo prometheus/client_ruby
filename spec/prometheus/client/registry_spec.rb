@@ -33,10 +33,6 @@ describe Prometheus::Client::Registry do
       mutex = Mutex.new
       containers = []
 
-      def registry.exist?(*args)
-        super.tap { sleep(0.01) }
-      end
-
       Array.new(5) do
         Thread.new do
           result = begin
