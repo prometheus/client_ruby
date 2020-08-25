@@ -22,7 +22,7 @@ module Prometheus
         name = metric.name
 
         @mutex.synchronize do
-          if exist?(name.to_sym)
+          if @metrics.key?(name.to_sym)
             raise AlreadyRegisteredError, "#{name} has already been registered"
           end
           @metrics[name.to_sym] = metric
@@ -73,15 +73,15 @@ module Prometheus
       end
 
       def exist?(name)
-        @metrics.key?(name)
+        @mutex.synchronize { @metrics.key?(name) }
       end
 
       def get(name)
-        @metrics[name.to_sym]
+        @mutex.synchronize { @metrics[name.to_sym] }
       end
 
       def metrics
-        @metrics.values
+        @mutex.synchronize { @metrics.values }
       end
     end
   end
