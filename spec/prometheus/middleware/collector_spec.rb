@@ -55,6 +55,18 @@ describe Prometheus::Middleware::Collector do
     expect(registry.get(metric).get(labels: labels)).to include("0.1" => 0, "0.25" => 1)
   end
 
+  it 'includes SCRIPT_NAME in the path if provided' do
+    metric = :http_server_requests_total
+
+    get '/foo'
+    expect(registry.get(metric).values.keys.last[:path]).to eql("/foo")
+
+    env('SCRIPT_NAME', '/engine')
+    get '/foo'
+    env('SCRIPT_NAME', nil)
+    expect(registry.get(metric).values.keys.last[:path]).to eql("/engine/foo")
+  end
+
   it 'normalizes paths containing numeric IDs by default' do
     expect(Benchmark).to receive(:realtime).and_yield.and_return(0.3)
 
