@@ -389,9 +389,21 @@ If you are running in pre-fork servers (such as Unicorn or Puma with multiple pr
 make sure you do this **before** the server forks. Otherwise, each child process may delete
 files created by other processes on *this* run, instead of deleting old files.
 
-**Large numbers of files**: Because there is an individual file per metric and per process 
-(which is done to optimize for observation performance), you may end up with a large number 
-of files. We don't currently have a solution for this problem, but we're working on it.
+**Large numbers of files**: Because there is an individual file per metric and
+per process (which is done to optimize for observation performance), you may
+end up with a large number of files. We don't currently have a solution for
+this problem, but it's important to make sure that files get deleted when
+worker processes exit. This can be achieved using Ruby's `at_exit` block:
+
+```ruby
+at_exit do
+  FileUtils.rm_f(Dir.glob("/path/to/prometheus_app/tmp/cache/*#{Process.pid}.bin"))
+end
+```
+
+For Ruby on Rails applications, this can be done via an initializer for
+example. It is also a good idea to delete all files during startup to clean up
+all leftovers caused by SIGKILL.
 
 **Performance**: Even though this store saves data on disk, it's still much faster than 
 would probably be expected, because the files are never actually `fsync`ed, so the store 
