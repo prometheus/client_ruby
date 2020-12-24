@@ -128,18 +128,28 @@ describe Prometheus::Client::Summary do
   end
 
   describe '#init_label_set' do
-    let(:expected_labels) { [:status] }
+    context "with labels" do
+      let(:expected_labels) { [:status] }
 
-    it 'initializes the metric for a given label set' do
-      expect(summary.values).to eql({})
+      it 'initializes the metric for a given label set' do
+        expect(summary.values).to eql({})
 
-      summary.init_label_set(status: 'bar')
-      summary.init_label_set(status: 'foo')
+        summary.init_label_set(status: 'bar')
+        summary.init_label_set(status: 'foo')
 
-      expect(summary.values).to eql(
-        { status: 'bar' } => { "count" => 0.0, "sum" => 0.0 },
-        { status: 'foo' } => { "count" => 0.0, "sum" => 0.0 },
-      )
+        expect(summary.values).to eql(
+          { status: 'bar' } => { "count" => 0.0, "sum" => 0.0 },
+          { status: 'foo' } => { "count" => 0.0, "sum" => 0.0 },
+        )
+      end
+    end
+
+    context "without labels" do
+      it 'automatically initializes the metric' do
+        expect(summary.values).to eql(
+          {} => { "count" => 0.0, "sum" => 0.0 },
+        )
+      end
     end
   end
 end

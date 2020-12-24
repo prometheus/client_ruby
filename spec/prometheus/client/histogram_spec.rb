@@ -165,18 +165,28 @@ describe Prometheus::Client::Histogram do
   end
 
   describe '#init_label_set' do
-    let(:expected_labels) { [:status] }
+    context "with labels" do
+      let(:expected_labels) { [:status] }
 
-    it 'initializes the metric for a given label set' do
-      expect(histogram.values).to eql({})
+      it 'initializes the metric for a given label set' do
+        expect(histogram.values).to eql({})
 
-      histogram.init_label_set(status: 'bar')
-      histogram.init_label_set(status: 'foo')
+        histogram.init_label_set(status: 'bar')
+        histogram.init_label_set(status: 'foo')
 
-      expect(histogram.values).to eql(
-        { status: 'bar' } => { "2.5" => 0.0, "5" => 0.0, "10" => 0.0, "+Inf" => 0.0, "sum" => 0.0 },
-        { status: 'foo' } => { "2.5" => 0.0, "5" => 0.0, "10" => 0.0, "+Inf" => 0.0, "sum" => 0.0 },
-      )
+        expect(histogram.values).to eql(
+          { status: 'bar' } => { "2.5" => 0.0, "5" => 0.0, "10" => 0.0, "+Inf" => 0.0, "sum" => 0.0 },
+          { status: 'foo' } => { "2.5" => 0.0, "5" => 0.0, "10" => 0.0, "+Inf" => 0.0, "sum" => 0.0 },
+        )
+      end
+    end
+
+    context "without labels" do
+      it 'automatically initializes the metric' do
+        expect(histogram.values).to eql(
+          {} => { "2.5" => 0.0, "5" => 0.0, "10" => 0.0, "+Inf" => 0.0, "sum" => 0.0 },
+        )
+      end
     end
   end
 end
