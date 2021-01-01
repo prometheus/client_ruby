@@ -91,6 +91,7 @@ module Prometheus
         path
           .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)}, '/:uuid\\1')
           .gsub(%r{/\d+(/|$)}, '/:id\\1')
+          .gsub(%r{/[0-9a-zA-Z=]+--[0-9a-f]+(/|$)}, '/:signed_id\\1')
       end
     end
   end
