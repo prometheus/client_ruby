@@ -389,6 +389,11 @@ If you are running in pre-fork servers (such as Unicorn or Puma with multiple pr
 make sure you do this **before** the server forks. Otherwise, each child process may delete
 files created by other processes on *this* run, instead of deleting old files.
 
+**Define metrics before fork**: In order to share the same definition of metrics between
+your forks, you should make sure to define your metrics before to fork your process.
+Indeed, even if the content of the metric is stored in a file, the list of all metrics is
+stored in memory. Creating metrics after fork would lead to unexported files metrics.
+
 **Large numbers of files**: Because there is an individual file per metric and per process 
 (which is done to optimize for observation performance), you may end up with a large number 
 of files. We don't currently have a solution for this problem, but we're working on it.
