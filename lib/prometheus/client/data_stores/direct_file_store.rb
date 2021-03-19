@@ -33,8 +33,9 @@ module Prometheus
         DEFAULT_METRIC_SETTINGS = { aggregation: SUM }
         DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }
 
-        def initialize(dir:)
+        def initialize(dir:, process_identifier: :pid, generate_identity: -> { Process.pid })
           @store_settings = { dir: dir }
+          @process_identity = ProcessIdentity.new(identifier_name: process_identifier, generator: generate_identity)
           FileUtils.mkdir_p(dir)
         end
 
@@ -49,7 +50,8 @@ module Prometheus
 
           MetricStore.new(metric_name: metric_name,
                           store_settings: @store_settings,
-                          metric_settings: settings)
+                          metric_settings: settings,
+                          process_identity: @process_identity)
         end
 
         private
@@ -72,13 +74,27 @@ module Prometheus
           end
         end
 
+        class ProcessIdentity
+          def initialize(identifier_name:, generator:)
+            raise unless generator.respond_to?(:call)
+
+            @identifier_name = identifier_name
+            @generator = generator
+          end
+
+          def insert_label!(labels)
+            labels[@identifier_name] = @generator.call
+          end
+        end
+
         class MetricStore
           attr_reader :metric_name, :store_settings
 
-          def initialize(metric_name:, store_settings:, metric_settings:)
+          def initialize(metric_name:, store_settings:, metric_settings:, process_identity:)
             @metric_name = metric_name
             @store_settings = store_settings
             @values_aggregation_mode = metric_settings[:aggregation]
+            @process_identity = process_identity
             @store_opened_by_pid = nil
 
             @lock = Monitor.new
@@ -163,10 +179,11 @@ module Prometheus
 
           def store_key(labels)
             if @values_aggregation_mode == ALL
-              labels[:pid] = process_id
+              @process_identity.insert_label!(labels)
             end
 
             labels.to_a.sort.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join('&')
+
           end
 
           def internal_store

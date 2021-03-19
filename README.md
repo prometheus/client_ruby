@@ -187,17 +187,17 @@ summary_value['count'] # => 100
 All metrics can have labels, allowing grouping of related time series.
 
 Labels are an extremely powerful feature, but one that must be used with care.
-Refer to the best practices on [naming](https://prometheus.io/docs/practices/naming/) and 
+Refer to the best practices on [naming](https://prometheus.io/docs/practices/naming/) and
 [labels](https://prometheus.io/docs/practices/instrumentation/#use-labels).
 
-Most importantly, avoid labels that can have a large number of possible values (high 
+Most importantly, avoid labels that can have a large number of possible values (high
 cardinality). For example, an HTTP Status Code is a good label. A User ID is **not**.
 
 Labels are specified optionally when updating metrics, as a hash of `label_name => value`.
-Refer to [the Prometheus documentation](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels) 
+Refer to [the Prometheus documentation](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels)
 as to what's a valid `label_name`.
 
-In order for a metric to accept labels, their names must be specified when first initializing 
+In order for a metric to accept labels, their names must be specified when first initializing
 the metric. Then, when the metric is updated, all the specified labels must be present.
 
 Example:
@@ -215,8 +215,8 @@ You can also "pre-set" some of these label values, if they'll always be the same
 need to specify them every time:
 
 ```ruby
-https_requests_total = Counter.new(:http_requests_total, 
-                                   docstring: '...', 
+https_requests_total = Counter.new(:http_requests_total,
+                                   docstring: '...',
                                    labels: [:service, :status_code],
                                    preset_labels: { service: "my_service" })
 
@@ -231,7 +231,7 @@ with a subset (or full set) of labels set, so that you can increment / observe t
 without having to specify the labels for every call.
 
 Moreover, if all the labels the metric can take have been pre-set, validation of the labels
-is done on the call to `with_labels`, and then skipped for each observation, which can 
+is done on the call to `with_labels`, and then skipped for each observation, which can
 lead to performance improvements. If you are incrementing a counter in a fast loop, you
 definitely want to be doing this.
 
@@ -242,8 +242,8 @@ Examples:
 
 ```ruby
 # in the metric definition:
-records_processed_total = registry.counter.new(:records_processed_total, 
-                                               docstring: '...', 
+records_processed_total = registry.counter.new(:records_processed_total,
+                                               docstring: '...',
                                                labels: [:service, :component],
                                                preset_labels: { service: "my_service" })
 
@@ -256,11 +256,11 @@ class MyComponent
   def metric
     @metric ||= records_processed_total.with_labels(component: "my_component")
   end
-  
+
   def process
     records.each do |record|
       # process the record
-      metric.increment 
+      metric.increment
     end
   end
 end
@@ -280,11 +280,11 @@ metric definition will result in a
 
   - `:job`
   - `:instance`
-  - `:pid`
+  - `:pid` (unless you define a new `ProcessIdentity`)
 
 ## Data Stores
 
-The data for all the metrics (the internal counters associated with each labelset) 
+The data for all the metrics (the internal counters associated with each labelset)
 is stored in a global Data Store object, rather than in the metric objects themselves.
 (This "storage" is ephemeral, generally in-memory, it's not "long-term storage")
 
@@ -294,12 +294,12 @@ example), require a shared store between all the processes, to be able to report
 numbers. At the same time, other applications may not have this requirement but be very
 sensitive to performance, and would prefer instead a simpler, faster store.
 
-By having a standardized and simple interface that metrics use to access this store, 
+By having a standardized and simple interface that metrics use to access this store,
 we abstract away the details of storing the data from the specific needs of each metric.
-This allows us to then simply swap around the stores based on the needs of different 
-applications, with no changes to the rest of the client. 
+This allows us to then simply swap around the stores based on the needs of different
+applications, with no changes to the rest of the client.
 
-The client provides 3 built-in stores, but if neither of these is ideal for your 
+The client provides 3 built-in stores, but if neither of these is ideal for your
 requirements, you can easily make your own store and use that instead. More on this below.
 
 ### Configuring which store to use.
@@ -317,7 +317,7 @@ NOTE: You **must** make sure to set the `data_store` before initializing any met
 If using Rails, you probably want to set up your Data Store on `config/application.rb`,
 or `config/environments/*`, both of which run before `config/initializers/*`
 
-Also note that `config.data_store` is set to an *instance* of a `DataStore`, not to the 
+Also note that `config.data_store` is set to an *instance* of a `DataStore`, not to the
 class. This is so that the stores can receive parameters. Most of the built-in stores
 don't require any, but `DirectFileStore` does, for example.
 
@@ -336,45 +336,58 @@ documentation of each store for more details.
 
 There are 3 built-in stores, with different trade-offs:
 
-- **Synchronized**: Default store. Thread safe, but not suitable for multi-process 
+- **Synchronized**: Default store. Thread safe, but not suitable for multi-process
   scenarios (e.g. pre-fork servers, like Unicorn). Stores data in Hashes, with all accesses
-  protected by Mutexes. 
+  protected by Mutexes.
+
 - **SingleThreaded**: Fastest store, but only suitable for single-threaded scenarios.
-  This store does not make any effort to synchronize access to its internal hashes, so 
+  This store does not make any effort to synchronize access to its internal hashes, so
   it's absolutely not thread safe.
+
 - **DirectFileStore**: Stores data in binary files, one file per process and per metric.
-  This is generally the recommended store to use with pre-fork servers and other 
+  This is generally the recommended store to use with pre-fork servers and other
   "multi-process" scenarios. There are some important caveats to using this store, so
   please read on the section below.
+
+  ```ruby
+  # process_identifier and generate_identity are optional
+  DirectFileStore.new(dir: '/tmp/dfs', process_identifier: :process_name, generate_identity: -> { $0 })
+  ```
 
 ### `DirectFileStore` caveats and things to keep in mind
 
 Each metric gets a file for each process, and manages its contents by storing keys and
-binary floats next to them, and updating the offsets of those Floats directly. When 
-exporting metrics, it will find all the files that apply to each metric, read them, 
+binary floats next to them, and updating the offsets of those Floats directly. When
+exporting metrics, it will find all the files that apply to each metric, read them,
 and aggregate them.
 
 **Aggregation of metrics**: Since there will be several files per metrics (one per process),
 these need to be aggregated to present a coherent view to Prometheus. Depending on your
-use case, you may need to control how this works. When using this store, 
+use case, you may need to control how this works. When using this store,
 each Metric allows you to specify an `:aggregation` setting, defining how
 to aggregate the multiple possible values we can get for each labelset. By default,
 Counters, Histograms and Summaries are `SUM`med, and Gauges report all their values (one
-for each process), tagged with a `pid` label. You can also select `SUM`, `MAX`, `MIN`, or
-`MOST_RECENT` for your gauges, depending on your use case.
+for each process), tagged with a `pid` label by default. You can also select `SUM`, `MAX`,
+`MIN`, or `MOST_RECENT` for your gauges, depending on your use case.
 
 Please note that that the `MOST_RECENT` aggregation only works for gauges, and it does not
-allow the use of `increment` / `decrement`, you can only use `set`. 
+allow the use of `increment` / `decrement`, you can only use `set`.
+
+**Process Identity**: When defining the `DirectFileStore`, you may change how processes are
+identified. When the `process_identifier` and `generate_identity` arguments are specified,
+then the default `pid` will no longer be applied. This can be done to capture the process
+name (`$0`), the puma worker's index, or other identifying attributes. `generate_identity`
+is expected to implement `call()`.
 
 **Memory Usage**: When scraped by Prometheus, this store will read all these files, get all
 the values and aggregate them. We have notice this can have a noticeable effect on memory
 usage for your app. We recommend you test this in a realistic usage scenario to make sure
 you won't hit any memory limits your app may have.
 
-**Resetting your metrics on each run**: You should also make sure that the directory where 
-you store your metric files (specified when initializing the `DirectFileStore`) is emptied 
-when your app starts. Otherwise, each app run will continue exporting the metrics from the 
-previous run.  
+**Resetting your metrics on each run**: You should also make sure that the directory where
+you store your metric files (specified when initializing the `DirectFileStore`) is emptied
+when your app starts. Otherwise, each app run will continue exporting the metrics from the
+previous run.
 
 If you have this issue, one way to do this is to run code similar to this as part of you
 initialization:
@@ -389,15 +402,15 @@ If you are running in pre-fork servers (such as Unicorn or Puma with multiple pr
 make sure you do this **before** the server forks. Otherwise, each child process may delete
 files created by other processes on *this* run, instead of deleting old files.
 
-**Large numbers of files**: Because there is an individual file per metric and per process 
-(which is done to optimize for observation performance), you may end up with a large number 
+**Large numbers of files**: Because there is an individual file per metric and per process
+(which is done to optimize for observation performance), you may end up with a large number
 of files. We don't currently have a solution for this problem, but we're working on it.
 
-**Performance**: Even though this store saves data on disk, it's still much faster than 
-would probably be expected, because the files are never actually `fsync`ed, so the store 
-never blocks while waiting for disk. The kernel's page cache is incredibly efficient in 
-this regard. If in doubt, check the benchmark scripts described in the documentation for 
-creating your own stores and run them in your particular runtime environment to make sure 
+**Performance**: Even though this store saves data on disk, it's still much faster than
+would probably be expected, because the files are never actually `fsync`ed, so the store
+never blocks while waiting for disk. The kernel's page cache is incredibly efficient in
+this regard. If in doubt, check the benchmark scripts described in the documentation for
+creating your own stores and run them in your particular runtime environment to make sure
 this provides adequate performance.
 
 
@@ -406,7 +419,7 @@ this provides adequate performance.
 If none of these stores is suitable for your requirements, you can easily make your own.
 
 The interface and requirements of Stores are specified in detail in the `README.md`
-in the `client/data_stores` directory. This thoroughly documents how to make your own 
+in the `client/data_stores` directory. This thoroughly documents how to make your own
 store.
 
 There are also links there to non-built-in stores created by others that may be useful,
@@ -418,16 +431,16 @@ If you are in a multi-process environment (such as pre-fork servers like Unicorn
 process will probably keep their own counters, which need to be aggregated when receiving
 a Prometheus scrape, to report coherent total numbers.
 
-For Counters, Histograms and quantile-less Summaries this is simply a matter of 
+For Counters, Histograms and quantile-less Summaries this is simply a matter of
 summing the values of each process.
 
-For Gauges, however, this may not be the right thing to do, depending on what they're 
+For Gauges, however, this may not be the right thing to do, depending on what they're
 measuring. You might want to take the maximum or minimum value observed in any process,
 rather than the sum of all of them. By default, we export each process's individual
 value, with a `pid` label identifying each one.
 
-If these defaults don't work for your use case, you should use the `store_settings` 
-parameter when registering the metric, to specify an `:aggregation` setting. 
+If these defaults don't work for your use case, you should use the `store_settings`
+parameter when registering the metric, to specify an `:aggregation` setting.
 
 ```ruby
 free_disk_space = registry.gauge(:free_disk_space_bytes,
@@ -438,8 +451,8 @@ free_disk_space = registry.gauge(:free_disk_space_bytes,
 NOTE: This will only work if the store you're using supports the `:aggregation` setting.
 Of the built-in stores, only `DirectFileStore` does.
 
-Also note that the `:aggregation` setting works for all metric types, not just for gauges. 
-It would be unusual to use it for anything other than gauges, but if your use-case 
+Also note that the `:aggregation` setting works for all metric types, not just for gauges.
+It would be unusual to use it for anything other than gauges, but if your use-case
 requires it, the store will respect your aggregation wishes.
 
 ## Tests
