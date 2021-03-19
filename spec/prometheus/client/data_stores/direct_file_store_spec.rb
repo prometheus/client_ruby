@@ -192,6 +192,26 @@ describe Prometheus::Client::DataStores::DirectFileStore do
     end
   end
 
+  context "gauge with custom process identifier" do
+    subject { described_class.new(dir: "/tmp/prometheus_test", process_identifier: process_identifier, generate_identity: generate_identity) }
+
+    let(:process_identifier) { :process_name }
+    let(:generate_identity) { -> { "rspec" } }
+    let(:labels) { metric_store.all_values.keys.first }
+
+    it "does not use default key value" do
+      metric_store = subject.for_metric(:metric_name, metric_type: :gauge)
+      metric_store.set(labels: {}, val: 1)
+      expect(labels).to_not include(:pid)
+    end
+
+    it "includes process_name with rspec" do
+      metric_store = subject.for_metric(:metric_name, metric_type: :gauge)
+      metric_store.set(labels: {}, val: 1)
+      expect(labels).to include(process_name: "rspec")
+    end
+  end
+
   context "with a metric that takes MAX instead of SUM" do
     it "reports the maximum values from different processes" do
       allow(Process).to receive(:pid).and_return(12345)
@@ -347,7 +367,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
      truncate_calls_count = 0
      allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).
        to receive(:resize_file).and_wrap_original do |original_method, *args, &block|
-    
+
        truncate_calls_count += 1
        original_method.call(*args, &block)
      end
