@@ -20,7 +20,7 @@ module Prometheus
 
       attr_reader :job, :instance, :gateway, :path
 
-      def initialize(job, instance = nil, gateway = nil)
+      def initialize(job, instance = nil, gateway = nil, **kwargs)
         @mutex = Mutex.new
         @job = job
         @instance = instance
@@ -30,6 +30,8 @@ module Prometheus
 
         @http = Net::HTTP.new(@uri.host, @uri.port)
         @http.use_ssl = (@uri.scheme == 'https')
+        @http.open_timeout = kwargs[:open_timeout] if kwargs[:open_timeout]
+        @http.read_timeout = kwargs[:read_timeout] if kwargs[:read_timeout]
       end
 
       def add(registry)
