@@ -3,6 +3,7 @@
 require 'thread'
 require 'net/http'
 require 'uri'
+require 'cgi'
 
 require 'prometheus/client'
 require 'prometheus/client/formats/text'
