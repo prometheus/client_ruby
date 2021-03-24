@@ -104,14 +104,22 @@ describe Prometheus::Client::Counter do
   end
 
   describe '#init_label_set' do
-    let(:expected_labels) { [:test] }
+    context "with labels" do
+      let(:expected_labels) { [:test] }
 
-    it 'initializes the metric for a given label set' do
-      expect(counter.values).to eql({})
+      it 'initializes the metric for a given label set' do
+        expect(counter.values).to eql({})
 
-      counter.init_label_set(test: 'value')
+        counter.init_label_set(test: 'value')
 
-      expect(counter.values).to eql({test: 'value'} => 0.0)
+        expect(counter.values).to eql({test: 'value'} => 0.0)
+      end
+    end
+
+    context "without labels" do
+      it 'automatically initializes the metric' do
+        expect(counter.values).to eql({} => 0.0)
+      end
     end
   end
 end

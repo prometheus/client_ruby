@@ -40,6 +40,8 @@ module Prometheus
           metric_type: type,
           metric_settings: store_settings
         )
+
+        init_label_set({}) if labels.empty?
       end
 
       # Returns the value for the given label set
