@@ -24,6 +24,12 @@ describe Prometheus::Client::Push do
       expect(push.gateway).to eql('http://pu.sh:1234')
     end
 
+    it 'raises an ArgumentError if the job is not provided' do
+      expect do
+        Prometheus::Client::Push.new(nil)
+      end.to raise_error ArgumentError
+    end
+
     it 'raises an ArgumentError if the given gateway URL is invalid' do
       ['inva.lid:1233', 'http://[invalid]'].each do |url|
         expect do

@@ -22,6 +22,10 @@ module Prometheus
       attr_reader :job, :instance, :gateway, :path
 
       def initialize(job, instance = nil, gateway = nil, **kwargs)
+        unless job
+          raise ArgumentError, "job cannot be nil"
+        end
+
         @mutex = Mutex.new
         @job = job
         @instance = instance
