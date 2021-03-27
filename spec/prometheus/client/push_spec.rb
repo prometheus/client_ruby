@@ -30,6 +30,12 @@ describe Prometheus::Client::Push do
       end.to raise_error ArgumentError
     end
 
+    it 'raises an ArgumentError if the job is empty' do
+      expect do
+        Prometheus::Client::Push.new(job: "")
+      end.to raise_error ArgumentError
+    end
+
     it 'raises an ArgumentError if the given gateway URL is invalid' do
       ['inva.lid:1233', 'http://[invalid]'].each do |url|
         expect do

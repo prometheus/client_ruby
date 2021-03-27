@@ -23,6 +23,7 @@ module Prometheus
 
       def initialize(job:, instance: nil, gateway: DEFAULT_GATEWAY, **kwargs)
         raise ArgumentError, "job cannot be nil" if job.nil?
+        raise ArgumentError, "job cannot be empty" if job.empty?
 
         @mutex = Mutex.new
         @job = job
