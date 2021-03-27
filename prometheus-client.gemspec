@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.summary           = 'A suite of instrumentation metric primitives' \
                         'that can be exposed through a web services interface.'
   s.authors           = ['Ben Kochie', 'Chris Sinjakli', 'Daniel Magliola']
-  s.email             = ['superq@gmail.com', 'chris@gocardless.com', 'dmagliola@crystalgears.com']
+  s.email             = ['superq@gmail.com', 'chris@sinjakli.co.uk', 'dmagliola@crystalgears.com']
   s.homepage          = 'https://github.com/prometheus/client_ruby'
   s.license           = 'Apache 2.0'
 
