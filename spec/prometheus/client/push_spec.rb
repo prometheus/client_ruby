@@ -76,6 +76,12 @@ describe Prometheus::Client::Push do
       expect(push.path).to eql('/metrics/job/test-job')
     end
 
+    it 'uses the default metrics path if an empty instance value is given' do
+      push = Prometheus::Client::Push.new(job: 'bar-job', instance: '')
+
+      expect(push.path).to eql('/metrics/job/bar-job')
+    end
+
     it 'uses the full metrics path if an instance value is given' do
       push = Prometheus::Client::Push.new(job: 'bar-job', instance: 'foo')
 

@@ -71,7 +71,7 @@ module Prometheus
       end
 
       def build_path(job, instance)
-        if instance
+        if instance && !instance.empty?
           format(INSTANCE_PATH, CGI::escape(job), CGI::escape(instance))
         else
           format(PATH, CGI::escape(job))
