@@ -347,7 +347,7 @@ describe Prometheus::Client::DataStores::DirectFileStore do
      truncate_calls_count = 0
      allow_any_instance_of(Prometheus::Client::DataStores::DirectFileStore::FileMappedDict).
        to receive(:resize_file).and_wrap_original do |original_method, *args, &block|
-    
+
        truncate_calls_count += 1
        original_method.call(*args, &block)
      end
@@ -358,5 +358,26 @@ describe Prometheus::Client::DataStores::DirectFileStore do
     end
 
     expect(truncate_calls_count).to be >= 3
+  end
+
+  context 'when temporary error occurs on filesystem' do
+    it do
+      metric_store = subject.for_metric(
+        :metric_name,
+        metric_type: :gauge,
+      )
+      fail_only_once = true
+      # Emulate a failure during write_value call.
+      # What we would have wanted to do is fail on the File#seek method, but since the @f in FileMappedDict
+      # object has already been instantiated, we don't see how to wrap it's call.
+      allow(Process).to receive(:clock_gettime).with(Process::CLOCK_MONOTONIC).and_wrap_original do |m, *args|
+        if fail_only_once
+          fail_only_once = false
+          raise Errno::ESTALE, 'Stale file handle'
+        end
+        m.call(*args)
+      end
+      expect { metric_store.set(labels: { foo: "bar" }, val: 1) }.not_to raise_error
+    end
   end
 end

@@ -284,6 +284,16 @@ module Prometheus
             @f.seek(pos)
             @f.write([value, now].pack('dd'))
             @f.flush
+          rescue SystemCallError => error
+            # Question to Community: Maybe we should not warn here ? Or maybe we should.
+            warn "Catching SystemCallError while writing #{error}"
+            path = @f.path
+            # do not fail on close.
+            begin @f.close ensure @f = nil end
+            # re-open and all
+            initialize(path)
+            # retry and then fail.
+            write_value(key, value)
           end
 
           def close
