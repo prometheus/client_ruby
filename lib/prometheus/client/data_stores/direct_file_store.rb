@@ -274,7 +274,7 @@ module Prometheus
             @f.read(8).unpack('d')[0]
           end
 
-          def write_value(key, value)
+          def write_value(key, value, do_rescue = true)
             if !@positions.has_key?(key)
               init_value(key)
             end
@@ -285,15 +285,24 @@ module Prometheus
             @f.write([value, now].pack('dd'))
             @f.flush
           rescue SystemCallError => error
-            # Question to Community: Maybe we should not warn here ? Or maybe we should.
+            raise error unless do_rescue
+
+            # FIXME: Question to Community: Maybe we should not warn here ? Or maybe we should.
             warn "Catching SystemCallError while writing #{error}"
             path = @f.path
             # do not fail on close.
-            begin @f.close ensure @f = nil end
+            begin
+              @f.close
+            rescue SystemCallError => close_error
+              # FIXME: Question to Community: Maybe we should not warn here ? Or maybe we should.
+              warn "An error happened while trying to close the metric file #{close_error}"
+            ensure
+              @f = nil
+            end
             # re-open and all
             initialize(path)
             # retry and then fail.
-            write_value(key, value)
+            write_value(key, value, false)
           end
 
           def close
