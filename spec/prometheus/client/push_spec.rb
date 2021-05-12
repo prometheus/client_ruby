@@ -5,7 +5,7 @@ require 'prometheus/client/push'
 describe Prometheus::Client::Push do
   let(:gateway) { 'http://localhost:9091' }
   let(:registry) { Prometheus::Client.registry }
-  let(:push) { Prometheus::Client::Push.new('test-job', nil, gateway) }
+  let(:push) { Prometheus::Client::Push.new('test-job', nil, gateway, open_timeout: 5, read_timeout: 30) }
 
   describe '.new' do
     it 'returns a new push instance' do
@@ -91,6 +91,8 @@ describe Prometheus::Client::Push do
 
       http = double(:http)
       expect(http).to receive(:use_ssl=).with(false)
+      expect(http).to receive(:open_timeout=).with(5)
+      expect(http).to receive(:read_timeout=).with(30)
       expect(http).to receive(:request).with(request)
       expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
@@ -104,6 +106,8 @@ describe Prometheus::Client::Push do
 
       http = double(:http)
       expect(http).to receive(:use_ssl=).with(false)
+      expect(http).to receive(:open_timeout=).with(5)
+      expect(http).to receive(:read_timeout=).with(30)
       expect(http).to receive(:request).with(request)
       expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
@@ -121,6 +125,8 @@ describe Prometheus::Client::Push do
 
         http = double(:http)
         expect(http).to receive(:use_ssl=).with(true)
+        expect(http).to receive(:open_timeout=).with(5)
+        expect(http).to receive(:read_timeout=).with(30)
         expect(http).to receive(:request).with(request)
         expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
@@ -140,6 +146,8 @@ describe Prometheus::Client::Push do
 
         http = double(:http)
         expect(http).to receive(:use_ssl=).with(true)
+        expect(http).to receive(:open_timeout=).with(5)
+        expect(http).to receive(:read_timeout=).with(30)
         expect(http).to receive(:request).with(request)
         expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
