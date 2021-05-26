@@ -11,7 +11,12 @@ module Prometheus
         :summary
       end
 
-      # Records a given value.
+      # Records a given value. The recorded value is usually positive
+      # or zero. A negative value is accepted but prevents current
+      # versions of Prometheus from properly detecting counter resets
+      # in the sum of observations. See
+      # https://prometheus.io/docs/practices/histograms/#count-and-sum-of-observations
+      # for details.
       def observe(value, labels: {})
         base_label_set = label_set_for(labels)
 
