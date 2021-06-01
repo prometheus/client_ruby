@@ -6,7 +6,7 @@ module Prometheus
   module Client
     # A histogram samples observations (usually things like request durations
     # or response sizes) and counts them in configurable buckets. It also
-    # provides a sum of all observed values.
+    # provides a total count and sum of all observed values.
     class Histogram < Metric
       # DEFAULT_BUCKETS are the default Histogram buckets. The default buckets
       # are tailored to broadly measure the response time (in seconds) of a
@@ -54,6 +54,12 @@ module Prometheus
         :histogram
       end
 
+      # Records a given value. The recorded value is usually positive
+      # or zero. A negative value is accepted but prevents current
+      # versions of Prometheus from properly detecting counter resets
+      # in the sum of observations. See
+      # https://prometheus.io/docs/practices/histograms/#count-and-sum-of-observations
+      # for details.
       def observe(value, labels: {})
         bucket = buckets.find {|upper_limit| upper_limit >= value  }
         bucket = "+Inf" if bucket.nil?
