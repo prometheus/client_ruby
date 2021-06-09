@@ -91,7 +91,7 @@ describe Prometheus::Client::Push do
     it 'escapes non-URL characters' do
       push = Prometheus::Client::Push.new(job: 'bar job', instance: 'foo <my instance>')
 
-      expected = '/metrics/job/bar+job/instance/foo+%3Cmy+instance%3E'
+      expected = '/metrics/job/bar%20job/instance/foo%20%3Cmy%20instance%3E'
       expect(push.path).to eql(expected)
     end
   end

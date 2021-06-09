@@ -3,7 +3,7 @@
 require 'thread'
 require 'net/http'
 require 'uri'
-require 'cgi'
+require 'erb'
 
 require 'prometheus/client'
 require 'prometheus/client/formats/text'
@@ -72,9 +72,9 @@ module Prometheus
 
       def build_path(job, instance)
         if instance && !instance.empty?
-          format(INSTANCE_PATH, CGI::escape(job), CGI::escape(instance))
+          format(INSTANCE_PATH, ERB::Util::url_encode(job), ERB::Util::url_encode(instance))
         else
-          format(PATH, CGI::escape(job))
+          format(PATH, ERB::Util::url_encode(job))
         end
       end
 
