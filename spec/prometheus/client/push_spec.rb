@@ -5,7 +5,7 @@ require 'prometheus/client/push'
 describe Prometheus::Client::Push do
   let(:gateway) { 'http://localhost:9091' }
   let(:registry) { Prometheus::Client.registry }
-  let(:push) { Prometheus::Client::Push.new('test-job', nil, gateway, open_timeout: 5, read_timeout: 30) }
+  let(:push) { Prometheus::Client::Push.new(job: 'test-job', gateway: gateway, open_timeout: 5, read_timeout: 30) }
 
   describe '.new' do
     it 'returns a new push instance' do
@@ -13,21 +13,33 @@ describe Prometheus::Client::Push do
     end
 
     it 'uses localhost as default Pushgateway' do
-      push = Prometheus::Client::Push.new('test-job')
+      push = Prometheus::Client::Push.new(job: 'test-job')
 
       expect(push.gateway).to eql('http://localhost:9091')
     end
 
     it 'allows to specify a custom Pushgateway' do
-      push = Prometheus::Client::Push.new('test-job', nil, 'http://pu.sh:1234')
+      push = Prometheus::Client::Push.new(job: 'test-job', gateway: 'http://pu.sh:1234')
 
       expect(push.gateway).to eql('http://pu.sh:1234')
+    end
+
+    it 'raises an ArgumentError if the job is nil' do
+      expect do
+        Prometheus::Client::Push.new(job: nil)
+      end.to raise_error ArgumentError
+    end
+
+    it 'raises an ArgumentError if the job is empty' do
+      expect do
+        Prometheus::Client::Push.new(job: "")
+      end.to raise_error ArgumentError
     end
 
     it 'raises an ArgumentError if the given gateway URL is invalid' do
       ['inva.lid:1233', 'http://[invalid]'].each do |url|
         expect do
-          Prometheus::Client::Push.new('test-job', nil, url)
+          Prometheus::Client::Push.new(job: 'test-job', gateway: url)
         end.to raise_error ArgumentError
       end
     end
@@ -59,21 +71,27 @@ describe Prometheus::Client::Push do
 
   describe '#path' do
     it 'uses the default metrics path if no instance value given' do
-      push = Prometheus::Client::Push.new('test-job')
+      push = Prometheus::Client::Push.new(job: 'test-job')
 
       expect(push.path).to eql('/metrics/job/test-job')
     end
 
+    it 'uses the default metrics path if an empty instance value is given' do
+      push = Prometheus::Client::Push.new(job: 'bar-job', instance: '')
+
+      expect(push.path).to eql('/metrics/job/bar-job')
+    end
+
     it 'uses the full metrics path if an instance value is given' do
-      push = Prometheus::Client::Push.new('bar-job', 'foo')
+      push = Prometheus::Client::Push.new(job: 'bar-job', instance: 'foo')
 
       expect(push.path).to eql('/metrics/job/bar-job/instance/foo')
     end
 
     it 'escapes non-URL characters' do
-      push = Prometheus::Client::Push.new('bar job', 'foo <my instance>')
+      push = Prometheus::Client::Push.new(job: 'bar job', instance: 'foo <my instance>')
 
-      expected = '/metrics/job/bar+job/instance/foo+%3Cmy+instance%3E'
+      expected = '/metrics/job/bar%20job/instance/foo%20%3Cmy%20instance%3E'
       expect(push.path).to eql(expected)
     end
   end

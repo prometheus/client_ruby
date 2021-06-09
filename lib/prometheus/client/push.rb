@@ -3,7 +3,7 @@
 require 'thread'
 require 'net/http'
 require 'uri'
-require 'cgi'
+require 'erb'
 
 require 'prometheus/client'
 require 'prometheus/client/formats/text'
@@ -21,7 +21,10 @@ module Prometheus
 
       attr_reader :job, :instance, :gateway, :path
 
-      def initialize(job, instance = nil, gateway = nil, **kwargs)
+      def initialize(job:, instance: nil, gateway: DEFAULT_GATEWAY, **kwargs)
+        raise ArgumentError, "job cannot be nil" if job.nil?
+        raise ArgumentError, "job cannot be empty" if job.empty?
+
         @mutex = Mutex.new
         @job = job
         @instance = instance
@@ -68,10 +71,10 @@ module Prometheus
       end
 
       def build_path(job, instance)
-        if instance
-          format(INSTANCE_PATH, CGI::escape(job), CGI::escape(instance))
+        if instance && !instance.empty?
+          format(INSTANCE_PATH, ERB::Util::url_encode(job), ERB::Util::url_encode(instance))
         else
-          format(PATH, CGI::escape(job))
+          format(PATH, ERB::Util::url_encode(job))
         end
       end
 
