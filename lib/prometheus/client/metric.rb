@@ -40,7 +40,15 @@ module Prometheus
           metric_type: type,
           metric_settings: store_settings
         )
+
+        # WARNING: Our internal store can be replaced later by `with_labels`
+        # Everything we do after this point needs to still work if @store gets replaced
       end
+
+      protected def replace_internal_store(new_store)
+        @store = new_store
+      end
+
 
       # Returns the value for the given label set
       def get(labels: {})
@@ -49,11 +57,17 @@ module Prometheus
       end
 
       def with_labels(labels)
-        self.class.new(name,
-                       docstring: docstring,
-                       labels: @labels,
-                       preset_labels: preset_labels.merge(labels),
-                       store_settings: @store_settings)
+        new_metric = self.class.new(name,
+                                     docstring: docstring,
+                                     labels: @labels,
+                                     preset_labels: preset_labels.merge(labels),
+                                     store_settings: @store_settings)
+
+        # The new metric needs to use the same store as the "main" declared one, otherwise
+        # any observations on that copy with the pre-set labels won't actually be exported.
+        new_metric.replace_internal_store(@store)
+
+        new_metric
       end
 
       def init_label_set(labels)
