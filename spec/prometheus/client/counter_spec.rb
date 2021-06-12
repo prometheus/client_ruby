@@ -3,6 +3,7 @@
 require 'prometheus/client'
 require 'prometheus/client/counter'
 require 'examples/metric_example'
+require 'prometheus/client/data_stores/direct_file_store'
 
 describe Prometheus::Client::Counter do
   # Reset the data store
@@ -44,12 +45,6 @@ describe Prometheus::Client::Counter do
             counter.increment(labels: { test: 'label' })
           end.to change { counter.get(labels: { test: 'label' }) }.by(1.0)
         end.to_not change { counter.get(labels: { test: 'other' }) }
-      end
-
-      it 'can pre-set labels using `with_labels`' do
-        expect { counter.increment }
-          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
-        expect { counter.with_labels(test: 'label').increment }.not_to raise_error
       end
     end
 
@@ -119,6 +114,59 @@ describe Prometheus::Client::Counter do
     context "without labels" do
       it 'automatically initializes the metric' do
         expect(counter.values).to eql({} => 0.0)
+      end
+    end
+  end
+
+  describe '#with_labels' do
+    let(:expected_labels) { [:foo] }
+
+    it 'pre-sets labels for observations' do
+      expect { counter.increment }
+        .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+      expect { counter.with_labels(foo: 'label').increment }.not_to raise_error
+    end
+
+    it 'registers `with_labels` observations in the original metric store' do
+      counter.increment(labels: { foo: 'value1'})
+      counter_with_labels = counter.with_labels({ foo: 'value2'})
+      counter_with_labels.increment(by: 2)
+
+      expect(counter_with_labels.values).to eql({foo: 'value1'} => 1.0, {foo: 'value2'} => 2.0)
+      expect(counter.values).to eql({foo: 'value1'} => 1.0, {foo: 'value2'} => 2.0)
+    end
+
+    context 'when using DirectFileStore' do
+      before do
+        Dir.glob('/tmp/prometheus_test/*').each { |file| File.delete(file) }
+        Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: '/tmp/prometheus_test')
+      end
+
+      let(:expected_labels) { [:foo, :bar] }
+      
+      it "doesn't corrupt the data files" do
+        counter_with_labels = counter.with_labels({ foo: 'longervalue'})
+
+        # Initialize / read the files for both views of the metric
+        counter.increment(labels: { foo: 'value1', bar: 'zzz'})
+        counter_with_labels.increment(by: 2, labels: {bar: 'zzz'})
+
+        # After both MetricStores have their files, add a new entry to both
+        counter.increment(labels: { foo: 'value1', bar: 'aaa'})
+        counter_with_labels.increment(by: 2, labels: {bar: 'aaa'})
+
+        expect { counter.values }.not_to raise_error # Check it hasn't corrupted our files
+        expect { counter_with_labels.values }.not_to raise_error # Check it hasn't corrupted our files
+
+        expected_values = {
+          {foo: 'value1', bar: 'zzz'} => 1.0,
+          {foo: 'value1', bar: 'aaa'} => 1.0,
+          {foo: 'longervalue', bar: 'zzz'} => 2.0,
+          {foo: 'longervalue', bar: 'aaa'} => 2.0,
+        }
+
+        expect(counter.values).to eql(expected_values)
+        expect(counter_with_labels.values).to eql(expected_values)
       end
     end
   end
