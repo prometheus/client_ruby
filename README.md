@@ -5,7 +5,7 @@ through a HTTP interface. Intended to be used together with a
 [Prometheus server][1].
 
 [![Gem Version][4]](http://badge.fury.io/rb/prometheus-client)
-[![Build Status][3]](http://travis-ci.org/prometheus/client_ruby)
+[![Build Status][3]](https://circleci.com/gh/prometheus/client_ruby/tree/master.svg?style=svg)
 [![Coverage Status][7]](https://coveralls.io/r/prometheus/client_ruby)
 
 ## Usage
