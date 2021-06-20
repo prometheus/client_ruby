@@ -80,12 +80,6 @@ describe Prometheus::Client::Histogram do
           end.to change { histogram.get(labels: { test: 'value' }) }
         end.to_not change { histogram.get(labels: { test: 'other' }) }
       end
-
-      it 'can pre-set labels using `with_labels`' do
-        expect { histogram.observe(2) }
-          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
-        expect { histogram.with_labels(test: 'value').observe(2) }.not_to raise_error
-      end
     end
 
     context "with non-string label values" do
@@ -187,6 +181,29 @@ describe Prometheus::Client::Histogram do
           {} => { "2.5" => 0.0, "5" => 0.0, "10" => 0.0, "+Inf" => 0.0, "sum" => 0.0 },
         )
       end
+    end
+  end
+
+  describe '#with_labels' do
+    let(:expected_labels) { [:foo] }
+
+    it 'pre-sets labels for observations' do
+      expect { histogram.observe(2) }
+        .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+      expect { histogram.with_labels(foo: 'value').observe(2) }.not_to raise_error
+    end
+
+    it 'registers `with_labels` observations in the original metric store' do
+      histogram.observe(7, labels: { foo: 'value1'})
+      histogram_with_labels = histogram.with_labels({ foo: 'value2'})
+      histogram_with_labels.observe(20)
+
+      expected_values = {
+        {foo: 'value1'} => {'2.5' => 0.0, '5' => 0.0, '10' => 1.0, '+Inf' => 1.0, 'sum' => 7.0},
+        {foo: 'value2'} => {'2.5' => 0.0, '5' => 0.0, '10' => 0.0, '+Inf' => 1.0, 'sum' => 20.0}
+      }
+      expect(histogram_with_labels.values).to eql(expected_values)
+      expect(histogram.values).to eql(expected_values)
     end
   end
 end

@@ -61,12 +61,6 @@ describe Prometheus::Client::Summary do
           end.to change { summary.get(labels: { test: 'value' })["count"] }
         end.to_not change { summary.get(labels: { test: 'other' })["count"] }
       end
-
-      it 'can pre-set labels using `with_labels`' do
-        expect { summary.observe(2) }
-          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
-        expect { summary.with_labels(test: 'value').observe(2) }.not_to raise_error
-      end
     end
 
     context "with non-string label values" do
@@ -150,6 +144,29 @@ describe Prometheus::Client::Summary do
           {} => { "count" => 0.0, "sum" => 0.0 },
         )
       end
+    end
+  end
+
+  describe '#with_labels' do
+    let(:expected_labels) { [:foo] }
+
+    it 'pre-sets labels for observations' do
+      expect { summary.observe(2) }
+        .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+      expect { summary.with_labels(foo: 'value').observe(2) }.not_to raise_error
+    end
+
+    it 'registers `with_labels` observations in the original metric store' do
+      summary.observe(1, labels: { foo: 'value1'})
+      summary_with_labels = summary.with_labels({ foo: 'value2'})
+      summary_with_labels.observe(2)
+
+      expected_values = {
+        {foo: 'value1'} => { 'count' => 1.0, 'sum' => 1.0 },
+        {foo: 'value2'} => { 'count' => 1.0, 'sum' => 2.0 }
+      }
+      expect(summary_with_labels.values).to eql(expected_values)
+      expect(summary.values).to eql(expected_values)
     end
   end
 end

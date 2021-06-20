@@ -45,12 +45,6 @@ describe Prometheus::Client::Gauge do
           end.to change { gauge.get(labels: { test: 'value' }) }.from(0).to(42)
         end.to_not change { gauge.get(labels: { test: 'other' }) }
       end
-
-      it 'can pre-set labels using `with_labels`' do
-        expect { gauge.set(10) }
-          .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
-        expect { gauge.with_labels(test: 'value').set(10) }.not_to raise_error
-      end
     end
 
     context 'given an invalid value' do
@@ -202,6 +196,25 @@ describe Prometheus::Client::Gauge do
       it 'automatically initializes the metric' do
         expect(gauge.values).to eql({} => 0.0)
       end
+    end
+  end
+
+  describe '#with_labels' do
+    let(:expected_labels) { [:foo] }
+
+    it 'pre-sets labels for observations' do
+      expect { gauge.set(10) }
+        .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
+      expect { gauge.with_labels(foo: 'value').set(10) }.not_to raise_error
+    end
+
+    it 'registers `with_labels` observations in the original metric store' do
+      gauge.set(1, labels: { foo: 'value1'})
+      gauge_with_labels = gauge.with_labels({ foo: 'value2'})
+      gauge_with_labels.set(2)
+
+      expect(gauge_with_labels.values).to eql({foo: 'value1'} => 1.0, {foo: 'value2'} => 2.0)
+      expect(gauge.values).to eql({foo: 'value1'} => 1.0, {foo: 'value2'} => 2.0)
     end
   end
 end
