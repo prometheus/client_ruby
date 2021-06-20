@@ -1,0 +1,32 @@
+---
+version: 2.1
+
+jobs:
+  test:
+    parameters:
+      ruby_image:
+        type: string
+
+    docker:
+    - image: << parameters.ruby_image >>
+
+    steps:
+    - checkout
+    - run: if [[ "$(ruby -e 'puts RUBY_VERSION')" != 1.* ]]; then gem update --system; fi
+    - run: bundle install
+    - run: bundle exec rake
+
+workflows:
+  version: 2
+  client_ruby:
+    jobs:
+    - test:
+        matrix:
+          parameters:
+            ruby_image:
+            - cimg/ruby:2.5
+            - cimg/ruby:2.6
+            - cimg/ruby:2.7
+            - cimg/ruby:3.0
+            - circleci/jruby:9.1
+            - circleci/jruby:9.2
