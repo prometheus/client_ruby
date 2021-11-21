@@ -76,10 +76,19 @@ describe Prometheus::Client::Push do
       expect(push.path).to eql('/metrics/job/test-job')
     end
 
-    it 'escapes non-URL characters' do
-      push = Prometheus::Client::Push.new(job: '<bar job>')
+    it 'appends additional grouping labels to the path if specified' do
+      push = Prometheus::Client::Push.new(
+        job: 'test-job',
+        grouping_key: { foo: "bar", baz: "qux"},
+      )
 
-      expected = '/metrics/job/%3Cbar%20job%3E'
+      expect(push.path).to eql('/metrics/job/test-job/foo/bar/baz/qux')
+    end
+
+    it 'escapes non-URL characters' do
+      push = Prometheus::Client::Push.new(job: '<bar job>', grouping_key: { foo_label: '<bar value>' })
+
+      expected = '/metrics/job/%3Cbar%20job%3E/foo_label/%3Cbar%20value%3E'
       expect(push.path).to eql(expected)
     end
   end
