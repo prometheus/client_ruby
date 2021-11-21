@@ -70,28 +70,16 @@ describe Prometheus::Client::Push do
   end
 
   describe '#path' do
-    it 'uses the default metrics path if no instance value given' do
+    it 'uses the default metrics path if no grouping key given' do
       push = Prometheus::Client::Push.new(job: 'test-job')
 
       expect(push.path).to eql('/metrics/job/test-job')
     end
 
-    it 'uses the default metrics path if an empty instance value is given' do
-      push = Prometheus::Client::Push.new(job: 'bar-job', instance: '')
-
-      expect(push.path).to eql('/metrics/job/bar-job')
-    end
-
-    it 'uses the full metrics path if an instance value is given' do
-      push = Prometheus::Client::Push.new(job: 'bar-job', instance: 'foo')
-
-      expect(push.path).to eql('/metrics/job/bar-job/instance/foo')
-    end
-
     it 'escapes non-URL characters' do
-      push = Prometheus::Client::Push.new(job: 'bar job', instance: 'foo <my instance>')
+      push = Prometheus::Client::Push.new(job: '<bar job>')
 
-      expected = '/metrics/job/bar%20job/instance/foo%20%3Cmy%20instance%3E'
+      expected = '/metrics/job/%3Cbar%20job%3E'
       expect(push.path).to eql(expected)
     end
   end

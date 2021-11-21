@@ -16,20 +16,18 @@ module Prometheus
     class Push
       DEFAULT_GATEWAY = 'http://localhost:9091'.freeze
       PATH            = '/metrics/job/%s'.freeze
-      INSTANCE_PATH   = '/metrics/job/%s/instance/%s'.freeze
       SUPPORTED_SCHEMES = %w(http https).freeze
 
-      attr_reader :job, :instance, :gateway, :path
+      attr_reader :job, :gateway, :path
 
-      def initialize(job:, instance: nil, gateway: DEFAULT_GATEWAY, **kwargs)
+      def initialize(job:, gateway: DEFAULT_GATEWAY, **kwargs)
         raise ArgumentError, "job cannot be nil" if job.nil?
         raise ArgumentError, "job cannot be empty" if job.empty?
 
         @mutex = Mutex.new
         @job = job
-        @instance = instance
         @gateway = gateway || DEFAULT_GATEWAY
-        @path = build_path(job, instance)
+        @path = build_path(job)
         @uri = parse("#{@gateway}#{@path}")
 
         @http = Net::HTTP.new(@uri.host, @uri.port)
@@ -70,12 +68,8 @@ module Prometheus
         raise ArgumentError, "#{url} is not a valid URL: #{e}"
       end
 
-      def build_path(job, instance)
-        if instance && !instance.empty?
-          format(INSTANCE_PATH, ERB::Util::url_encode(job), ERB::Util::url_encode(instance))
-        else
-          format(PATH, ERB::Util::url_encode(job))
-        end
+      def build_path(job)
+        format(PATH, ERB::Util::url_encode(job))
       end
 
       def request(req_class, registry = nil)
