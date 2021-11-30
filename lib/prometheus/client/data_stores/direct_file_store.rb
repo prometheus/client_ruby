@@ -23,6 +23,11 @@ module Prometheus
       # For Gauges, it's also possible to set `SUM`, MAX` or `MIN` as aggregation, to get
       # the highest / lowest value / or the sum of all the processes / threads.
       #
+      # Each data file is identified by PID, however, it is possible to pass regular
+      # expression that will match process titles set by some application servers (e.g.
+      # Puma) and the same data files will be reused when worker processes are restarted.
+      # This is only implemented for Linux.
+      #
       # Before using this Store, please read the "`DirectFileStore` caveats and things to
       # keep in mind" section of the main README in this repository. It includes a number
       # of important things to keep in mind.
@@ -33,8 +38,8 @@ module Prometheus
         DEFAULT_METRIC_SETTINGS = { aggregation: SUM }
         DEFAULT_GAUGE_SETTINGS = { aggregation: ALL }
 
-        def initialize(dir:)
-          @store_settings = { dir: dir }
+        def initialize(dir:, proctitles: nil)
+          @store_settings = { dir: dir, proctitles: proctitles }
           FileUtils.mkdir_p(dir)
         end
 
@@ -180,7 +185,7 @@ module Prometheus
 
           # Filename for this metric's PStore (one per process)
           def filemap_filename
-            filename = "metric_#{ metric_name }___#{ process_id }.bin"
+            filename = "metric_#{ metric_name }___#{ filename_suffix }.bin"
             File.join(@store_settings[:dir], filename)
           end
 
@@ -190,6 +195,39 @@ module Prometheus
 
           def process_id
             Process.pid
+          end
+
+          # Returns process title as reported via /proc/PID/cmdline or just PID
+          # when running on non-Linux platform.
+          def process_title
+            @process_title ||= begin
+              cmdline = "/proc/#{process_id}/cmdline"
+              if File.exist?(cmdline)
+                File.read(cmdline).unpack("Z*").first
+              else
+                process_id
+              end
+            end
+          end
+
+          def filename_suffix
+            @filename_suffix ||= begin
+              if @store_settings[:proctitles]&.match(process_title)
+                # When running in Puma environment and the process is actually a
+                # cluster worker member, then keep the process_id the same across
+                # same workers even if they were recycled to # avoid the
+                # directory from overgrowing. Master process still gets the
+                # regular PID numbering scheme. Unfortunately, Puma.stats hash
+                # cannot be used as it only returns usable results when evaluated
+                # in the master process. But Puma sets process title for each
+                # of its subprocesses so let's read that to our advantage. This
+                # may work with other application servers as well as long as it
+                # supports consistent title naming scheme.
+                process_title.gsub(/[^0-9a-z]/i, '-').gsub(/-+/, '-')
+              else
+                process_id
+              end
+            end
           end
 
           def aggregate_values(values)
@@ -205,7 +243,7 @@ module Prometheus
               if @values_aggregation_mode == SUM
                 values.inject { |sum, element| sum + element }
               elsif @values_aggregation_mode == MAX
-                values.max
+                  values.max
               elsif @values_aggregation_mode == MIN
                 values.min
               elsif @values_aggregation_mode == ALL

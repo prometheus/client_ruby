@@ -364,17 +364,17 @@ for each process), tagged with a `pid` label. You can also select `SUM`, `MAX`, 
 `MOST_RECENT` for your gauges, depending on your use case.
 
 Please note that that the `MOST_RECENT` aggregation only works for gauges, and it does not
-allow the use of `increment` / `decrement`, you can only use `set`. 
+allow the use of `increment` / `decrement`, you can only use `set`.
 
 **Memory Usage**: When scraped by Prometheus, this store will read all these files, get all
 the values and aggregate them. We have notice this can have a noticeable effect on memory
 usage for your app. We recommend you test this in a realistic usage scenario to make sure
 you won't hit any memory limits your app may have.
 
-**Resetting your metrics on each run**: You should also make sure that the directory where 
-you store your metric files (specified when initializing the `DirectFileStore`) is emptied 
-when your app starts. Otherwise, each app run will continue exporting the metrics from the 
-previous run.  
+**Resetting your metrics on each run**: You should also make sure that the directory where
+you store your metric files (specified when initializing the `DirectFileStore`) is emptied
+when your app starts. Otherwise, each app run will continue exporting the metrics from the
+previous run.
 
 If you have this issue, one way to do this is to run code similar to this as part of you
 initialization:
@@ -400,17 +400,82 @@ If you're absolutely sure that every child process will run the metric declarati
 then you won't run into this issue, but the simplest approach is to declare the metrics
 before forking.
 
-**Large numbers of files**: Because there is an individual file per metric and per process 
-(which is done to optimize for observation performance), you may end up with a large number 
-of files. We don't currently have a solution for this problem, but we're working on it.
-
-**Performance**: Even though this store saves data on disk, it's still much faster than 
-would probably be expected, because the files are never actually `fsync`ed, so the store 
-never blocks while waiting for disk. The kernel's page cache is incredibly efficient in 
-this regard. If in doubt, check the benchmark scripts described in the documentation for 
-creating your own stores and run them in your particular runtime environment to make sure 
+**Performance**: Even though this store saves data on disk, it's still much faster than
+would probably be expected, because the files are never actually `fsync`ed, so the store
+never blocks while waiting for disk. The kernel's page cache is incredibly efficient in
+this regard. If in doubt, check the benchmark scripts described in the documentation for
+creating your own stores and run them in your particular runtime environment to make sure
 this provides adequate performance.
 
+**Large numbers of files**: Because there is an individual file per metric and per process
+(which is done to optimize for observation performance), you may end up with a large number
+of files as application servers keep recycling worker processes. To solve this problem,
+`DirectFileStore` can be configured to name data files according to process titles rather
+than PIDs. This will only work with application servers which use `setproctitle`, for example
+Puma:
+
+```
+Puma starting in cluster mode...
+ * Puma version: 5.5.2 (ruby 2.7.2-p137) ("Zawgyi")
+ *  Min threads: 2
+ *  Max threads: 8
+ *  Environment: development
+ *   Master PID: 604655
+ *      Workers: 2
+ *     Restarts: (✔) hot (✖) phased
+ * Preloading application
+ * Listening on http://[::]:5000
+ Use Ctrl-C to stop
+ - Worker 0 (PID: 604695) booted in 0.0s, phase: 0
+ - Worker 1 (PID: 604704) booted in 0.0s, phase: 0
+```
+
+In the example above, Puma was configured in cluster mode with two workers. The
+worker processes have process title set to an arbitrary string and when those
+are restarted during cluster rolling-restart, they keep the same title (but a
+PID changes):
+
+```
+$ ps axu | grep puma
+lzap      604655  2.3  1.1 738832 371172 pts/1   Sl+  13:36   0:11 puma 5.5.2 (tcp://[::]:5000)
+lzap      605080  1.9  1.7 1750264 560432 pts/1  Sl+  13:39   0:06 puma: cluster worker 0: 604655
+lzap      605131  1.0  1.5 1683112 515840 pts/1  Sl+  13:39   0:03 puma: cluster worker 1: 604655
+```
+
+The processes that match a regular expression passed as `proctitles` will not use PID for the
+data filenames. Here is an example for Puma server:
+
+```
+Prometheus::Client::DataStores::DirectFileStore.new(
+  dir: "/var/tmp/myapp-puma-prometheus",
+  proctitles: /^puma: cluster worker.*/
+)
+```
+
+The data files will look something like:
+
+```
+rails_activerecord_instances___puma-cluster-worker-0-604655.bin
+rails_activerecord_instances___puma-cluster-worker-1-604655.bin
+rails_activerecord_instances___604655.bin
+rails_http_request_db_duration___puma-cluster-worker-0-604655.bin
+rails_http_request_db_duration___puma-cluster-worker-1-604655.bin
+rails_http_requests___puma-cluster-worker-0-604655.bin
+rails_http_requests___puma-cluster-worker-1-604655.bin
+rails_http_request_total_duration___puma-cluster-worker-0-604655.bin
+rails_http_request_total_duration___puma-cluster-worker-1-604655.bin
+rails_http_request_view_duration___puma-cluster-worker-0-604655.bin
+rails_http_request_view_duration___puma-cluster-worker-1-604655.bin
+rails_ldap_request_duration___604655.bin
+```
+
+Note that the master process (604655) does not match the regular expression.
+This is expected, this process is stopped after server shutdown.
+
+The feature will work with any Ruby web application server that uses
+`setproctitle` call to consistently name processes on Linux platform. If you
+set the regular expression on other platform, it will be simply ignored and it
+will fall back to the regular PID naming scheme.
 
 ### Building your own store, and stores other than the built-in ones.
 

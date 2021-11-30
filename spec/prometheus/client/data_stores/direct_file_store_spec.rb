@@ -88,11 +88,13 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
   context "when process is forked" do
     it "opens a new internal store to avoid two processes using the same file" do
-      allow(Process).to receive(:pid).and_return(12345)
       metric_store = subject.for_metric(:metric_name, metric_type: :counter)
+      allow(metric_store).to receive(:process_id).and_return(12345)
+      allow(metric_store).to receive(:filename_suffix).and_return(12345)
       metric_store.increment(labels: {}, by: 1)
 
-      allow(Process).to receive(:pid).and_return(23456)
+      allow(metric_store).to receive(:process_id).and_return(23456)
+      allow(metric_store).to receive(:filename_suffix).and_return(23456)
       metric_store.increment(labels: {}, by: 1)
       expect(Dir.glob('/tmp/prometheus_test/*').size).to eq(2)
       expect(metric_store.all_values).to eq({} => 2.0)
@@ -117,14 +119,16 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
   context "for a non-gauge metric" do
     it "sums values from different processes by default" do
-      allow(Process).to receive(:pid).and_return(12345)
       metric_store1 = subject.for_metric(:metric_name, metric_type: :counter)
+      allow(metric_store1).to receive(:process_id).and_return(12345)
+      allow(metric_store1).to receive(:filename_suffix).and_return(12345)
       metric_store1.set(labels: { foo: "bar" }, val: 1)
       metric_store1.set(labels: { foo: "baz" }, val: 7)
       metric_store1.set(labels: { foo: "yyy" }, val: 3)
 
-      allow(Process).to receive(:pid).and_return(23456)
       metric_store2 = subject.for_metric(:metric_name, metric_type: :counter)
+      allow(metric_store2).to receive(:process_id).and_return(23456)
+      allow(metric_store2).to receive(:filename_suffix).and_return(23456)
       metric_store2.set(labels: { foo: "bar" }, val: 3)
       metric_store2.set(labels: { foo: "baz" }, val: 2)
       metric_store2.set(labels: { foo: "zzz" }, val: 1)
@@ -194,22 +198,24 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
   context "with a metric that takes MAX instead of SUM" do
     it "reports the maximum values from different processes" do
-      allow(Process).to receive(:pid).and_return(12345)
       metric_store1 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
         metric_settings: { aggregation: :max }
       )
+      allow(metric_store1).to receive(:process_id).and_return(12345)
+      allow(metric_store1).to receive(:filename_suffix).and_return(12345)
       metric_store1.set(labels: { foo: "bar" }, val: 1)
       metric_store1.set(labels: { foo: "baz" }, val: 7)
       metric_store1.set(labels: { foo: "yyy" }, val: 3)
 
-      allow(Process).to receive(:pid).and_return(23456)
       metric_store2 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
         metric_settings: { aggregation: :max }
       )
+      allow(metric_store2).to receive(:process_id).and_return(23456)
+      allow(metric_store2).to receive(:filename_suffix).and_return(23456)
       metric_store2.set(labels: { foo: "bar" }, val: 3)
       metric_store2.set(labels: { foo: "baz" }, val: 2)
       metric_store2.set(labels: { foo: "zzz" }, val: 1)
@@ -228,22 +234,24 @@ describe Prometheus::Client::DataStores::DirectFileStore do
 
   context "with a metric that takes MIN instead of SUM" do
     it "reports the minimum values from different processes" do
-      allow(Process).to receive(:pid).and_return(12345)
       metric_store1 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
         metric_settings: { aggregation: :min }
       )
+      allow(metric_store1).to receive(:process_id).and_return(12345)
+      allow(metric_store1).to receive(:filename_suffix).and_return(12345)
       metric_store1.set(labels: { foo: "bar" }, val: 1)
       metric_store1.set(labels: { foo: "baz" }, val: 7)
       metric_store1.set(labels: { foo: "yyy" }, val: 3)
 
-      allow(Process).to receive(:pid).and_return(23456)
       metric_store2 = subject.for_metric(
         :metric_name,
         metric_type: :gauge,
         metric_settings: { aggregation: :min }
       )
+      allow(metric_store2).to receive(:process_id).and_return(23456)
+      allow(metric_store2).to receive(:filename_suffix).and_return(23456)
       metric_store2.set(labels: { foo: "bar" }, val: 3)
       metric_store2.set(labels: { foo: "baz" }, val: 2)
       metric_store2.set(labels: { foo: "zzz" }, val: 1)
@@ -309,15 +317,16 @@ describe Prometheus::Client::DataStores::DirectFileStore do
         metric_settings: { aggregation: :most_recent }
       )
 
-      allow(Process).to receive(:pid).and_return(12345)
+      allow(metric_store1).to receive(:process_id).and_return(12345)
+      allow(metric_store1).to receive(:filename_suffix).and_return(12345)
       metric_store1.set(labels: { foo: "bar" }, val: 1)
 
-      allow(Process).to receive(:pid).and_return(23456)
+      allow(metric_store2).to receive(:process_id).and_return(23456)
+      allow(metric_store2).to receive(:filename_suffix).and_return(23456)
       metric_store2.set(labels: { foo: "bar" }, val: 3) # Supercedes 'bar' in PID 12345
       metric_store2.set(labels: { foo: "baz" }, val: 2)
       metric_store2.set(labels: { foo: "zzz" }, val: 1)
 
-      allow(Process).to receive(:pid).and_return(12345)
       metric_store1.set(labels: { foo: "baz" }, val: 4) # Supercedes 'baz' in PID 23456
 
       expect(metric_store1.all_values).to eq(
