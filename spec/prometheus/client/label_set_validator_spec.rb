@@ -18,7 +18,7 @@ describe Prometheus::Client::LabelSetValidator do
       expect(validator.validate_symbols!(version: 'alpha')).to eql(true)
     end
 
-    it 'raises Invaliddescribed_classError if a label set is not a hash' do
+    it 'raises InvalidLabelSetError if a label set is not a hash' do
       expect do
         validator.validate_symbols!('invalid')
       end.to raise_exception invalid
