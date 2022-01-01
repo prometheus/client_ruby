@@ -5,6 +5,7 @@ require 'thread'
 require 'net/http'
 require 'uri'
 require 'erb'
+require 'set'
 
 require 'prometheus/client'
 require 'prometheus/client/formats/text'
@@ -103,6 +104,8 @@ module Prometheus
       end
 
       def request(req_class, registry = nil)
+        validate_no_label_clashes!(registry) if registry
+
         req = req_class.new(@uri)
         req.content_type = Formats::Text::CONTENT_TYPE
         req.basic_auth(@uri.user, @uri.password) if @uri.user
@@ -113,6 +116,25 @@ module Prometheus
 
       def synchronize
         @mutex.synchronize { yield }
+      end
+
+      def validate_no_label_clashes!(registry)
+        # There's nothing to check if we don't have a grouping key
+        return if @grouping_key.empty?
+
+        # We could be doing a lot of comparisons, so let's do them against a
+        # set rather than an array
+        grouping_key_labels = @grouping_key.keys.to_set
+
+        registry.metrics.each do |metric|
+          metric.labels.each do |label|
+            if grouping_key_labels.include?(label)
+              raise LabelSetValidator::InvalidLabelSetError,
+                "label :#{label} from grouping key collides with label of the " \
+                "same name from metric :#{metric.name} and would overwrite it"
+            end
+          end
+        end
       end
     end
   end

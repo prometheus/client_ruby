@@ -1,11 +1,13 @@
 # encoding: UTF-8
 
+require 'prometheus/client/gauge'
 require 'prometheus/client/push'
 
 describe Prometheus::Client::Push do
   let(:gateway) { 'http://localhost:9091' }
-  let(:registry) { Prometheus::Client.registry }
-  let(:push) { Prometheus::Client::Push.new(job: 'test-job', gateway: gateway, open_timeout: 5, read_timeout: 30) }
+  let(:registry) { Prometheus::Client::Registry.new }
+  let(:grouping_key) { {} }
+  let(:push) { Prometheus::Client::Push.new(job: 'test-job', gateway: gateway, grouping_key: grouping_key, open_timeout: 5, read_timeout: 30) }
 
   describe '.new' do
     it 'returns a new push instance' do
@@ -191,6 +193,26 @@ describe Prometheus::Client::Push do
         expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
         push.send(:request, Net::HTTP::Put, registry)
+      end
+    end
+
+    context 'with a grouping key that clashes with a metric label' do
+      let(:grouping_key) { { foo: "bar"} }
+
+      before do
+        gauge = Prometheus::Client::Gauge.new(
+          :test_gauge,
+          labels: [:foo],
+          docstring: "test docstring"
+        )
+        registry.register(gauge)
+        gauge.set(42, labels: { foo: "bar" })
+      end
+
+      it 'raises an error when grouping key labels conflict with metric labels' do
+        expect { push.send(:request, Net::HTTP::Post, registry) }.to raise_error(
+          Prometheus::Client::LabelSetValidator::InvalidLabelSetError
+        )
       end
     end
   end
