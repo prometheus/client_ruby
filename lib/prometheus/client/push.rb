@@ -1,5 +1,6 @@
 # encoding: UTF-8
 
+require 'base64'
 require 'thread'
 require 'net/http'
 require 'uri'
@@ -76,7 +77,26 @@ module Prometheus
         path = format(PATH, ERB::Util::url_encode(job))
 
         grouping_key.each do |label, value|
-          path += "/#{label}/#{ERB::Util::url_encode(value)}"
+          if value.include?('/')
+            encoded_value = Base64.urlsafe_encode64(value)
+            path += "/#{label}@base64/#{encoded_value}"
+          # While it's valid for the urlsafe_encode64 function to return an
+          # empty string when the input string is empty, it doesn't work for
+          # our specific use case as we're putting the result into a URL path
+          # segment. A double slash (`//`) can be normalised away by HTTP
+          # libraries, proxies, and web servers.
+          #
+          # For empty strings, we use a single padding character (`=`) as the
+          # value.
+          #
+          # See the pushgateway docs for more details:
+          #
+          # https://github.com/prometheus/pushgateway/blob/6393a901f56d4dda62cd0f6ab1f1f07c495b6354/README.md#url
+          elsif value.empty?
+            path += "/#{label}@base64/="
+          else
+            path += "/#{label}/#{ERB::Util::url_encode(value)}"
+          end
         end
 
         path

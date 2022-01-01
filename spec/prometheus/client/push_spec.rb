@@ -91,6 +91,24 @@ describe Prometheus::Client::Push do
       expect(push.path).to eql('/metrics/job/test-job/foo/bar/baz/qux')
     end
 
+    it 'encodes grouping key label values containing `/` in url-safe base64' do
+      push = Prometheus::Client::Push.new(
+        job: 'test-job',
+        grouping_key: { foo: "bar/baz"},
+      )
+
+      expect(push.path).to eql('/metrics/job/test-job/foo@base64/YmFyL2Jheg==')
+    end
+
+    it 'encodes empty grouping key label values as a single base64 padding character' do
+      push = Prometheus::Client::Push.new(
+        job: 'test-job',
+        grouping_key: { foo: ""},
+      )
+
+      expect(push.path).to eql('/metrics/job/test-job/foo@base64/=')
+    end
+
     it 'escapes non-URL characters' do
       push = Prometheus::Client::Push.new(job: '<bar job>', grouping_key: { foo_label: '<bar value>' })
 
