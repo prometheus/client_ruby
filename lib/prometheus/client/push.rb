@@ -7,6 +7,7 @@ require 'erb'
 
 require 'prometheus/client'
 require 'prometheus/client/formats/text'
+require 'prometheus/client/label_set_validator'
 
 module Prometheus
   # Client is a ruby implementation for a Prometheus compatible client.
@@ -23,6 +24,8 @@ module Prometheus
       def initialize(job:, gateway: DEFAULT_GATEWAY, grouping_key: {}, **kwargs)
         raise ArgumentError, "job cannot be nil" if job.nil?
         raise ArgumentError, "job cannot be empty" if job.empty?
+        @validator = LabelSetValidator.new(expected_labels: grouping_key.keys)
+        @validator.validate_symbols!(grouping_key)
 
         @mutex = Mutex.new
         @job = job

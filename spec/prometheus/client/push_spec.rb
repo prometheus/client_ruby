@@ -43,6 +43,12 @@ describe Prometheus::Client::Push do
         end.to raise_error ArgumentError
       end
     end
+
+    it 'raises InvalidLabelError if a grouping key label has an invalid name' do
+      expect do
+        Prometheus::Client::Push.new(job: "test-job", grouping_key: { "not_a_symbol" => "foo" })
+      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelError
+    end
   end
 
   describe '#add' do
