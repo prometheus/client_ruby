@@ -17,6 +17,11 @@ module Prometheus
     # Push implements a simple way to transmit a given registry to a given
     # Pushgateway.
     class Push
+      class HttpError < StandardError; end
+      class HttpRedirectError < HttpError; end
+      class HttpClientError < HttpError; end
+      class HttpServerError < HttpError; end
+
       DEFAULT_GATEWAY = 'http://localhost:9091'.freeze
       PATH            = '/metrics/job/%s'.freeze
       SUPPORTED_SCHEMES = %w(http https).freeze
@@ -111,7 +116,10 @@ module Prometheus
         req.basic_auth(@uri.user, @uri.password) if @uri.user
         req.body = Formats::Text.marshal(registry) if registry
 
-        @http.request(req)
+        response = @http.request(req)
+        validate_response!(response)
+
+        response
       end
 
       def synchronize
@@ -133,6 +141,20 @@ module Prometheus
                 "label :#{label} from grouping key collides with label of the " \
                 "same name from metric :#{metric.name} and would overwrite it"
             end
+          end
+        end
+      end
+
+      def validate_response!(response)
+        status = Integer(response.code)
+        if status >= 300
+          message = "status: #{response.code}, message: #{response.message}, body: #{response.body}"
+          if status <= 399
+            raise HttpRedirectError, message
+          elsif status <= 499
+            raise HttpClientError, message
+          else
+            raise HttpServerError, message
           end
         end
       end

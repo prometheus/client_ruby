@@ -123,6 +123,14 @@ describe Prometheus::Client::Push do
     let(:content_type) { Prometheus::Client::Formats::Text::CONTENT_TYPE }
     let(:data) { Prometheus::Client::Formats::Text.marshal(registry) }
     let(:uri) { URI.parse("#{gateway}/metrics/job/test-job") }
+    let(:response) do
+      double(
+        :response,
+        code: '200',
+        message: 'OK',
+        body: 'Everything worked'
+      )
+    end
 
     it 'sends marshalled registry to the specified gateway' do
       request = double(:request)
@@ -134,10 +142,97 @@ describe Prometheus::Client::Push do
       expect(http).to receive(:use_ssl=).with(false)
       expect(http).to receive(:open_timeout=).with(5)
       expect(http).to receive(:read_timeout=).with(30)
-      expect(http).to receive(:request).with(request)
+      expect(http).to receive(:request).with(request).and_return(response)
       expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
       push.send(:request, Net::HTTP::Post, registry)
+    end
+
+    context 'for a 3xx response' do
+      let(:response) do
+        double(
+          :response,
+          code: '301',
+          message: 'Moved Permanently',
+          body: 'Probably no body, but technically you can return one'
+        )
+      end
+
+      it 'raises a redirect error' do
+        request = double(:request)
+        allow(request).to receive(:content_type=)
+        allow(request).to receive(:body=)
+        allow(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
+
+        http = double(:http)
+        allow(http).to receive(:use_ssl=)
+        allow(http).to receive(:open_timeout=)
+        allow(http).to receive(:read_timeout=)
+        allow(http).to receive(:request).with(request).and_return(response)
+        allow(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+        expect { push.send(:request, Net::HTTP::Post, registry) }.to raise_error(
+          Prometheus::Client::Push::HttpRedirectError
+        )
+      end
+    end
+
+    context 'for a 4xx response' do
+      let(:response) do
+        double(
+          :response,
+          code: '400',
+          message: 'Bad Request',
+          body: 'Info on why the request was bad'
+        )
+      end
+
+      it 'raises a client error' do
+        request = double(:request)
+        allow(request).to receive(:content_type=)
+        allow(request).to receive(:body=)
+        allow(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
+
+        http = double(:http)
+        allow(http).to receive(:use_ssl=)
+        allow(http).to receive(:open_timeout=)
+        allow(http).to receive(:read_timeout=)
+        allow(http).to receive(:request).with(request).and_return(response)
+        allow(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+        expect { push.send(:request, Net::HTTP::Post, registry) }.to raise_error(
+          Prometheus::Client::Push::HttpClientError
+        )
+      end
+    end
+
+    context 'for a 5xx response' do
+      let(:response) do
+        double(
+          :response,
+          code: '500',
+          message: 'Internal Server Error',
+          body: 'Apology for the server code being broken'
+        )
+      end
+
+      it 'raises a server error' do
+        request = double(:request)
+        allow(request).to receive(:content_type=)
+        allow(request).to receive(:body=)
+        allow(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
+
+        http = double(:http)
+        allow(http).to receive(:use_ssl=)
+        allow(http).to receive(:open_timeout=)
+        allow(http).to receive(:read_timeout=)
+        allow(http).to receive(:request).with(request).and_return(response)
+        allow(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+        expect { push.send(:request, Net::HTTP::Post, registry) }.to raise_error(
+          Prometheus::Client::Push::HttpServerError
+        )
+      end
     end
 
     it 'deletes data from the registry' do
@@ -149,7 +244,7 @@ describe Prometheus::Client::Push do
       expect(http).to receive(:use_ssl=).with(false)
       expect(http).to receive(:open_timeout=).with(5)
       expect(http).to receive(:read_timeout=).with(30)
-      expect(http).to receive(:request).with(request)
+      expect(http).to receive(:request).with(request).and_return(response)
       expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
       push.send(:request, Net::HTTP::Delete)
@@ -168,7 +263,7 @@ describe Prometheus::Client::Push do
         expect(http).to receive(:use_ssl=).with(true)
         expect(http).to receive(:open_timeout=).with(5)
         expect(http).to receive(:read_timeout=).with(30)
-        expect(http).to receive(:request).with(request)
+        expect(http).to receive(:request).with(request).and_return(response)
         expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
         push.send(:request, Net::HTTP::Post, registry)
@@ -189,7 +284,7 @@ describe Prometheus::Client::Push do
         expect(http).to receive(:use_ssl=).with(true)
         expect(http).to receive(:open_timeout=).with(5)
         expect(http).to receive(:read_timeout=).with(30)
-        expect(http).to receive(:request).with(request)
+        expect(http).to receive(:request).with(request).and_return(response)
         expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
         push.send(:request, Net::HTTP::Put, registry)
