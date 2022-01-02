@@ -8,7 +8,7 @@ Any Ruby version that has not received an End-of-Life notice (e.g.
 is supported.
 
 To ensure we're meeting these guidelines, we test the client against all
-supported versions, as specified in our [build matrix](.travis.yml).
+supported versions, as specified in our [build matrix](.circleci/config.yml).
 
 # Deprecation
 
