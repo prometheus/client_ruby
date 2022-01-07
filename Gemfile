@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 gemspec
 
 group :test do
-  gem 'coveralls'
+  gem 'simplecov'
   gem 'json'
   gem 'rack'
   gem 'rack-test'
