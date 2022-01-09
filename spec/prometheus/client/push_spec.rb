@@ -271,23 +271,35 @@ describe Prometheus::Client::Push do
     end
 
     context 'Basic Auth support' do
-      let(:gateway) { 'https://super:secret@localhost:9091' }
+      context 'when credentials are passed in the gateway URL' do
+        let(:gateway) { 'https://super:secret@localhost:9091' }
 
-      it 'sets Basic Auth header when requested' do
-        request = double(:request)
-        expect(request).to receive(:content_type=).with(content_type)
-        expect(request).to receive(:basic_auth).with('super', 'secret')
-        expect(request).to receive(:body=).with(data)
-        expect(Net::HTTP::Put).to receive(:new).with(uri).and_return(request)
+        it "raises an ArgumentError explaining why we don't support that mechanism" do
+          expect { push }.to raise_error ArgumentError, /in the gateway URL.*username `super`/m
+        end
+      end
 
-        http = double(:http)
-        expect(http).to receive(:use_ssl=).with(true)
-        expect(http).to receive(:open_timeout=).with(5)
-        expect(http).to receive(:read_timeout=).with(30)
-        expect(http).to receive(:request).with(request).and_return(response)
-        expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+      context 'when credentials are passed to the separate `basic_auth` method' do
+        let(:gateway) { 'https://localhost:9091' }
 
-        push.send(:request, Net::HTTP::Put, registry)
+        it 'passes the credentials on to the HTTP client' do
+          request = double(:request)
+          expect(request).to receive(:content_type=).with(content_type)
+          expect(request).to receive(:basic_auth).with('super', 'secret')
+          expect(request).to receive(:body=).with(data)
+          expect(Net::HTTP::Put).to receive(:new).with(uri).and_return(request)
+
+          http = double(:http)
+          expect(http).to receive(:use_ssl=).with(true)
+          expect(http).to receive(:open_timeout=).with(5)
+          expect(http).to receive(:read_timeout=).with(30)
+          expect(http).to receive(:request).with(request).and_return(response)
+          expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+          push.basic_auth("super", "secret")
+
+          push.send(:request, Net::HTTP::Put, registry)
+        end
       end
     end
 

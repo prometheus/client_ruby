@@ -39,12 +39,19 @@ module Prometheus
         @gateway = gateway || DEFAULT_GATEWAY
         @grouping_key = grouping_key
         @path = build_path(job, grouping_key)
+
         @uri = parse("#{@gateway}#{@path}")
+        validate_no_basic_auth!(@uri)
 
         @http = Net::HTTP.new(@uri.host, @uri.port)
         @http.use_ssl = (@uri.scheme == 'https')
         @http.open_timeout = kwargs[:open_timeout] if kwargs[:open_timeout]
         @http.read_timeout = kwargs[:read_timeout] if kwargs[:read_timeout]
+      end
+
+      def basic_auth(user, password)
+        @user = user
+        @password = password
       end
 
       def add(registry)
@@ -113,7 +120,7 @@ module Prometheus
 
         req = req_class.new(@uri)
         req.content_type = Formats::Text::CONTENT_TYPE
-        req.basic_auth(@uri.user, @uri.password) if @uri.user
+        req.basic_auth(@user, @password) if @user
         req.body = Formats::Text.marshal(registry) if registry
 
         response = @http.request(req)
@@ -124,6 +131,39 @@ module Prometheus
 
       def synchronize
         @mutex.synchronize { yield }
+      end
+
+      def validate_no_basic_auth!(uri)
+        if uri.user || uri.password
+          raise ArgumentError, <<~EOF
+            Setting Basic Auth credentials in the gateway URL is not supported, please call the `basic_auth` method.
+
+            Received username `#{uri.user}` in gateway URL. Instead of passing
+            Basic Auth credentials like this:
+
+            ```
+            push = Prometheus::Client::Push.new(job: "my-job", gateway: "http://user:password@localhost:9091")
+            ```
+
+            please pass them like this instead:
+
+            ```
+            push = Prometheus::Client::Push.new(job: "my-job", gateway: "http://localhost:9091")
+            push.basic_auth("user", "password")
+            ```
+
+            While URLs do support passing Basic Auth credentials using the
+            `http://user:password@example.com/` syntax, the username and
+            password in that syntax have to follow the usual rules for URL
+            encoding of characters per RFC 3986
+            (https://datatracker.ietf.org/doc/html/rfc3986#section-2.1).
+
+            Rather than place the burden of correctly performing that encoding
+            on users of this gem, we decided to have a separate method for
+            supplying Basic Auth credentials, with no requirement to URL encode
+            the characters in them.
+          EOF
+        end
       end
 
       def validate_no_label_clashes!(registry)
