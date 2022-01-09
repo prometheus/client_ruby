@@ -111,7 +111,7 @@ describe Prometheus::Client::Push do
       expect(push.path).to eql('/metrics/job/test-job/foo@base64/=')
     end
 
-    it 'escapes non-URL characters' do
+    it 'URL-encodes all other non-URL-safe characters' do
       push = Prometheus::Client::Push.new(job: '<bar job>', grouping_key: { foo_label: '<bar value>' })
 
       expected = '/metrics/job/%3Cbar%20job%3E/foo_label/%3Cbar%20value%3E'
