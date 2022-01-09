@@ -42,12 +42,18 @@ module Prometheus
       end
 
       def with_labels(labels)
-        self.class.new(name,
-                       docstring: docstring,
-                       labels: @labels,
-                       preset_labels: preset_labels.merge(labels),
-                       buckets: @buckets,
-                       store_settings: @store_settings)
+        new_metric = self.class.new(name,
+                                    docstring: docstring,
+                                    labels: @labels,
+                                    preset_labels: preset_labels.merge(labels),
+                                    buckets: @buckets,
+                                    store_settings: @store_settings)
+
+        # The new metric needs to use the same store as the "main" declared one, otherwise
+        # any observations on that copy with the pre-set labels won't actually be exported.
+        new_metric.replace_internal_store(@store)
+
+        new_metric
       end
 
       def type
