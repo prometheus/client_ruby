@@ -7,7 +7,7 @@ module Prometheus
   module Client
     # Metric
     class Metric
-      attr_reader :name, :docstring, :preset_labels
+      attr_reader :name, :docstring, :labels, :preset_labels
 
       def initialize(name,
                      docstring:,

@@ -1,11 +1,13 @@
 # encoding: UTF-8
 
+require 'prometheus/client/gauge'
 require 'prometheus/client/push'
 
 describe Prometheus::Client::Push do
   let(:gateway) { 'http://localhost:9091' }
-  let(:registry) { Prometheus::Client.registry }
-  let(:push) { Prometheus::Client::Push.new(job: 'test-job', gateway: gateway, open_timeout: 5, read_timeout: 30) }
+  let(:registry) { Prometheus::Client::Registry.new }
+  let(:grouping_key) { {} }
+  let(:push) { Prometheus::Client::Push.new(job: 'test-job', gateway: gateway, grouping_key: grouping_key, open_timeout: 5, read_timeout: 30) }
 
   describe '.new' do
     it 'returns a new push instance' do
@@ -43,6 +45,12 @@ describe Prometheus::Client::Push do
         end.to raise_error ArgumentError
       end
     end
+
+    it 'raises InvalidLabelError if a grouping key label has an invalid name' do
+      expect do
+        Prometheus::Client::Push.new(job: "test-job", grouping_key: { "not_a_symbol" => "foo" })
+      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelError
+    end
   end
 
   describe '#add' do
@@ -70,28 +78,43 @@ describe Prometheus::Client::Push do
   end
 
   describe '#path' do
-    it 'uses the default metrics path if no instance value given' do
+    it 'uses the default metrics path if no grouping key given' do
       push = Prometheus::Client::Push.new(job: 'test-job')
 
       expect(push.path).to eql('/metrics/job/test-job')
     end
 
-    it 'uses the default metrics path if an empty instance value is given' do
-      push = Prometheus::Client::Push.new(job: 'bar-job', instance: '')
+    it 'appends additional grouping labels to the path if specified' do
+      push = Prometheus::Client::Push.new(
+        job: 'test-job',
+        grouping_key: { foo: "bar", baz: "qux"},
+      )
 
-      expect(push.path).to eql('/metrics/job/bar-job')
+      expect(push.path).to eql('/metrics/job/test-job/foo/bar/baz/qux')
     end
 
-    it 'uses the full metrics path if an instance value is given' do
-      push = Prometheus::Client::Push.new(job: 'bar-job', instance: 'foo')
+    it 'encodes grouping key label values containing `/` in url-safe base64' do
+      push = Prometheus::Client::Push.new(
+        job: 'test-job',
+        grouping_key: { foo: "bar/baz"},
+      )
 
-      expect(push.path).to eql('/metrics/job/bar-job/instance/foo')
+      expect(push.path).to eql('/metrics/job/test-job/foo@base64/YmFyL2Jheg==')
     end
 
-    it 'escapes non-URL characters' do
-      push = Prometheus::Client::Push.new(job: 'bar job', instance: 'foo <my instance>')
+    it 'encodes empty grouping key label values as a single base64 padding character' do
+      push = Prometheus::Client::Push.new(
+        job: 'test-job',
+        grouping_key: { foo: ""},
+      )
 
-      expected = '/metrics/job/bar%20job/instance/foo%20%3Cmy%20instance%3E'
+      expect(push.path).to eql('/metrics/job/test-job/foo@base64/=')
+    end
+
+    it 'URL-encodes all other non-URL-safe characters' do
+      push = Prometheus::Client::Push.new(job: '<bar job>', grouping_key: { foo_label: '<bar value>' })
+
+      expected = '/metrics/job/%3Cbar%20job%3E/foo_label/%3Cbar%20value%3E'
       expect(push.path).to eql(expected)
     end
   end
@@ -100,6 +123,14 @@ describe Prometheus::Client::Push do
     let(:content_type) { Prometheus::Client::Formats::Text::CONTENT_TYPE }
     let(:data) { Prometheus::Client::Formats::Text.marshal(registry) }
     let(:uri) { URI.parse("#{gateway}/metrics/job/test-job") }
+    let(:response) do
+      double(
+        :response,
+        code: '200',
+        message: 'OK',
+        body: 'Everything worked'
+      )
+    end
 
     it 'sends marshalled registry to the specified gateway' do
       request = double(:request)
@@ -111,10 +142,97 @@ describe Prometheus::Client::Push do
       expect(http).to receive(:use_ssl=).with(false)
       expect(http).to receive(:open_timeout=).with(5)
       expect(http).to receive(:read_timeout=).with(30)
-      expect(http).to receive(:request).with(request)
+      expect(http).to receive(:request).with(request).and_return(response)
       expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
       push.send(:request, Net::HTTP::Post, registry)
+    end
+
+    context 'for a 3xx response' do
+      let(:response) do
+        double(
+          :response,
+          code: '301',
+          message: 'Moved Permanently',
+          body: 'Probably no body, but technically you can return one'
+        )
+      end
+
+      it 'raises a redirect error' do
+        request = double(:request)
+        allow(request).to receive(:content_type=)
+        allow(request).to receive(:body=)
+        allow(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
+
+        http = double(:http)
+        allow(http).to receive(:use_ssl=)
+        allow(http).to receive(:open_timeout=)
+        allow(http).to receive(:read_timeout=)
+        allow(http).to receive(:request).with(request).and_return(response)
+        allow(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+        expect { push.send(:request, Net::HTTP::Post, registry) }.to raise_error(
+          Prometheus::Client::Push::HttpRedirectError
+        )
+      end
+    end
+
+    context 'for a 4xx response' do
+      let(:response) do
+        double(
+          :response,
+          code: '400',
+          message: 'Bad Request',
+          body: 'Info on why the request was bad'
+        )
+      end
+
+      it 'raises a client error' do
+        request = double(:request)
+        allow(request).to receive(:content_type=)
+        allow(request).to receive(:body=)
+        allow(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
+
+        http = double(:http)
+        allow(http).to receive(:use_ssl=)
+        allow(http).to receive(:open_timeout=)
+        allow(http).to receive(:read_timeout=)
+        allow(http).to receive(:request).with(request).and_return(response)
+        allow(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+        expect { push.send(:request, Net::HTTP::Post, registry) }.to raise_error(
+          Prometheus::Client::Push::HttpClientError
+        )
+      end
+    end
+
+    context 'for a 5xx response' do
+      let(:response) do
+        double(
+          :response,
+          code: '500',
+          message: 'Internal Server Error',
+          body: 'Apology for the server code being broken'
+        )
+      end
+
+      it 'raises a server error' do
+        request = double(:request)
+        allow(request).to receive(:content_type=)
+        allow(request).to receive(:body=)
+        allow(Net::HTTP::Post).to receive(:new).with(uri).and_return(request)
+
+        http = double(:http)
+        allow(http).to receive(:use_ssl=)
+        allow(http).to receive(:open_timeout=)
+        allow(http).to receive(:read_timeout=)
+        allow(http).to receive(:request).with(request).and_return(response)
+        allow(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
+
+        expect { push.send(:request, Net::HTTP::Post, registry) }.to raise_error(
+          Prometheus::Client::Push::HttpServerError
+        )
+      end
     end
 
     it 'deletes data from the registry' do
@@ -126,7 +244,7 @@ describe Prometheus::Client::Push do
       expect(http).to receive(:use_ssl=).with(false)
       expect(http).to receive(:open_timeout=).with(5)
       expect(http).to receive(:read_timeout=).with(30)
-      expect(http).to receive(:request).with(request)
+      expect(http).to receive(:request).with(request).and_return(response)
       expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
       push.send(:request, Net::HTTP::Delete)
@@ -145,7 +263,7 @@ describe Prometheus::Client::Push do
         expect(http).to receive(:use_ssl=).with(true)
         expect(http).to receive(:open_timeout=).with(5)
         expect(http).to receive(:read_timeout=).with(30)
-        expect(http).to receive(:request).with(request)
+        expect(http).to receive(:request).with(request).and_return(response)
         expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
         push.send(:request, Net::HTTP::Post, registry)
@@ -166,10 +284,30 @@ describe Prometheus::Client::Push do
         expect(http).to receive(:use_ssl=).with(true)
         expect(http).to receive(:open_timeout=).with(5)
         expect(http).to receive(:read_timeout=).with(30)
-        expect(http).to receive(:request).with(request)
+        expect(http).to receive(:request).with(request).and_return(response)
         expect(Net::HTTP).to receive(:new).with('localhost', 9091).and_return(http)
 
         push.send(:request, Net::HTTP::Put, registry)
+      end
+    end
+
+    context 'with a grouping key that clashes with a metric label' do
+      let(:grouping_key) { { foo: "bar"} }
+
+      before do
+        gauge = Prometheus::Client::Gauge.new(
+          :test_gauge,
+          labels: [:foo],
+          docstring: "test docstring"
+        )
+        registry.register(gauge)
+        gauge.set(42, labels: { foo: "bar" })
+      end
+
+      it 'raises an error when grouping key labels conflict with metric labels' do
+        expect { push.send(:request, Net::HTTP::Post, registry) }.to raise_error(
+          Prometheus::Client::LabelSetValidator::InvalidLabelSetError
+        )
       end
     end
   end
