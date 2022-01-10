@@ -71,7 +71,7 @@ integrated [example application](examples/rack/README.md).
 The Ruby client can also be used to push its collected metrics to a
 [Pushgateway][8]. This comes in handy with batch jobs or in other scenarios
 where it's not possible or feasible to let a Prometheus server scrape a Ruby
-process. TLS and basic access authentication are supported.
+process. TLS and HTTP basic authentication are supported.
 
 ```ruby
 require 'prometheus/client'
@@ -81,18 +81,59 @@ registry = Prometheus::Client.registry
 # ... register some metrics, set/increment/observe/etc. their values
 
 # push the registry state to the default gateway
-Prometheus::Client::Push.new('my-batch-job').add(registry)
+Prometheus::Client::Push.new(job: 'my-batch-job').add(registry)
 
-# optional: specify the instance name (instead of IP) and gateway.
-Prometheus::Client::Push.new('my-batch-job', 'foobar', 'https://example.domain:1234').add(registry)
+# optional: specify a grouping key that uniquely identifies a job instance, and gateway.
+#
+# Note: the labels you use in the grouping key must not conflict with labels set on the
+# metrics being pushed. If they do, an error will be raised.
+Prometheus::Client::Push.new(
+  job: 'my-batch-job',
+  gateway: 'https://example.domain:1234',
+  grouping_key: { instance: 'some-instance', extra_key: 'foobar' }
+).add(registry)
 
-# If you want to replace any previously pushed metrics for a given instance,
+# If you want to replace any previously pushed metrics for a given grouping key,
 # use the #replace method.
-Prometheus::Client::Push.new('my-batch-job').replace(registry)
+#
+# Unlike #add, this will completely replace the metrics under the specified grouping key
+# (i.e. anything currently present in the pushgateway for the specified grouping key, but
+# not present in the registry for that grouping key will be removed).
+#
+# See https://github.com/prometheus/pushgateway#put-method for a full explanation.
+Prometheus::Client::Push.new(job: 'my-batch-job').replace(registry)
 
-# If you want to delete all previously pushed metrics for a given instance,
+# If you want to delete all previously pushed metrics for a given grouping key,
 # use the #delete method.
-Prometheus::Client::Push.new('my-batch-job').delete
+Prometheus::Client::Push.new(job: 'my-batch-job').delete
+```
+
+#### Basic authentication
+
+By design, `Prometheus::Client::Push` doesn't read credentials for HTTP basic
+authentication when they are passed in via the gateway URL using the
+`http://user:password@example.com:9091` syntax, and will in fact raise an error if they're
+supplied that way.
+
+The reason for this is that when using that syntax, the username and password
+have to follow the usual rules for URL encoding of characters [per RFC
+3986](https://datatracker.ietf.org/doc/html/rfc3986#section-2.1).
+
+Rather than place the burden of correctly performing that encoding on users of this gem,
+we decided to have a separate method for supplying HTTP basic authentication credentials,
+with no requirement to URL encode the characters in them.
+
+Instead of passing credentials like this:
+
+```ruby
+push = Prometheus::Client::Push.new(job: "my-job", gateway: "http://user:password@localhost:9091")
+```
+
+please pass them like this:
+
+```ruby
+push = Prometheus::Client::Push.new(job: "my-job", gateway: "http://localhost:9091")
+push.basic_auth("user", "password")
 ```
 
 ## Metrics
