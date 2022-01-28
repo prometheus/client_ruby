@@ -1,19 +1,39 @@
 # CHANGELOG
 
-# Upcoming 3.0.0 / 2021-??-?? (not released yet, these are the merged PRs we'll release)
+# Unreleased changes
+
+_None outstanding_
+
+# 3.0.0 / 2022-??-?? (TODO: edit commit to add date before merging)
 
 This new major version includes some breaking changes. They should be reasonably easy to
 adapt to, but please read the details below:
 
 ## Breaking changes
 
-- [#206](https://github.com/prometheus/client_ruby/pull/206) Include SCRIPT_NAME when 
+Please refer to [UPGRADING.md](UPGRADING.md) for details on upgrading from versions
+`< 3.0.0`.
+
+- [#206](https://github.com/prometheus/client_ruby/pull/206) Include `SCRIPT_NAME` when 
     determining path in Collector:  
-    When determining the path for a request, Rack::Request prefixes the
-    SCRIPT_NAME. This was a problem with our code when using mountable engines,
-    where the engine part of the path gets lost. This patch fixes that to include SCRIPT_NAME as part of the path.
+    When determining the path for a request, `Rack::Request` prefixes the
+    `SCRIPT_NAME`. This was a problem with our code when using mountable engines,
+    where the engine part of the path gets lost. This patch fixes that to include `SCRIPT_NAME` as part of the path.
     
     **This may be a breaking change**. Labels may change in existing metrics.  
+
+- [#245](https://github.com/prometheus/client_ruby/pull/206) Use framework-specific route
+    info and handle consecutive path segments containing IDs in Collector:
+    When generating the `path` label, we now use framework-specific information from the
+    request environment to produce better labels for apps written in the Sinatra and Grape
+    frameworks. Rails doesn't provide the information we need to do the same there, but we
+    hope to get such functionality added in a future release.
+
+    Our framework-agnostic fallback (which Rails apps will use) has also been improved. It
+    now supports stripping IDs/UUIDs from consecutive path segments, where previously only
+    alternating segments would be correctly stripped.
+
+    **This may be a breaking change**. Labels may change in existing metrics.
 
 - [#209](https://github.com/prometheus/client_ruby/pull/209) Automatically initialize metrics
     without labels.  
@@ -28,21 +48,55 @@ adapt to, but please read the details below:
     result in a significant increase to the number of time series being exported. We 
     recommend you test this and make sure it doesn't cause problems.  
 
-- [#220](https://github.com/prometheus/client_ruby/pull/220) Improvements to PushGateway client:  
+- [#220](https://github.com/prometheus/client_ruby/pull/220) and [#234](https://github.com/prometheus/client_ruby/pull/234)
+    Improvements to Pushgateway client:  
     - The `job` parameter is now mandatory when instantiating `Prometheus::Client::Push` 
         and will raise `ArgumentError` if not specified, or if `nil` or an empty string/object
         are passed.
     - The `Prometheus::Client::Push` initializer now takes keyword arguments.
-    - We now correctly handle an empty value for `instance` when generating the path to
-        the PushGateway. 
-    - Fixed URI escaping of spaces in the path to PushGateway. In the past, spaces were
-        being encoded as `+` instead of `%20`, which is invalid.
+    - You can now pass a set of arbitrary key-value pairs (`grouping_key`) to uniquely
+        identify a job instance, rather than just an `instance` label. 
+    - Fixed URI escaping of spaces in the path when pushing to to Pushgateway. In the
+        past, spaces were being encoded as `+` instead of `%20`, which resulted in
+        incorrect label values in the grouping key.
+    - We now correctly encode special values in `job` and `grouping_key` that can't
+        ordinarily be represented in the URL. This mean you can have a forward slash (`/`)
+        in a grouping key label value, or set one to the empty string.
+    - We validate that labels in your `grouping_key` don't clash with labels in the
+        metrics being submitted, and raise an error if they do.
+    - We raise an error on a non-2xx HTTP response from the Pushgateway.
         
     **This is a breaking change if you use Pushgateway**. You will need to update your
     code to pass keyword arguments to the `Prometheus::Client::Push` initializer.
-    
 
-# 2.2.0 / 2021-06-?? <-- TODO: update this date when we merge this and cut the new version
+- [#242](https://github.com/prometheus/client_ruby/pull/242) Move HTTP Basic
+    Authentication credentials in `Prometheus::Client::Push` to separate method call:
+    In earlier versions, these were provided as part of the `gateway` URL, which had some
+    significant downsides when it came to special characters in usernames/passwords.
+
+    These credentials must now be passed via an explicit call to `basic_auth` on an
+    instance of `Prometheus::Client::Push`.
+
+    **This is a breaking change if you use Pushgateway with HTTP Basic Authentication**.
+    You will need to update your code to call this method instead of including the
+    credentials in the URL.
+
+- [#236](https://github.com/prometheus/client_ruby/pull/236) Validate label names:
+    Previously, we didn't validate that label names match the character set required by
+    Prometheus (`[a-zA-Z_][a-zA-Z0-9_]*`). As of this release, we raise an error if a
+    metric is initialized with label names that don't match that regex.
+
+    **This is a breaking change**. While it's likely that Prometheus server would have
+    been failing to scrape metrics with such labels anyway, declaring them will now cause
+    an error to be raised in your code.
+
+- [#237](https://github.com/prometheus/client_ruby/pull/237) Drop support for old Ruby versions:
+    Ruby versions below 2.6 are no longer supported upstream, and `client_ruby` is no
+    longer tested against them.
+
+    **This may be a breaking change**. We no longer make efforts to ensure that
+    `client_ruby` works on older versions, and any issues filed specific to them will be
+    considered invalid.
 
 ## New Features
 
@@ -53,7 +107,7 @@ adapt to, but please read the details below:
     through that port.
 
 - [#222](https://github.com/prometheus/client_ruby/pull/222) Enable configuring `Net::HTTP` 
-    timeouts for PushGateway calls.  
+    timeouts for Pushgateway calls.  
     You can now specify `open_timeout` and `read_timeout` when instantiating 
     `Prometheus::Client::Push`, to control these timeouts.
 
