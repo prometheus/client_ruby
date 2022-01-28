@@ -1,3 +1,168 @@
+# Upgrading from 2.x.x to 3.x.x
+
+## Objectives
+
+Most of the breaking changes in 3.0.0 are in `Prometheus::Client::Push`, which has had a
+fairly major overhaul.
+
+As well as that, there are a handful of smaller breaking changes.
+
+## Ruby
+
+The minimum supported Ruby version is now 2.6. This will change over time according to our
+[compatibility policy](COMPATIBILITY.md).
+
+## Push client improvements
+
+### Keyword arguments
+
+In line with changes we made for the 0.10.0 release (see below),
+`Prometheus::Client::Push` now favours the use of keyword arguments for improved clarity
+at the callsites. Specifically, the constructor now takes several keyword arguments rather
+than relying entirely on positional arguments. Where you would previously have written:
+
+```ruby
+Prometheus::Client::Push.new('my-batch-job', 'some-instance', 'https://example.domain:1234')
+```
+
+you would now write:
+
+```ruby
+Prometheus::Client::Push.new(
+  job: 'my-batch-job',
+  gateway: 'https://example.domain:1234',
+  grouping_key: { instance: 'some-instance', extra_key: 'foobar' }
+).add(registry)
+```
+
+### Removal of `instance` in favour of `grouping_key`
+
+Previously, it was possible to specify the instance of a job for which metrics were being
+pushed, like:
+
+```ruby
+Prometheus::Client::Push.new('my-batch-job', 'some-instance').add(registry)
+```
+
+What this really did under-the-hood was set a grouping key with a single key-value pair in
+it. The Pushgateway itself [supports arbitrary grouping
+keys](https://github.com/prometheus/pushgateway#url) made up of many key-value pairs. We
+now support submitting metrics with such grouping keys:
+
+```ruby
+Prometheus::Client::Push.new(
+  job: 'my-batch-job',
+  grouping_key: { instance: 'some-instance', extra_key: 'foobar' }
+).add(registry)
+```
+
+### Separate method for setting basic auth credentials
+
+Previously, when initializing a `Prometheus::Client::Push` instance with HTTP Basic
+Authentication credentials, you would make a call like:
+
+```ruby
+push = Prometheus::Client::Push.new("my-job", "some-instance", "http://user:password@localhost:9091")
+```
+
+In most cases, this was fine, but would break if the user or password contained any
+non-URL-safe characters ([per RFC
+3986](https://datatracker.ietf.org/doc/html/rfc3986#section-2.1)).
+
+While it is possible to pass those characters using percent-encoding, previous versions of
+`Prometheus::Client::Push` didn't decode them before passing them into the HTTP client,
+meaning that approach wouldn't work as the credentials we sent to the server would be
+wrong.
+
+We [discussed how to fix
+it](https://github.com/prometheus/client_ruby/issues/170#issuecomment-1003765815) and
+decided it would be better to have a separate method for supplying HTTP Basic
+Authentication credentials, with no requirement for percent-encoding, than to make users
+jump through the hoops of correctly encoding the username and password in the gateway URL.
+
+In the 3.x.x release series, HTTP Basic Authentication credentials should be passed like
+this:
+
+```ruby
+push = Prometheus::Client::Push.new(job: "my-job", gateway: "http://localhost:9091")
+push.basic_auth("user", "password")
+```
+
+We also explicitly reject usernames and passwords being passed in the gateway URL, and
+will raise an error if they are passed that way.
+
+### Presence of `job` is now validated
+
+We now validate that the `job` passed to the `Prometheus::Client::Push` initializer is not
+`nil` and isn't the empty string.
+
+### Raising errors on non-2xx responses from Pushgateway
+
+Previously, if the Pushgateway (or a proxy between us and it) returned a non-2xx HTTP
+response, we would silently fail to submit metrics to it.
+
+Now, an appropriate error is raised, indicating which class of non-2xx response was
+received. If you want to `rescue` those errors and handle them explicitly, they are all
+subclasses of `Prometheus::Client::Push::HttpError`. If you only want to handle some of
+them, or want to handle each class of non-2xx response differently, you can `rescue` one
+or more of:
+
+  - `Prometheus::Client::Push::HttpRedirectError`
+  - `Prometheus::Client::Push::HttpClientError`
+  - `Prometheus::Client::Push::HttpServerError`
+
+_Note: `Prometheus::Client::Push` does not follow redirects. You should configure the
+client to talk directly to an instance of the Pushgateway._
+
+### Fixed encoding of spaces in `job` and `instance`
+
+In a [previous
+commit](https://github.com/prometheus/client_ruby/pull/188/commits/f31bdcb8eda943f8ddf720e0b9d65ac22124cc93)
+we addressed the deprecation (and later removal in Ruby 3.0) of `URI.escape` by switching
+to `CGI.escape` for encoding the values of `job` and `instance` which would ultimately end
+up in the grouping key.
+
+Unfortunately, this proved to be a subtly breaking change, as `CGI.escape` encodes spaces
+(`" "`) as `"+"` rather than `"%20"`. This led to spaces in the values of `job` and
+`instance` being turned into literal plus signs.
+
+In 3.x.x, [we have
+switched](https://github.com/prometheus/client_ruby/pull/220/commits/ec5c5aa6979aa295d91fbc16e76e5eb09f82a256)
+to `ERB::Util::url_encode`, which handles this case correctly. You may notice your metrics
+being published under a different grouping key as a result of this change (if either your
+`job` or `instance` values contained spaces).
+
+## Automatic initialization of time series with no labels
+
+The [Prometheus documentation on best
+practices](https://prometheus.io/docs/practices/instrumentation/#avoid-missing-metrics)
+recommends exporting a default value for any time series you know will exist in advance.
+For series with no labels, other Prometheus clients (including Go, Java, and Python) do
+this automatically, so we have matched that behaviour in the 3.x.x series.
+
+## Path generation fix in Collector middleware
+
+Previously, we did not include `Rack::Request`'s `SCRIPT_NAME` when building paths in
+`Prometheus::Middleware::Collector`. We have now added this, which means that any
+application using the included collector middleware with a non-empty `SCRIPT_NAME` will
+generate different path labels.
+
+This will most typically be present when mounting several Rack applications in the same
+server process, such as when using [Rails
+Engines](https://guides.rubyonrails.org/engines.html).
+
+## Improved validation of label names
+
+Earlier versions of the Ruby Prometheus client performed limited validation of label names
+(e.g. ensuring that they didn't start with `__`). The validation rules for label names are
+specified [in the Prometheus
+documentation](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels),
+and we now apply them during metric declaration. Specifically, we have added a check that
+label names match the regex `[a-zA-Z_][a-zA-Z0-9_]*`.
+
+Any labels previously let through by the lack of validation were invalid, and likely would
+have caused problems when scraped by Prometheus server.
+
 # Upgrading from 0.9 to 0.10.x
 
 ## Objectives

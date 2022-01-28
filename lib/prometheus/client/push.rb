@@ -145,7 +145,7 @@ module Prometheus
             push = Prometheus::Client::Push.new(job: "my-job", gateway: "http://user:password@localhost:9091")
             ```
 
-            please pass them like this instead:
+            please pass them like this:
 
             ```
             push = Prometheus::Client::Push.new(job: "my-job", gateway: "http://localhost:9091")
