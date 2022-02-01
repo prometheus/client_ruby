@@ -95,6 +95,34 @@ describe Prometheus::Middleware::Collector do
     expect(registry.get(metric).get(labels: labels)).to include("0.1" => 0, "0.5" => 1)
   end
 
+  it 'handles consecutive path segments containing IDs' do
+    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.3)
+
+    get '/foo/42/24'
+
+    metric = :http_server_requests_total
+    labels = { method: 'get', path: '/foo/:id/:id', code: '200' }
+    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+
+    metric = :http_server_request_duration_seconds
+    labels = { method: 'get', path: '/foo/:id/:id' }
+    expect(registry.get(metric).get(labels: labels)).to include("0.1" => 0, "0.5" => 1)
+  end
+
+  it 'handles consecutive path segments containing UUIDs' do
+    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.3)
+
+    get '/foo/5180349d-a491-4d73-af30-4194a46bdff3/5180349d-a491-4d73-af30-4194a46bdff2'
+
+    metric = :http_server_requests_total
+    labels = { method: 'get', path: '/foo/:uuid/:uuid', code: '200' }
+    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+
+    metric = :http_server_request_duration_seconds
+    labels = { method: 'get', path: '/foo/:uuid/:uuid' }
+    expect(registry.get(metric).get(labels: labels)).to include("0.1" => 0, "0.5" => 1)
+  end
+
   it 'prefers sinatra.route to PATH_INFO' do
     metric = :http_server_requests_total
 
