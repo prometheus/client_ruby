@@ -140,7 +140,7 @@ recommends exporting a default value for any time series you know will exist in 
 For series with no labels, other Prometheus clients (including Go, Java, and Python) do
 this automatically, so we have matched that behaviour in the 3.x.x series.
 
-## Path generation fix in Collector middleware
+## Added `SCRIPT_NAME` to path labels in Collector middleware
 
 Previously, we did not include `Rack::Request`'s `SCRIPT_NAME` when building paths in
 `Prometheus::Middleware::Collector`. We have now added this, which means that any
@@ -150,6 +150,22 @@ generate different path labels.
 This will most typically be present when mounting several Rack applications in the same
 server process, such as when using [Rails
 Engines](https://guides.rubyonrails.org/engines.html).
+
+## Improved stripping of IDs/UUIDs from paths in Collector middleware
+
+Where available (currently for applications written in the Sinatra and Grape frameworks),
+we now use framework-specific equivalents to `PATH_INFO` in
+`Prometheus::Middleware::Collector`, which means that rather than having path segments
+replaced with the generic `:id` and `:uuid` placeholders, you'll see the route as you
+defined it in your framework.
+
+For frameworks where that information isn't available to us (most notably Rails), we still
+fall back to using `PATH_INFO`, though we have also improved how we strip IDs/UUIDs from
+it. Previously, we would only strip them from alternating path segments due to the way we
+were matching them. We have improved that matching so it works even when there are
+IDs/UUIDs in consecutive path segments.
+
+You may notice the path label change for some of your endpoints.
 
 ## Improved validation of label names
 
