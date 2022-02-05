@@ -95,6 +95,82 @@ describe Prometheus::Middleware::Collector do
     expect(registry.get(metric).get(labels: labels)).to include("0.1" => 0, "0.5" => 1)
   end
 
+  it 'handles consecutive path segments containing IDs' do
+    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.3)
+
+    get '/foo/42/24'
+
+    metric = :http_server_requests_total
+    labels = { method: 'get', path: '/foo/:id/:id', code: '200' }
+    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+
+    metric = :http_server_request_duration_seconds
+    labels = { method: 'get', path: '/foo/:id/:id' }
+    expect(registry.get(metric).get(labels: labels)).to include("0.1" => 0, "0.5" => 1)
+  end
+
+  it 'handles consecutive path segments containing UUIDs' do
+    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.3)
+
+    get '/foo/5180349d-a491-4d73-af30-4194a46bdff3/5180349d-a491-4d73-af30-4194a46bdff2'
+
+    metric = :http_server_requests_total
+    labels = { method: 'get', path: '/foo/:uuid/:uuid', code: '200' }
+    expect(registry.get(metric).get(labels: labels)).to eql(1.0)
+
+    metric = :http_server_request_duration_seconds
+    labels = { method: 'get', path: '/foo/:uuid/:uuid' }
+    expect(registry.get(metric).get(labels: labels)).to include("0.1" => 0, "0.5" => 1)
+  end
+
+  it 'prefers sinatra.route to PATH_INFO' do
+    metric = :http_server_requests_total
+
+    env('sinatra.route', 'GET /foo/:named_param')
+    get '/foo/7'
+    env('sinatra.route', nil)
+    expect(registry.get(metric).values.keys.last[:path]).to eql("/foo/:named_param")
+  end
+
+  it 'prefers grape.routing_args to PATH_INFO' do
+    metric = :http_server_requests_total
+
+    # request.env["grape.routing_args"][:route_info].pattern.origin
+    #
+    # Yes, this is the object you have to traverse to get the path.
+    #
+    # No, I'm not happy about it either.
+    grape_routing_args = {
+      route_info: double(:route_info,
+        pattern: double(:pattern,
+          origin: '/foo/:named_param'
+        )
+      )
+    }
+
+    env('grape.routing_args', grape_routing_args)
+    get '/foo/7'
+    env('grape.routing_args', nil)
+    expect(registry.get(metric).values.keys.last[:path]).to eql("/foo/:named_param")
+  end
+
+  it "falls back to PATH_INFO if the structure of grape.routing_args changes" do
+    metric = :http_server_requests_total
+
+    grape_routing_args = {
+      route_info: double(:route_info,
+        pattern: double(:pattern,
+          origin_but_different: '/foo/:named_param'
+        )
+      )
+    }
+
+    env('grape.routing_args', grape_routing_args)
+    get '/foo/7'
+    env('grape.routing_args', nil)
+    expect(registry.get(metric).values.keys.last[:path]).to eql("/foo/:id")
+  end
+
   context 'when the app raises an exception' do
     let(:original_app) do
       lambda do |env|

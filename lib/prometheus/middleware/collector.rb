@@ -67,7 +67,7 @@ module Prometheus
       end
 
       def record(env, code, duration)
-        path = [env["SCRIPT_NAME"], env['PATH_INFO']].join
+        path = generate_path(env)
 
         counter_labels = {
           code:   code,
@@ -87,10 +87,58 @@ module Prometheus
         nil
       end
 
+      # While `PATH_INFO` is framework agnostic, and works for any Rack app, some Ruby web
+      # frameworks pass a more useful piece of information into the request env - the
+      # route that the request matched.
+      #
+      # This means that rather than using our generic `:id` and `:uuid` replacements in
+      # the `path` label for any path segments that look like dynamic IDs, we can put the
+      # actual route that matched in there, with correctly named parameters. For example,
+      # if a Sinatra app defined a route like:
+      #
+      # get "/foo/:bar" do
+      #   ...
+      # end
+      #
+      # instead of containing `/foo/:id`, the `path` label would contain `/foo/:bar`.
+      #
+      # Sadly, Rails is a notable exception, and (as far as I can tell at the time of
+      # writing) doesn't provide this info in the request env.
+      def generate_path(env)
+        if env['sinatra.route']
+          route = env['sinatra.route'].partition(' ').last
+        elsif env['grape.routing_args']
+          # We are deep in the weeds of an object that Grape passes into the request env,
+          # but don't document any explicit guarantees about. Let's have a fallback in
+          # case they change it down the line.
+          #
+          # This code would be neater with the safe navigation operator (`&.`) here rather
+          # than the much more verbose `respond_to?` calls, but unlike Rails' `try`
+          # method, it still raises an error if the object is non-nil, but doesn't respond
+          # to the method being called on it.
+          route = nil
+
+          route_info = env.dig('grape.routing_args', :route_info)
+          if route_info.respond_to?(:pattern)
+            pattern = route_info.pattern
+            if pattern.respond_to?(:origin)
+              route = pattern.origin
+            end
+          end
+
+          # Fall back to PATH_INFO if Grape change the structure of `grape.routing_args`
+          route ||= env['PATH_INFO']
+        else
+          route = env['PATH_INFO']
+        end
+
+        [env['SCRIPT_NAME'], route].join
+      end
+
       def strip_ids_from_path(path)
         path
-          .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/|$)}, '/:uuid\\1')
-          .gsub(%r{/\d+(/|$)}, '/:id\\1')
+          .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?=/|$)}, '/:uuid\\1')
+          .gsub(%r{/\d+(?=/|$)}, '/:id\\1')
       end
     end
   end
