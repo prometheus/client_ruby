@@ -4,7 +4,7 @@
 
 _None outstanding_
 
-# 3.0.0 / 2022-??-?? (TODO: edit commit to add date before merging)
+# 3.0.0 / 2022-02-05
 
 This new major version includes some breaking changes. They should be reasonably easy to
 adapt to, but please read the details below:
