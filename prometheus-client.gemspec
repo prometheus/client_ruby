@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.authors           = ['Ben Kochie', 'Chris Sinjakli', 'Daniel Magliola']
   s.email             = ['superq@gmail.com', 'chris@sinjakli.co.uk', 'dmagliola@crystalgears.com']
   s.homepage          = 'https://github.com/prometheus/client_ruby'
-  s.license           = 'Apache 2.0'
+  s.license           = 'Apache-2.0'
 
   s.files             = %w(README.md) + Dir.glob('{lib/**/*}')
   s.require_paths     = ['lib']
