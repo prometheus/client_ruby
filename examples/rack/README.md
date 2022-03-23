@@ -54,21 +54,41 @@ example, if you want to [change the way IDs are stripped from the
 path](https://github.com/prometheus/client_ruby/blob/982fe2e3c37e2940d281573c7689224152dd791f/lib/prometheus/middleware/collector.rb#L97-L101)
 you could override the appropriate method:
 
-```Ruby
+```ruby
 require 'prometheus/middleware/collector'
-module Prometheus
-  module Middleware
-    class MyCollector < Collector
-      def strip_ids_from_path(path)
-        super(path)
-          .gsub(/8675309/, ':jenny\\1')
-      end
-    end
+
+class MyCollector < Prometheus::Middleware::Collector
+  def strip_ids_from_path(path)
+    super(path)
+      .gsub(/8675309/, ':jenny\\1')
   end
 end
 ```
 
 and use your class in `config.ru` instead.
+
+If you want to completely customise how the `path` label is generated, you can
+override `generate_path`. For example, to use
+[Sinatra](https://github.com/sinatra/sinatra)'s framework-specific route info
+from the request environment:
+
+```ruby
+require 'prometheus/middleware/collector'
+
+class MyCollector < Prometheus::Middleware::Collector
+  def generate_path(env)
+    # `sinatra.route` contains both the request method and the route, separated
+    # by a space (e.g. "GET /payments/:id"). To get just the request path, you
+    # can partition the string on " ".
+    env['sinatra.route'].partition(' ').last
+  end
+end
+```
+
+Just make sure that your custom path generation logic strips IDs from the path
+it returns, or gets the path from a source that would never contain them in the
+first place (such as `sinatra.route`), otherwise you'll generate a huge number
+of label values!
 
 **Note:** `Prometheus::Middleware::Collector` isn't explicitly designed to be
 subclassed, so the internals are liable to change at any time, including in
