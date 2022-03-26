@@ -1,3 +1,26 @@
+# Upgrading from 3.x.x to 4.x.x
+
+## Objectives
+
+4.0.0 contains a single breaking change - the [removal
+of](https://github.com/prometheus/client_ruby/pull/251) [framework-specific route
+detection](https://github.com/prometheus/client_ruby/pull/245) from
+`Prometheus::Middleware::Collector`.
+
+## Removal of framework-specific route detection
+
+In 3.0.0 we added a feature that used specific information provided by the Sinatra and
+Grape web frameworks to generate the `path` label in `Prometheus::Middleware::Collector`.
+
+This feature turned out to be inherently flawed, due to limitations in the information we
+can extract from the request environment. [This
+comment](https://github.com/prometheus/client_ruby/issues/249#issuecomment-1061317511)
+goes into much more depth on the investigation we did and the conclusions we came to.
+
+Most users will be unaffected by this change. If you use Sinatra or Grape and
+`Prometheus::Middleware::Collector` you will notice that your `path` label values will be
+much more similar to the ones we generated in the 2.x.x release series.
+
 # Upgrading from 2.x.x to 3.x.x
 
 ## Objectives
