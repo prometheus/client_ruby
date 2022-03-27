@@ -4,6 +4,39 @@
 
 _None outstanding_
 
+# 4.0.0 / 2022-03-27
+
+_**Codename:** The "barely a release" release_
+
+This version contains a single - sadly breaking - change.
+
+- [#251](https://github.com/prometheus/client_ruby/pull/251) Remove framework-specific
+    route detection from collector middleware:
+    In 3.0.0 [we shipped](https://github.com/prometheus/client_ruby/issues/245) a feature
+    that attempted to use framework-specific information to determine the path of the
+    request in `Prometheus::Middleware::Collector`.
+
+    Sadly, we found out after shipping it that it was prone to multiple issues. We spent
+    a decent amount of time looking into them in depth, and came to the conclusion that
+    there wasn't any reasonable way to fix them - the issues are inherent to the feature.
+
+    For a full, detailed write-up of our investigation, see [this
+    comment](https://github.com/prometheus/client_ruby/issues/249#issuecomment-1061317511).
+
+    Almost all users will be unaffected by this change, but it is breaking per the
+    definition we've used for previous releases, so we've erred on the side of caution and
+    bumped the major version to communicate that.
+
+    If you use Sinatra or Grape with the `Prometheus::Middleware::Collector`, you will
+    notice different `path` labels being generated. If not, this release will change
+    nothing for you.
+
+    If you want the behaviour from 3.0.0 - or any custom path label generation you'd
+    prefer - we've updated [our collector middleware
+    documentation](https://github.com/prometheus/client_ruby/blob/master/examples/rack/README.md#collector).
+
+    **This may be a breaking change**. Labels may change in existing metrics.
+
 # 3.0.0 / 2022-02-05
 
 This new major version includes some breaking changes. They should be reasonably easy to
