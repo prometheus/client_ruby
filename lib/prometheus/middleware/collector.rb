@@ -14,6 +14,9 @@ module Prometheus
     # By default metrics all have the prefix "http_server". Set
     # `:metrics_prefix` to something else if you like.
     #
+    # By default metrics have no preset_labels. Set `:preset_labels` as a hash
+    # containing `label_name: 'value'` pairs to include them.
+    #
     # The request counter metric is broken down by code, method and path.
     # The request duration metric is broken down by method and path.
     class Collector
@@ -23,6 +26,7 @@ module Prometheus
         @app = app
         @registry = options[:registry] || Client.registry
         @metrics_prefix = options[:metrics_prefix] || 'http_server'
+        @preset_labels = options[:preset_labels] || {}
 
         init_request_metrics
         init_exception_metrics
@@ -39,12 +43,14 @@ module Prometheus
           :"#{@metrics_prefix}_requests_total",
           docstring:
             'The total number of HTTP requests handled by the Rack application.',
-          labels: %i[code method path]
+          labels: labels_with_presets(%i[code method path]),
+          preset_labels: @preset_labels,
         )
         @durations = @registry.histogram(
           :"#{@metrics_prefix}_request_duration_seconds",
           docstring: 'The HTTP response duration of the Rack application.',
-          labels: %i[method path]
+          labels: labels_with_presets(%i[method path]),
+          preset_labels: @preset_labels,
         )
       end
 
@@ -52,8 +58,13 @@ module Prometheus
         @exceptions = @registry.counter(
           :"#{@metrics_prefix}_exceptions_total",
           docstring: 'The total number of exceptions raised by the Rack application.',
-          labels: [:exception]
+          labels: labels_with_presets([:exception]),
+          preset_labels: @preset_labels,
         )
+      end
+
+      def labels_with_presets(labels)
+        (labels + @preset_labels.keys).tap(&:uniq!).map!(&:to_sym)
       end
 
       def trace(env)

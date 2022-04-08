@@ -172,4 +172,20 @@ describe Prometheus::Middleware::Collector do
       expect(registry.get(:http_server_exceptions_total)).to be(nil)
     end
   end
+
+  context 'when provided with preset_labels' do
+    let!(:app) do
+      described_class.new(
+        original_app,
+        registry: registry,
+        preset_labels: {version: '1.4'},
+      )
+    end
+
+    it "applies the preset labels to the default metrics" do
+      expect(registry.get(:http_server_requests_total).preset_labels).to eq({version: '1.4'})
+      expect(registry.get(:http_server_request_duration_seconds).preset_labels).to eq({version: '1.4'})
+      expect(registry.get(:http_server_exceptions_total).preset_labels).to eq({version: '1.4'})
+    end
+  end
 end
