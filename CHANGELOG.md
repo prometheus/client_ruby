@@ -33,7 +33,7 @@ This version contains a single - sadly breaking - change.
 
     If you want the behaviour from 3.0.0 - or any custom path label generation you'd
     prefer - we've updated [our collector middleware
-    documentation](https://github.com/prometheus/client_ruby/blob/master/examples/rack/README.md#collector).
+    documentation](https://github.com/prometheus/client_ruby/blob/v4.0.0/examples/rack/README.md#collector).
 
     **This may be a breaking change**. Labels may change in existing metrics.
 
