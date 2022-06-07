@@ -19,9 +19,7 @@ describe Prometheus::Client::Histogram do
                         buckets: [2.5, 5, 10])
   end
 
-  it_behaves_like Prometheus::Client::Metric do
-    let(:type) { Hash }
-  end
+  it_behaves_like Prometheus::Client::Metric
 
   describe '#initialization' do
     it 'raise error for unsorted buckets' do
@@ -64,12 +62,6 @@ describe Prometheus::Client::Histogram do
       end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
     end
 
-    it 'raises an InvalidLabelSetError if sending unexpected labels' do
-      expect do
-        histogram.observe(5, labels: { foo: 'bar' })
-      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
-    end
-
     context "with a an expected label set" do
       let(:expected_labels) { [:test] }
 
@@ -79,35 +71,6 @@ describe Prometheus::Client::Histogram do
             histogram.observe(5, labels: { test: 'value' })
           end.to change { histogram.get(labels: { test: 'value' }) }
         end.to_not change { histogram.get(labels: { test: 'other' }) }
-      end
-    end
-
-    context "with non-string label values" do
-      let(:histogram) do
-        described_class.new(:foo,
-                            docstring: 'foo description',
-                            labels: [:foo],
-                            buckets: [2.5, 5, 10])
-      end
-
-      it "converts labels to strings for consistent storage" do
-        histogram.observe(5, labels: { foo: :label })
-        expect(histogram.get(labels: { foo: 'label' })["10"]).to eq(1.0)
-      end
-
-      context "and some labels preset" do
-        let(:histogram) do
-          described_class.new(:foo,
-                              docstring: 'foo description',
-                              labels: [:foo, :bar],
-                              preset_labels: { foo: :label },
-                              buckets: [2.5, 5, 10])
-        end
-
-        it "converts labels to strings for consistent storage" do
-          histogram.observe(5, labels: { bar: :label })
-          expect(histogram.get(labels: { foo: 'label', bar: 'label' })["10"]).to eq(1.0)
-        end
       end
     end
   end
@@ -204,6 +167,55 @@ describe Prometheus::Client::Histogram do
       }
       expect(histogram_with_labels.values).to eql(expected_values)
       expect(histogram.values).to eql(expected_values)
+    end
+
+    context 'when using DirectFileStore' do
+      before do
+        Dir.glob('/tmp/prometheus_test/*').each { |file| File.delete(file) }
+        Prometheus::Client.config.data_store = Prometheus::Client::DataStores::DirectFileStore.new(dir: '/tmp/prometheus_test')
+      end
+
+      after do
+        Dir.glob('/tmp/prometheus_test/*').each { |file| File.delete(file) }
+        Prometheus::Client.config.data_store = Prometheus::Client::DataStores::Synchronized.new
+      end
+
+      let(:expected_labels) { [:foo, :bar] }
+
+      # This is a slightly weird test, and largely a duplicate of one in
+      # spec/prometheus/client/metric_spec.rb.
+      #
+      # The reason we have this copy of the test is because histogram.rb
+      # implements its own fix for the issue this test guards against due to
+      # having slightly different constructor signature (which gets called in
+      # `with_labels`).
+      #
+      # See the comment in spec/prometheus/client/metric_spec.rb for an
+      # explanation of what this test is doing and why.
+      it "doesn't corrupt the data files" do
+        histogram_with_labels = histogram.with_labels({ foo: 'longervalue'})
+
+        # Initialize / read the files for both views of the metric
+        histogram.observe(1, labels: { foo: 'value1', bar: 'zzz'})
+        histogram_with_labels.observe(1, labels: {bar: 'zzz'})
+
+        # After both MetricStores have their files, add a new entry to both
+        histogram.observe(1, labels: { foo: 'value1', bar: 'aaa'}) # If there's a bug, we partially overwrite { foo: 'longervalue', bar: 'zzz'}
+        histogram_with_labels.observe(1, labels: {bar: 'aaa'}) # Extend the file so we read past that overwrite
+
+        expect { histogram.values }.not_to raise_error # Check it hasn't corrupted our files
+        expect { histogram_with_labels.values }.not_to raise_error # Check it hasn't corrupted our files
+
+        expected_values = {
+          {foo: 'value1', bar: 'zzz'} => {"2.5" => 1.0, "5"=>1.0, "10" => 1.0, "+Inf" => 1.0, "sum"=>1.0},
+          {foo: 'value1', bar: 'aaa'} => {"2.5" => 1.0, "5"=>1.0, "10" => 1.0, "+Inf" => 1.0, "sum"=>1.0},
+          {foo: 'longervalue', bar: 'zzz'} => {"2.5" => 1.0, "5"=>1.0, "10" => 1.0, "+Inf" => 1.0, "sum"=>1.0},
+          {foo: 'longervalue', bar: 'aaa'} => {"2.5" => 1.0, "5"=>1.0, "10" => 1.0, "+Inf" => 1.0, "sum"=>1.0},
+        }
+
+        expect(histogram.values).to eql(expected_values)
+        expect(histogram_with_labels.values).to eql(expected_values)
+      end
     end
   end
 end
