@@ -403,7 +403,7 @@ Counters, Histograms and Summaries are `SUM`med, and Gauges report all their val
 for each process), tagged with a `pid` label. You can also select `SUM`, `MAX`, `MIN`, or
 `MOST_RECENT` for your gauges, depending on your use case.
 
-Please note that that the `MOST_RECENT` aggregation only works for gauges, and it does not
+Please note that the `MOST_RECENT` aggregation only works for gauges, and it does not
 allow the use of `increment` / `decrement`, you can only use `set`. 
 
 **Memory Usage**: When scraped by Prometheus, this store will read all these files, get all
