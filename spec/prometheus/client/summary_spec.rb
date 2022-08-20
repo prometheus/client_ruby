@@ -18,9 +18,7 @@ describe Prometheus::Client::Summary do
                                     labels: expected_labels)
   end
 
-  it_behaves_like Prometheus::Client::Metric do
-    let(:type) { Hash }
-  end
+  it_behaves_like Prometheus::Client::Metric
 
   describe '#initialization' do
     it 'raise error for `quantile` label' do
@@ -45,12 +43,6 @@ describe Prometheus::Client::Summary do
       end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
     end
 
-    it 'raises an InvalidLabelSetError if sending unexpected labels' do
-      expect do
-        summary.observe(5, labels: { foo: 'bar' })
-      end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
-    end
-
     context "with a an expected label set" do
       let(:expected_labels) { [:test] }
 
@@ -60,33 +52,6 @@ describe Prometheus::Client::Summary do
             summary.observe(5, labels: { test: 'value' })
           end.to change { summary.get(labels: { test: 'value' })["count"] }
         end.to_not change { summary.get(labels: { test: 'other' })["count"] }
-      end
-    end
-
-    context "with non-string label values" do
-      let(:summary) do
-        described_class.new(:foo,
-                            docstring: 'foo description',
-                            labels: [:foo])
-      end
-
-      it "converts labels to strings for consistent storage" do
-        summary.observe(5, labels: { foo: :label })
-        expect(summary.get(labels: { foo: 'label' })["count"]).to eq(1.0)
-      end
-
-      context "and some labels preset" do
-        let(:summary) do
-          described_class.new(:foo,
-                              docstring: 'foo description',
-                              labels: [:foo, :bar],
-                              preset_labels: { foo: :label })
-        end
-
-        it "converts labels to strings for consistent storage" do
-          summary.observe(5, labels: { bar: :label })
-          expect(summary.get(labels: { foo: 'label', bar: 'label' })["count"]).to eq(1.0)
-        end
       end
     end
   end
@@ -144,29 +109,6 @@ describe Prometheus::Client::Summary do
           {} => { "count" => 0.0, "sum" => 0.0 },
         )
       end
-    end
-  end
-
-  describe '#with_labels' do
-    let(:expected_labels) { [:foo] }
-
-    it 'pre-sets labels for observations' do
-      expect { summary.observe(2) }
-        .to raise_error(Prometheus::Client::LabelSetValidator::InvalidLabelSetError)
-      expect { summary.with_labels(foo: 'value').observe(2) }.not_to raise_error
-    end
-
-    it 'registers `with_labels` observations in the original metric store' do
-      summary.observe(1, labels: { foo: 'value1'})
-      summary_with_labels = summary.with_labels({ foo: 'value2'})
-      summary_with_labels.observe(2)
-
-      expected_values = {
-        {foo: 'value1'} => { 'count' => 1.0, 'sum' => 1.0 },
-        {foo: 'value2'} => { 'count' => 1.0, 'sum' => 2.0 }
-      }
-      expect(summary_with_labels.values).to eql(expected_values)
-      expect(summary.values).to eql(expected_values)
     end
   end
 end
