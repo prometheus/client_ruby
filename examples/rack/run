@@ -24,7 +24,7 @@ if ! installed vegeta; then
 	go install github.com/tsenart/vegeta@latest # newer versions of Go
 fi
 
-PORT=5000
+PORT=5123
 URL=http://127.0.0.1:${PORT}/
 
 log "starting example server"

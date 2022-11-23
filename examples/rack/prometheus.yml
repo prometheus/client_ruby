@@ -10,4 +10,4 @@ scrape_configs:
   - job_name: "rack-example"
     static_configs:
       - targets:
-        - "localhost:5000"
+        - "localhost:5123"
