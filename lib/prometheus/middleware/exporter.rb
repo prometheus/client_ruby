@@ -66,7 +66,7 @@ module Prometheus
       def respond_with(format)
         [
           200,
-          { 'Content-Type' => format::CONTENT_TYPE },
+          { 'content-type' => format::CONTENT_TYPE },
           [format.marshal(@registry)],
         ]
       end
@@ -76,7 +76,7 @@ module Prometheus
 
         [
           406,
-          { 'Content-Type' => 'text/plain' },
+          { 'content-type' => 'text/plain' },
           ["Supported media types: #{types.join(', ')}"],
         ]
       end

@@ -16,7 +16,7 @@ describe Prometheus::Middleware::Collector do
   end
 
   let(:original_app) do
-    ->(_) { [200, { 'Content-Type' => 'text/html' }, ['OK']] }
+    ->(_) { [200, { 'content-type' => 'text/html' }, ['OK']] }
   end
 
   let!(:app) do
@@ -128,7 +128,7 @@ describe Prometheus::Middleware::Collector do
       lambda do |env|
         raise dummy_error if env['PATH_INFO'] == '/broken'
 
-        [200, { 'Content-Type' => 'text/html' }, ['OK']]
+        [200, { 'content-type' => 'text/html' }, ['OK']]
       end
     end
 
