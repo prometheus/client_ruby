@@ -56,7 +56,7 @@ use Rack::Deflater
 use Prometheus::Middleware::Collector
 use Prometheus::Middleware::Exporter
 
-run ->(_) { [200, {'Content-Type' => 'text/html'}, ['OK']] }
+run ->(_) { [200, {'content-type' => 'text/html'}, ['OK']] }
 ```
 
 Start the server and have a look at the metrics endpoint:
