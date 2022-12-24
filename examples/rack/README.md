@@ -33,8 +33,8 @@ bundle install
 bundle exec unicorn -c ./unicorn.conf
 ```
 
-You can now open the [example app](http://localhost:5000/) and its [metrics
-page](http://localhost:5000/metrics) to inspect the output. The running
+You can now open the [example app](http://localhost:5123/) and its [metrics
+page](http://localhost:5123/metrics) to inspect the output. The running
 Prometheus server can be used to [play around with the metrics][rate-query].
 
 [rate-query]: http://localhost:9090/graph#%5B%7B%22range_input%22%3A%221h%22%2C%22expr%22%3A%22rate(http_server_requests_total%5B1m%5D)%22%2C%22tab%22%3A0%7D%5D
