@@ -20,8 +20,8 @@ if ! installed vegeta; then
 		fatal "Could not find go. Either run the examples manually or install"
 	fi
 
-	go get github.com/tsenart/vegeta # older versions of Go
-	go install github.com/tsenart/vegeta@latest # newer versions of Go
+	go get github.com/tsenart/vegeta # versions of Go < 1.18
+	go install github.com/tsenart/vegeta@latest # versions of Go >= 1.18
 fi
 
 PORT=5123
