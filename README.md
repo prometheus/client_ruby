@@ -60,7 +60,7 @@ run ->(_) { [200, {'content-type' => 'text/html'}, ['OK']] }
 ```
 
 Start the server and have a look at the metrics endpoint:
-[http://localhost:5000/metrics](http://localhost:5000/metrics).
+[http://localhost:5123/metrics](http://localhost:5123/metrics).
 
 For further instructions and other scripts to get started, have a look at the
 integrated [example application](examples/rack/README.md).
