@@ -12,7 +12,18 @@ jobs:
 
     steps:
     - checkout
-    - run: if [[ "$(ruby -e 'puts RUBY_VERSION')" != 1.* ]]; then gem update --system; fi
+    # JRuby <= 9.2.x is no longer supported by the `rubygems-update` gem, which now
+    # requires at least Ruby 2.6 compatibility.
+    #
+    # For now, we'll pin to the last supported version. We can drop this check once we
+    # drop all those versions of JRuby.
+    - run: |
+        running_old_ruby=$(ruby -e 'puts Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.6.0")')
+        if [[ "${running_old_ruby}" == "true" ]]; then 
+          gem update --system 3.3.26
+        else
+          gem update --system
+        fi
     - run: bundle install
     - run: bundle exec rake
 
