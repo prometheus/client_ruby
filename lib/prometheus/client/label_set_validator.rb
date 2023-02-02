@@ -5,8 +5,7 @@ module Prometheus
     # LabelSetValidator ensures that all used label sets comply with the
     # Prometheus specification.
     class LabelSetValidator
-      # TODO: we might allow setting :instance in the future
-      BASE_RESERVED_LABELS = [:job, :instance, :pid].freeze
+      BASE_RESERVED_LABELS = [:job, :pid].freeze
       LABEL_NAME_REGEX = /\A[a-zA-Z_][a-zA-Z0-9_]*\Z/
 
       class LabelSetError < StandardError; end
