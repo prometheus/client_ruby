@@ -4,7 +4,10 @@ require 'prometheus/client/label_set_validator'
 
 describe Prometheus::Client::LabelSetValidator do
   let(:expected_labels) { [] }
-  let(:validator) { Prometheus::Client::LabelSetValidator.new(expected_labels: expected_labels) }
+  let(:additional_reserved_labels) { [] }
+  let(:validator) do
+    Prometheus::Client::LabelSetValidator.new(expected_labels: expected_labels, reserved_labels: additional_reserved_labels)
+  end
   let(:invalid) { Prometheus::Client::LabelSetValidator::InvalidLabelSetError }
 
   describe '.new' do
@@ -42,11 +45,27 @@ describe Prometheus::Client::LabelSetValidator do
       end.to raise_exception(described_class::InvalidLabelError)
     end
 
-    it 'raises ReservedLabelError if a label key is reserved' do
-      [:job, :instance, :pid].each do |label|
-        expect do
-          validator.validate_symbols!(label => 'value')
-        end.to raise_exception(described_class::ReservedLabelError)
+    context "with only the base set of reserved labels" do
+      it "doesn't raise ReservedLabelError for the additional reserved label" do
+        expect { validator.validate_symbols!(additional: 'value') }.
+          to_not raise_exception
+      end
+
+      it 'raises ReservedLabelError if a label key is reserved' do
+        expect { validator.validate_symbols!(pid: 'value') }.
+          to raise_exception(described_class::ReservedLabelError)
+      end
+    end
+
+    context "with an additional reserved label" do
+      let(:additional_reserved_labels) { [:additional] }
+
+      it 'raises ReservedLabelError if a label key is reserved' do
+        [:additional, :pid].each do |label|
+          expect do
+            validator.validate_symbols!(label => 'value')
+          end.to raise_exception(described_class::ReservedLabelError)
+        end
       end
     end
   end
