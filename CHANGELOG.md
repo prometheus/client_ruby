@@ -2,6 +2,12 @@
 
 # Unreleased changes
 
+_None outstanding_
+
+# 4.1.0 / 2023-02-15
+
+_**Codename:** They finally made a point release_
+
 ## Small improvements
 
 - [#277](https://github.com/prometheus/client_ruby/pull/277) Allow use of `instance` and
