@@ -114,8 +114,7 @@ module Prometheus
 
             key = store_key(labels)
             in_process_sync do
-              value = internal_store.read_value(key)
-              internal_store.write_value(key, value + by.to_f)
+              internal_store.increment_value(key, by.to_f)
             end
           end
 
@@ -283,6 +282,21 @@ module Prometheus
             pos = @positions[key]
             @f.seek(pos)
             @f.write([value, now].pack('dd'))
+            @f.flush
+          end
+
+          def increment_value(key, by)
+            if !@positions.has_key?(key)
+              init_value(key)
+            end
+
+            pos = @positions[key]
+            @f.seek(pos)
+            value = @f.read(8).unpack('d')[0]
+
+            now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            @f.seek(-8, :CUR)
+            @f.write([value + by, now].pack('dd'))
             @f.flush
           end
 
