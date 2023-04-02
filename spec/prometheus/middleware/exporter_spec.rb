@@ -35,7 +35,7 @@ describe Prometheus::Middleware::Exporter do
         get '/metrics', nil, headers
 
         expect(last_response.status).to eql(200)
-        expect(last_response.header['content-type']).to eql(fmt::CONTENT_TYPE)
+        expect(last_response.headers['content-type']).to eql(fmt::CONTENT_TYPE)
         expect(last_response.body).to eql(fmt.marshal(registry))
       end
     end
@@ -47,7 +47,7 @@ describe Prometheus::Middleware::Exporter do
         get '/metrics', nil, headers
 
         expect(last_response.status).to eql(406)
-        expect(last_response.header['content-type']).to eql('text/plain')
+        expect(last_response.headers['content-type']).to eql('text/plain')
         expect(last_response.body).to eql(message)
       end
     end
@@ -108,7 +108,7 @@ describe Prometheus::Middleware::Exporter do
           get 'http://example.org:9999/metrics', nil, {}
 
           expect(last_response.status).to eql(200)
-          expect(last_response.header['content-type']).to eql(text::CONTENT_TYPE)
+          expect(last_response.headers['content-type']).to eql(text::CONTENT_TYPE)
           expect(last_response.body).to eql(text.marshal(registry))
         end
       end
