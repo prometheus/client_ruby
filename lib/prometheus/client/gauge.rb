@@ -20,6 +20,10 @@ module Prometheus
         @store.set(labels: label_set_for(labels), val: value)
       end
 
+      def set_to_current_time(labels: {})
+        @store.set(labels: label_set_for(labels), val: Time.now.to_f)
+      end
+
       # Increments Gauge value by 1 or adds the given value to the Gauge.
       # (The value can be negative, resulting in a decrease of the Gauge.)
       def increment(by: 1, labels: {})

@@ -48,6 +48,30 @@ describe Prometheus::Client::Gauge do
     end
   end
 
+  describe '#set_to_current_time' do
+    it 'it sets the gauge to the current Unix epoch time' do
+      Timecop.freeze(Time.at(12345.1)) do
+        expect do
+          gauge.set_to_current_time
+        end.to change { gauge.get }.from(0).to(12345.1)
+      end
+    end
+
+    context "with a an expected label set" do
+      let(:expected_labels) { [:test] }
+
+      it 'sets a metric value for a given label set' do
+        Timecop.freeze(Time.at(12345.1)) do
+          expect do
+            expect do
+              gauge.set_to_current_time(labels: { test: 'value' })
+            end.to change { gauge.get(labels: { test: 'value' }) }.from(0).to(12345.1)
+          end.to_not change { gauge.get(labels: { test: 'other' }) }
+        end
+      end
+    end
+  end
+
   describe '#increment' do
     before do
       gauge.set(0, labels: RSpec.current_example.metadata[:labels] || {})
