@@ -4,6 +4,18 @@
 
 _None outstanding_
 
+# 4.2.0 / 2023-07-25
+
+_**Codename:** Funny number_
+
+## Small improvements
+
+- [#287](https://github.com/prometheus/client_ruby/pull/287) Add `Gauge#set_to_current_time`:
+    Does what you'd expect - sets a gauge to the current unix epoch timestamp (including
+    fractional seconds).
+
+    Other client libraries have this and it's about time we did!
+
 # 4.1.0 / 2023-03-20
 
 _**Codename:** They finally made a point release_
