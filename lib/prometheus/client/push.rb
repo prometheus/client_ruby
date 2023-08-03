@@ -23,7 +23,7 @@ module Prometheus
       class HttpServerError < HttpError; end
 
       DEFAULT_GATEWAY = 'http://localhost:9091'.freeze
-      PATH            = '/metrics/job/%s'.freeze
+      PATH = '/metrics'.freeze
       SUPPORTED_SCHEMES = %w(http https).freeze
 
       attr_reader :job, :gateway, :path
@@ -87,7 +87,14 @@ module Prometheus
       end
 
       def build_path(job, grouping_key)
-        path = format(PATH, ERB::Util::url_encode(job))
+        # Job can't be empty, but it can contain `/`, so we need to base64
+        # encode it in that case
+        if job.include?('/')
+          encoded_job = Base64.urlsafe_encode64(job)
+          path = "#{PATH}/job@base64/#{encoded_job}"
+        else
+          path = "#{PATH}/job/#{ERB::Util::url_encode(job)}"
+        end
 
         grouping_key.each do |label, value|
           if value.include?('/')

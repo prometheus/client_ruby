@@ -93,6 +93,14 @@ describe Prometheus::Client::Push do
       expect(push.path).to eql('/metrics/job/test-job/foo/bar/baz/qux')
     end
 
+    it 'encodes the job name in url-safe base64 if it contains `/`' do
+      push = Prometheus::Client::Push.new(
+        job: 'foo/test-job',
+      )
+
+      expect(push.path).to eql('/metrics/job@base64/Zm9vL3Rlc3Qtam9i')
+    end
+
     it 'encodes grouping key label values containing `/` in url-safe base64' do
       push = Prometheus::Client::Push.new(
         job: 'test-job',
