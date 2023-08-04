@@ -4,6 +4,23 @@
 
 _None outstanding_
 
+# 4.2.1 / 2023-08-04
+
+_**Codename:** If a bug falls in the forest_
+
+## Bug fixes
+
+- [#291](https://github.com/prometheus/client_ruby/pull/291) Handle `/` in job name in
+    `Prometheus::Client::Push`:
+    Previously, if you included a `/` in your job name when using the Pushgateway client,
+    you'd get a `400` error back as we didn't encode it properly. We now base64 encode it
+    per the Pushgateway spec.
+
+    It's possible that nobody has hit this bug (`/` is fairly unlikely to appear in a job
+    name) or that the error message (a `400` from Pushgateway with a complaint about an
+    odd number of path components) didn't make it look like a bug in the Ruby client.
+    Either way, this hopefully brings us fully in line with the spec!
+
 # 4.2.0 / 2023-07-25
 
 _**Codename:** Funny number_
