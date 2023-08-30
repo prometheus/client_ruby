@@ -49,14 +49,16 @@ for example by including the `Rack::Deflater` middleware.
 # config.ru
 
 require 'rack'
-require 'prometheus/middleware/collector'
-require 'prometheus/middleware/exporter'
+require 'prometheus/client/rack/collector'
+require 'prometheus/client/rack/exporter'
 
-use Rack::Deflater
-use Prometheus::Middleware::Collector
-use Prometheus::Middleware::Exporter
+require_relative "config/environment"
 
-run ->(_) { [200, {'content-type' => 'text/html'}, ['OK']] }
+use Prometheus::Client::Rack::Collector
+use Prometheus::Client::Rack::Exporter
+
+run Rails.application
+Rails.application.load_server
 ```
 
 Start the server and have a look at the metrics endpoint:
