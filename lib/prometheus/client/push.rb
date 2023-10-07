@@ -87,6 +87,8 @@ module Prometheus
       end
 
       def build_path(job, grouping_key)
+        job = job.to_s
+
         # Job can't be empty, but it can contain `/`, so we need to base64
         # encode it in that case
         if job.include?('/')
