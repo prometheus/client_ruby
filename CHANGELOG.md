@@ -2,7 +2,13 @@
 
 # Unreleased changes
 
-_None outstanding_
+## Bug fixes
+
+- [#296](https://github.com/prometheus/client_ruby/pull/296) Stringify non-string job
+    names in push client:
+    Previously, an error would be raised if you passed a symbol as the job name, which
+    is inconsistent with how we handle label values in the rest of the client. This
+    change converts the job name to a string before trying to use it.
 
 # 4.2.1 / 2023-08-04
 
