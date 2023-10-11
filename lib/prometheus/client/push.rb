@@ -99,6 +99,8 @@ module Prometheus
         end
 
         grouping_key.each do |label, value|
+          value = value.to_s
+
           if value.include?('/')
             encoded_value = Base64.urlsafe_encode64(value)
             path += "/#{label}@base64/#{encoded_value}"
