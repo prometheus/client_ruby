@@ -101,6 +101,15 @@ describe Prometheus::Client::Push do
       expect(push.path).to eql('/metrics/job/foo')
     end
 
+    it 'converts non-string grouping labels to strings' do
+      push = Prometheus::Client::Push.new(
+        job: 'test-job',
+        grouping_key: { foo: :bar, baz: :qux},
+      )
+
+      expect(push.path).to eql('/metrics/job/test-job/foo/bar/baz/qux')
+    end
+
     it 'encodes the job name in url-safe base64 if it contains `/`' do
       push = Prometheus::Client::Push.new(
         job: 'foo/test-job',

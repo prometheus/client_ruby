@@ -9,6 +9,9 @@
     Previously, an error would be raised if you passed a symbol as the job name, which
     is inconsistent with how we handle label values in the rest of the client. This
     change converts the job name to a string before trying to use it.
+- [#297](https://github.com/prometheus/client_ruby/pull/297) Stringify grouping key
+    values in push client:
+    Same thing as #296, but for grouping key values.
 
 # 4.2.1 / 2023-08-04
 
