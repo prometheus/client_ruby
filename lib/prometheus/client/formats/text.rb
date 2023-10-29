@@ -44,6 +44,8 @@ module Prometheus
               summary(metric.name, label_set, value, &block)
             elsif metric.type == :histogram
               histogram(metric.name, label_set, value, &block)
+            elsif metric.type == :vm_histogram
+              vm_histogram(metric.name, label_set, value, &block)
             else
               yield metric(metric.name, labels(label_set), value)
             end
@@ -65,6 +67,19 @@ module Prometheus
             l = labels(set)
             yield metric("#{name}_sum", l, value["sum"])
             yield metric("#{name}_count", l, value["+Inf"])
+          end
+
+          def vm_histogram(name, set, value)
+            bucket = "#{name}_bucket"
+            value.each do |q, v|
+              next if ["count", "sum"].include? q
+
+              yield metric(bucket, labels(set.merge(vmrange: q)), v)
+            end
+
+            l = labels(set)
+            yield metric("#{name}_sum", l, value["sum"])
+            yield metric("#{name}_count", l, value["count"])
           end
 
           def metric(name, labels, value)
