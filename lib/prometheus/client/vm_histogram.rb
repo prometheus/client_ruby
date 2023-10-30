@@ -17,7 +17,6 @@ module Prometheus
       VMRANGES ||= begin
         h = {}
         value = 10**E10MIN
-        # TODO: check memory if add .to_sym
         range_start = format('%.3e', value)
 
         BUCKETS_COUNT.times do |i|
@@ -35,13 +34,13 @@ module Prometheus
                      docstring:,
                      labels: [],
                      preset_labels: {},
-                     buckets: [],
+                     buckets: [], # VM histogram ignores passed buckets, accepts only for compatibility
                      store_settings: {})
-        puts "\nWARNING: VM histogram ignores passed buckets, accepts only for compatibility" unless buckets.empty?
 
         @buckets = ['sum', 'count']
         # TODO: this should take into account labels
         @non_nil_buckets = {}
+        @base_label_set_cache = {}
 
         super(name,
               docstring: docstring,
@@ -63,7 +62,7 @@ module Prometheus
                                     docstring: docstring,
                                     labels: @labels,
                                     preset_labels: preset_labels.merge(labels),
-                                    # buckets: @buckets,
+                                    buckets: @buckets,
                                     store_settings: @store_settings)
 
         # The new metric needs to use the same store as the "main" declared one, otherwise
@@ -86,10 +85,6 @@ module Prometheus
       def observe(value, labels: {})
         return if value.to_f.nan? || value.negative?
 
-        # bucket = buckets.find {|upper_limit| upper_limit >= value  }
-        # bucket = buckets.find_or_create {|upper_limit| upper_limit >= value  }
-        # bucket = "+Inf" if bucket.nil?
-
         float_bucket_id = (Math.log10(value) - E10MIN) * BUCKETS_PER_DECIMAL
 
         bucket_id = float_bucket_id.to_i
@@ -110,14 +105,18 @@ module Prometheus
 
         @non_nil_buckets[bucket_label_set[:vmrange]] = nil # just to track non empty buckets
 
-        base_label_set_copy = base_label_set.dup
+        # TODO: add specs
+        unless @base_label_set_cache.key? base_label_set
+          @base_label_set_cache[base_label_set] = {
+            sum: base_label_set.merge({ le: 'sum' }),
+            count: base_label_set.merge({ le: 'count' })
+          }
+        end
 
         @store.synchronize do
           @store.increment(labels: bucket_label_set, by: 1)
-
-          # TODO: optimize to avoid using .merge, its slow
-          @store.increment(labels: base_label_set_copy.merge({ le: 'sum' }), by: value)
-          @store.increment(labels: base_label_set_copy.merge({ le: 'count' }), by: 1)
+          @store.increment(labels: @base_label_set_cache[base_label_set][:sum], by: value)
+          @store.increment(labels: @base_label_set_cache[base_label_set][:count], by: 1)
         end
       end
 
