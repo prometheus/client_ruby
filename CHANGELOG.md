@@ -2,6 +2,12 @@
 
 # Unreleased changes
 
+_None outstanding_
+
+# 4.2.2 / 2023-10-31
+
+_**Codename:** 🎃🦇 Spooky type conversion 🦇🎃_
+
 ## Bug fixes
 
 - [#296](https://github.com/prometheus/client_ruby/pull/296) Stringify non-string job
