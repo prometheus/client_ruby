@@ -48,7 +48,31 @@ describe Prometheus::Client::VmHistogram do
       end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
     end
 
-    context "with an expected label set" do
+    context 'when value is zero' do
+      it 'uses the special bucket' do
+        histogram.observe(0)
+
+        expect(histogram.get).to eq('0...1.000e-09' => 1.0, 'count' => 1.0, 'sum' => 0.0)
+      end
+    end
+
+    context 'when value is one of 10^n' do
+      it 'uses correct bucket' do
+        histogram.observe(100)
+
+        expect(histogram.get).to eq('8.799e+01...1.000e+02' => 1.0, 'count' => 1.0, 'sum' => 100.0)
+      end
+    end
+
+    context 'when value is too big' do
+      it 'uses the last bucket' do
+        histogram.observe(1000000000000000000000000)
+
+        expect(histogram.get).to eq('8.799e+17...1.000e+18' => 1.0, 'count' => 1.0, 'sum' => 1.0e+24)
+      end
+    end
+
+    context 'with an expected label set' do
       let(:expected_labels) { [:test] }
 
       it 'observes a value for a given label set' do
@@ -62,7 +86,6 @@ describe Prometheus::Client::VmHistogram do
   end
 
   describe '#get' do
-    # TODO: fix get method, now it returns all tags
     let(:expected_labels) { [:foo] }
 
     before do
@@ -110,12 +133,12 @@ describe Prometheus::Client::VmHistogram do
     it 'returns a hash of all recorded summaries' do
       histogram.observe(3, labels: { status: 'bar' })
       histogram.observe(6, labels: { status: 'foo' })
-      histogram.observe(10, labels: { status: 'baz' })
+      histogram.observe(12, labels: { status: 'baz' })
 
       expect(histogram.values).to eql(
-        { status: 'bar' } => { "1.000e+01...1.136e+01" => 0.0, "2.783e+00...3.162e+00" => 1.0, "5.995e+00...6.813e+00" => 0.0, "count" => 1.0, "sum" => 3.0},
-        { status: 'foo' } => { "1.000e+01...1.136e+01" => 0.0, "2.783e+00...3.162e+00" => 0.0, "5.995e+00...6.813e+00" => 1.0, "count" => 1.0, "sum" => 6.0},
-        { status: 'baz' } => { "1.000e+01...1.136e+01" => 1.0, "2.783e+00...3.162e+00" => 0.0, "5.995e+00...6.813e+00" => 0.0, "count" => 1.0, "sum" => 10.0},
+        { status: 'bar' } => { "1.136e+01...1.292e+01" => 0.0, "2.783e+00...3.162e+00" => 1.0, "5.995e+00...6.813e+00" => 0.0, "count" => 1.0, "sum" => 3.0},
+        { status: 'foo' } => { "1.136e+01...1.292e+01" => 0.0, "2.783e+00...3.162e+00" => 0.0, "5.995e+00...6.813e+00" => 1.0, "count" => 1.0, "sum" => 6.0},
+        { status: 'baz' } => { "1.136e+01...1.292e+01" => 1.0, "2.783e+00...3.162e+00" => 0.0, "5.995e+00...6.813e+00" => 0.0, "count" => 1.0, "sum" => 12.0},
       )
     end
   end

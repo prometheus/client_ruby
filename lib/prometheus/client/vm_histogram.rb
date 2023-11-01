@@ -26,6 +26,9 @@ module Prometheus
           range_start = range_end
         end
 
+        # edge case fo zeros
+        h[-1] = '0...1.000e-09'
+
         h
       end
 
@@ -87,18 +90,21 @@ module Prometheus
 
         float_bucket_id = (Math.log10(value) - E10MIN) * BUCKETS_PER_DECIMAL
 
-        bucket_id = float_bucket_id.to_i
+        bucket_id = if float_bucket_id.negative?
+          -1
+        elsif float_bucket_id > VMRANGES.keys.max
+          VMRANGES.keys.max
+        else
+          float_bucket_id.to_i
+        end
 
-        # TODO: edge case where value is equal to one of 10^n
-        # if float_bucket_id == bucket_id.to_f && bucket_id.positive?
-        #   bucket_id -= 1
-        # end
-
-        # decimal_bucket_id = bucket_id / BUCKETS_PER_DECIMAL
-        # offset = bucket_id % BUCKETS_PER_DECIMAL
+        # Edge case for 10^n values, which must go to the lower bucket
+        # according to Prometheus logic for `le`-based histograms
+        bucket_id -= 1 if (float_bucket_id - bucket_id.to_f).abs < Float::EPSILON && bucket_id.positive?
 
         base_label_set = label_set_for(labels)
 
+        # OPTIMIZE: probably we also can use cache for vmranges to avoid using .dup every time
         # This is basically faster than doing `.merge`
         bucket_label_set = base_label_set.dup
         bucket_label_set[:vmrange] = VMRANGES[bucket_id]

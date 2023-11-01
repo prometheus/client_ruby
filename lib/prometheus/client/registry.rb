@@ -6,6 +6,7 @@ require 'prometheus/client/counter'
 require 'prometheus/client/summary'
 require 'prometheus/client/gauge'
 require 'prometheus/client/histogram'
+require 'prometheus/client/vm_histogram'
 
 module Prometheus
   module Client
@@ -70,6 +71,17 @@ module Prometheus
                                preset_labels: preset_labels,
                                buckets: buckets,
                                store_settings: store_settings))
+      end
+
+      def vm_histogram(name, docstring:, labels: [], preset_labels: {},
+                    buckets: [],
+                    store_settings: {})
+        register(VmHistogram.new(name,
+                              docstring: docstring,
+                              labels: labels,
+                              preset_labels: preset_labels,
+                              buckets: buckets,
+                              store_settings: store_settings))
       end
 
       def exist?(name)
