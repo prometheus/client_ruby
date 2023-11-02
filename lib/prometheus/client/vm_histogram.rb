@@ -4,9 +4,11 @@ require 'prometheus/client/metric'
 
 module Prometheus
   module Client
-    # TODO: description
+    # A histogram samples observations (usually things like request durations
+    # or response sizes) and counts them in dynamic VictoriaMetrics buckets. It also
+    # provides a total count and sum of all observed values.
     class VmHistogram < Metric
-      attr_reader :buckets, :non_nil_buckets
+      attr_reader :buckets
 
       E10MIN = -9
       E10MAX = 18
@@ -32,7 +34,6 @@ module Prometheus
         h
       end
 
-      # Offer a way to manually specify buckets
       def initialize(name,
                      docstring:,
                      labels: [],
@@ -80,11 +81,7 @@ module Prometheus
       end
 
       # Records a given value. The recorded value is usually positive
-      # or zero. A negative value is accepted but prevents current
-      # versions of Prometheus from properly detecting counter resets
-      # in the sum of observations. See
-      # https://prometheus.io/docs/practices/histograms/#count-and-sum-of-observations
-      # for details.
+      # or zero. A negative value is ignored.
       def observe(value, labels: {})
         return if value.to_f.nan? || value.negative?
 
@@ -105,13 +102,11 @@ module Prometheus
         base_label_set = label_set_for(labels)
 
         # OPTIMIZE: probably we also can use cache for vmranges to avoid using .dup every time
-        # This is basically faster than doing `.merge`
         bucket_label_set = base_label_set.dup
         bucket_label_set[:vmrange] = VMRANGES[bucket_id]
 
         @non_nil_buckets[bucket_label_set[:vmrange]] = nil # just to track non empty buckets
 
-        # TODO: add specs
         unless @base_label_set_cache.key? base_label_set
           @base_label_set_cache[base_label_set] = {
             sum: base_label_set.merge({ le: 'sum' }),
@@ -147,12 +142,9 @@ module Prometheus
       def values
         values = @store.all_values
 
-        vmrange_buckets = values.map { |hash_key, _v| hash_key[:vmrange] if hash_key.key? :vmrange }.compact
-        all_buckets = vmrange_buckets + @buckets
-
         values.each_with_object({}) do |(label_set, v), acc|
-          actual_label_set = label_set.reject{|l| [:vmrange, :le].include? l }
-          acc[actual_label_set] ||= all_buckets.map{|b| [b.to_s, 0.0]}.to_h
+          actual_label_set = label_set.reject { |l| [:vmrange, :le].include? l }
+          acc[actual_label_set] ||= {}
           label_name = label_set[:vmrange] || label_set[:le]
           acc[actual_label_set][label_name.to_s] = v
         end

@@ -3,7 +3,6 @@
 require 'prometheus/client'
 require 'prometheus/client/vm_histogram'
 require 'examples/metric_example'
-require 'pry'
 
 describe Prometheus::Client::VmHistogram do
   # Reset the data store
@@ -136,14 +135,13 @@ describe Prometheus::Client::VmHistogram do
       histogram.observe(12, labels: { status: 'baz' })
 
       expect(histogram.values).to eql(
-        { status: 'bar' } => { "1.136e+01...1.292e+01" => 0.0, "2.783e+00...3.162e+00" => 1.0, "5.995e+00...6.813e+00" => 0.0, "count" => 1.0, "sum" => 3.0},
-        { status: 'foo' } => { "1.136e+01...1.292e+01" => 0.0, "2.783e+00...3.162e+00" => 0.0, "5.995e+00...6.813e+00" => 1.0, "count" => 1.0, "sum" => 6.0},
-        { status: 'baz' } => { "1.136e+01...1.292e+01" => 1.0, "2.783e+00...3.162e+00" => 0.0, "5.995e+00...6.813e+00" => 0.0, "count" => 1.0, "sum" => 12.0},
+        { status: 'bar' } => { "2.783e+00...3.162e+00" => 1.0, "count" => 1.0, "sum" => 3.0 },
+        { status: 'foo' } => { "5.995e+00...6.813e+00" => 1.0, "count" => 1.0, "sum" => 6.0 },
+        { status: 'baz' } => { "1.136e+01...1.292e+01" => 1.0, "count" => 1.0, "sum" => 12.0 }
       )
     end
   end
 
-  # TODO: not sure what to do with it
   describe '#init_label_set' do
     context "with labels" do
       let(:expected_labels) { [:status] }
@@ -185,8 +183,8 @@ describe Prometheus::Client::VmHistogram do
       histogram_with_labels.observe(20)
 
       expected_values = {
-        {foo: 'value1'} => {"1.896e+01...2.154e+01" => 0.0, "6.813e+00...7.743e+00" => 1.0, "count" => 1.0, "sum" => 7.0},
-        {foo: 'value2'} => {"1.896e+01...2.154e+01" => 1.0, "6.813e+00...7.743e+00" => 0.0, "count" => 1.0, "sum" => 20.0}
+        { foo: 'value1' } => { "6.813e+00...7.743e+00" => 1.0, "count" => 1.0, "sum" => 7.0 },
+        { foo: 'value2' } => { "1.896e+01...2.154e+01" => 1.0, "count" => 1.0, "sum" => 20.0 }
       }
       expect(histogram_with_labels.values).to eql(expected_values)
       expect(histogram.values).to eql(expected_values)
@@ -230,10 +228,10 @@ describe Prometheus::Client::VmHistogram do
         expect { histogram_with_labels.values }.not_to raise_error # Check it hasn't corrupted our files
 
         expected_values = {
-          {foo: 'value1', bar: 'zzz'} => {"2.5" => 1.0, "5"=>1.0, "10" => 1.0, "+Inf" => 1.0, "sum"=>1.0},
-          {foo: 'value1', bar: 'aaa'} => {"2.5" => 1.0, "5"=>1.0, "10" => 1.0, "+Inf" => 1.0, "sum"=>1.0},
-          {foo: 'longervalue', bar: 'zzz'} => {"2.5" => 1.0, "5"=>1.0, "10" => 1.0, "+Inf" => 1.0, "sum"=>1.0},
-          {foo: 'longervalue', bar: 'aaa'} => {"2.5" => 1.0, "5"=>1.0, "10" => 1.0, "+Inf" => 1.0, "sum"=>1.0},
+          {foo: 'value1', bar: 'zzz'} => {"8.799e-01...1.000e+00"=>1.0, "count"=>1.0, "sum"=>1.0},
+          {foo: 'value1', bar: 'aaa'} => {"8.799e-01...1.000e+00"=>1.0, "count"=>1.0, "sum"=>1.0},
+          {foo: 'longervalue', bar: 'zzz'} => {"8.799e-01...1.000e+00"=>1.0, "count"=>1.0, "sum"=>1.0},
+          {foo: 'longervalue', bar: 'aaa'} => {"8.799e-01...1.000e+00"=>1.0, "count"=>1.0, "sum"=>1.0}
         }
 
         expect(histogram.values).to eql(expected_values)
