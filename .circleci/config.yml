@@ -12,15 +12,23 @@ jobs:
 
     steps:
     - checkout
-    # JRuby <= 9.2.x is no longer supported by the `rubygems-update` gem, which now
-    # requires at least Ruby 2.6 compatibility.
+    # We need to limit the version of Rubygems that we update to for some of the older
+    # JRuby versions. Specifically:
+    #
+    #   - JRuby 9.2.x targets Ruby 2.5, and Rubygems 3.3.26 was the last version to
+    #     support that
+    #   - JRuby 9.3.x targets Ruby 2.6, and version 3.4.22 was the last version to
+    #     support that
     #
     # For now, we'll pin to the last supported version. We can drop this check once we
     # drop all those versions of JRuby.
     - run: |
-        running_old_ruby=$(ruby -e 'puts Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.6.0")')
-        if [[ "${running_old_ruby}" == "true" ]]; then 
+        running_very_old_ruby=$(ruby -e 'puts Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.6.0")')
+        running_moderately_old_ruby=$(ruby -e 'puts Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.0.0")')
+        if [[ "${running_very_old_ruby}" == "true" ]]; then
           gem update --system 3.3.26
+        elif [[ "${running_moderately_old_ruby}" == "true" ]]; then
+          gem update --system 3.4.22
         else
           gem update --system
         fi
