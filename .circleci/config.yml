@@ -48,6 +48,7 @@ workflows:
             - cimg/ruby:3.0
             - cimg/ruby:3.1
             - cimg/ruby:3.2
-            - circleci/jruby:9.1
-            - circleci/jruby:9.2
-            - circleci/jruby:9.3
+            - jruby:9.1
+            - jruby:9.2
+            - jruby:9.3
+            - jruby:9.4
