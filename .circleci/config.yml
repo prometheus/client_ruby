@@ -49,6 +49,14 @@ workflows:
             - cimg/ruby:3.1
             - cimg/ruby:3.2
             - cimg/ruby:3.3
+            # We've switched to JRuby's own Docker image as CircleCI decided to
+            # stop supporting it when they deprecated their legacy images. For
+            # some reason, the official JRuby image for 9.1 fails with an
+            # inscrutable error message that isn't worth debugging.
+            #
+            # We'll drop this version on our next major release anyway, as it's
+            # out of security support.
             - circleci/jruby:9.1
-            - circleci/jruby:9.2
-            - circleci/jruby:9.3
+            - jruby:9.2
+            - jruby:9.3
+            - jruby:9.4
