@@ -18,11 +18,11 @@ module Prometheus
         @mutex = Mutex.new
       end
 
-      def register(metric)
+      def register(metric, allow_override: false)
         name = metric.name
 
         @mutex.synchronize do
-          if @metrics.key?(name.to_sym)
+          if @metrics.key?(name.to_sym) && ! allow_override
             raise AlreadyRegisteredError, "#{name} has already been registered"
           end
           @metrics[name.to_sym] = metric
