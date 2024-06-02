@@ -56,7 +56,7 @@ workflows:
             #
             # We'll drop this version on our next major release anyway, as it's
             # out of security support.
-            - jruby:9.1-alpine
+            - circleci/jruby:9.1
             - jruby:9.2
             - jruby:9.3
             - jruby:9.4
