@@ -26,7 +26,7 @@ jobs:
         running_very_old_ruby=$(ruby -e 'puts Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.6.0")')
         running_moderately_old_ruby=$(ruby -e 'puts Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.0.0")')
         if [[ "${running_very_old_ruby}" == "true" ]]; then
-          sudo apt update && sudo apt dist-upgrade && sudo apt install build-essential
+          sudo apt update && sudo apt dist-upgrade && sudo apt install build-essential patch
           gem update --system 3.3.26
         elif [[ "${running_moderately_old_ruby}" == "true" ]]; then
           gem update --system 3.4.22
