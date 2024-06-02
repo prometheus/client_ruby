@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.require_paths     = ['lib']
 
   s.add_dependency 'base64'
+  s.add_dependency 'bigdecimal'
 
   s.add_development_dependency 'benchmark-ips'
   s.add_development_dependency 'concurrent-ruby'
