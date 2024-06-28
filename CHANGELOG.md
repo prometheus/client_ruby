@@ -4,6 +4,17 @@
 
 _None outstanding_
 
+# 4.2.3 / 2024-06-28
+
+_**Codename:** Now with 25% fewer test dependencies!_
+
+## Small improvements
+
+- [#308](https://github.com/prometheus/client_ruby/pull/308) Declare base64 gem
+    dependency, ready for Ruby 3.4:
+    Ruby 3.4 and above will require an explicit dependency on `base64` as it will no
+    longer be included with CRuby. This gets us ready for that change.
+
 # 4.2.2 / 2023-10-31
 
 _**Codename:** 🎃🦇 Spooky type conversion 🦇🎃_
