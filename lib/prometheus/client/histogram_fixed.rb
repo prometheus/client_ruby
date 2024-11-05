@@ -1,4 +1,4 @@
-# encoding: UTF-8
+# frozen_string_literal: true
 
 require 'prometheus/client/metric'
 
@@ -7,14 +7,17 @@ module Prometheus
     # A histogram samples observations (usually things like request durations
     # or response sizes) and counts them in configurable buckets. It also
     # provides a total count and sum of all observed values.
-    class Histogram < Metric
+    class HistogramFixed < Metric
       # DEFAULT_BUCKETS are the default Histogram buckets. The default buckets
       # are tailored to broadly measure the response time (in seconds) of a
       # network service. (From DefBuckets client_golang)
-      DEFAULT_BUCKETS = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1,
-                         2.5, 5, 10].freeze
+      DEFAULT_BUCKETS = [
+        0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10
+      ].freeze
+      INF = '+Inf'
+      SUM = 'sum'
 
-      attr_reader :buckets
+      attr_reader :buckets, :bucket_strings
 
       # Offer a way to manually specify buckets
       def initialize(name,
@@ -26,6 +29,8 @@ module Prometheus
         raise ArgumentError, 'Unsorted buckets, typo?' unless sorted?(buckets)
 
         @buckets = buckets
+        @bucket_strings = buckets.map(&:to_s) # This is used to avoid calling `to_s` multiple times
+
         super(name,
               docstring: docstring,
               labels: labels,
@@ -67,20 +72,17 @@ module Prometheus
       # https://prometheus.io/docs/practices/histograms/#count-and-sum-of-observations
       # for details.
       def observe(value, labels: {})
-        bucket = buckets.bsearch { |upper_limit| upper_limit >= value  }
-        bucket = "+Inf" if bucket.nil?
-
-        base_label_set = label_set_for(labels)
+        base_label_set = label_set_for(labels) # Pottentially can raise, so it should be first
+        bucket_idx = buckets.bsearch_index { |upper_limit| upper_limit >= value }
+        bucket_str = bucket_idx == nil ? INF : bucket_strings[bucket_idx]
 
         # This is basically faster than doing `.merge`
         bucket_label_set = base_label_set.dup
-        bucket_label_set[:le] = bucket.to_s
-        sum_label_set = base_label_set.dup
-        sum_label_set[:le] = "sum"
+        bucket_label_set[:le] = bucket_str
 
         @store.synchronize do
           @store.increment(labels: bucket_label_set, by: 1)
-          @store.increment(labels: sum_label_set, by: value)
+          @store.increment(labels: base_label_set, by: value)
         end
       end
 
@@ -88,13 +90,13 @@ module Prometheus
       def get(labels: {})
         base_label_set = label_set_for(labels)
 
-        all_buckets = buckets + ["+Inf", "sum"]
+        all_buckets = buckets + [INF, SUM]
 
         @store.synchronize do
-          all_buckets.each_with_object({}) do |upper_limit, acc|
+          all_buckets.each_with_object(Hash.new(0.0)) do |upper_limit, acc|
             acc[upper_limit.to_s] = @store.get(labels: base_label_set.merge(le: upper_limit.to_s))
           end.tap do |acc|
-            accumulate_buckets(acc)
+            accumulate_buckets!(acc)
           end
         end
       end
@@ -102,23 +104,23 @@ module Prometheus
       # Returns all label sets with their values expressed as hashes with their buckets
       def values
         values = @store.all_values
+        default_buckets = Hash.new(0.0)
+        bucket_strings.each { |b| default_buckets[b] = 0.0 }
 
         result = values.each_with_object({}) do |(label_set, v), acc|
-          actual_label_set = label_set.reject{|l| l == :le }
-          acc[actual_label_set] ||= @buckets.map{|b| [b.to_s, 0.0]}.to_h
-          acc[actual_label_set][label_set[:le].to_s] = v
+          actual_label_set = label_set.except(:le)
+          acc[actual_label_set] ||= default_buckets.dup
+          acc[actual_label_set][label_set[:le]] = v
         end
 
-        result.each do |(_label_set, v)|
-          accumulate_buckets(v)
-        end
+        result.each_value { |v| accumulate_buckets!(v) }
       end
 
       def init_label_set(labels)
         base_label_set = label_set_for(labels)
 
         @store.synchronize do
-          (buckets + ["+Inf", "sum"]).each do |bucket|
+          (buckets + [INF, SUM]).each do |bucket|
             @store.set(labels: base_label_set.merge(le: bucket.to_s), val: 0)
           end
         end
@@ -127,24 +129,36 @@ module Prometheus
       private
 
       # Modifies the passed in parameter
-      def accumulate_buckets(h)
-        bucket_acc = 0
-        buckets.each do |upper_limit|
-          bucket_value = h[upper_limit.to_s]
-          h[upper_limit.to_s] += bucket_acc
-          bucket_acc += bucket_value
+      def accumulate_buckets!(h)
+        accumulator = 0
+
+        bucket_strings.each do |upper_limit|
+          accumulator = (h[upper_limit] += accumulator)
         end
 
-        inf_value = h["+Inf"] || 0.0
-        h["+Inf"] = inf_value + bucket_acc
+        h[INF] += accumulator
       end
 
+      RESERVED_LABELS = [:le].freeze
+      private_constant :RESERVED_LABELS
       def reserved_labels
-        [:le]
+        RESERVED_LABELS
       end
 
       def sorted?(bucket)
-        bucket.each_cons(2).all? { |i, j| i <= j }
+        # This is faster than using `each_cons` and `all?`
+        bucket == bucket.sort
+      end
+
+      def label_set_for(labels)
+        @label_set_for ||= Hash.new do |hash, key|
+          _labels = key.transform_values(&:to_s)
+          _labels = @validator.validate_labelset_new!(preset_labels.merge(_labels))
+          _labels[:le] = SUM # We can cache this, because it's always the same
+          hash[key] = _labels
+        end
+
+        @label_set_for[labels]
       end
     end
   end
