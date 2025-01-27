@@ -67,7 +67,7 @@ module Prometheus
       # https://prometheus.io/docs/practices/histograms/#count-and-sum-of-observations
       # for details.
       def observe(value, labels: {})
-        bucket = buckets.find {|upper_limit| upper_limit >= value  }
+        bucket = buckets.bsearch { |upper_limit| upper_limit >= value  }
         bucket = "+Inf" if bucket.nil?
 
         base_label_set = label_set_for(labels)
