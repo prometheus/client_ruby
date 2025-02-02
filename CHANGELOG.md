@@ -4,6 +4,18 @@
 
 _None outstanding_
 
+# 4.2.4 / 2025-02-02
+
+_**Codename:** FOSDEM 25th Anniversary Edition_
+
+## Small improvements
+
+- [#316](https://github.com/prometheus/client_ruby/pull/316) Use binary search for
+    histogram buckets:
+    This change speeds up observations in histogram metrics by using a binary search
+    rather than a sequential search through the bucket array. This is possible because
+    we enforce that histogram buckets are sorted at initialization.
+
 # 4.2.3 / 2024-06-28
 
 _**Codename:** Now with 25% fewer test dependencies!_
