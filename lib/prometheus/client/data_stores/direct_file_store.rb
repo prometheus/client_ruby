@@ -1,5 +1,6 @@
 require 'fileutils'
 require "cgi"
+require 'socket'
 
 module Prometheus
   module Client
@@ -188,7 +189,7 @@ module Prometheus
           end
 
           def process_id
-            Process.pid
+            "#{Socket.gethostname}_#{Process.pid}"
           end
 
           def aggregate_values(values)
