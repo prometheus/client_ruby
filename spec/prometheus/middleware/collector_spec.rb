@@ -42,7 +42,7 @@ describe Prometheus::Middleware::Collector do
   end
 
   it 'traces request information' do
-    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.2)
+    expect(app).to receive(:realtime).and_yield.and_return(0.2)
 
     get '/foo'
 
@@ -68,7 +68,7 @@ describe Prometheus::Middleware::Collector do
   end
 
   it 'normalizes paths containing numeric IDs by default' do
-    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.3)
+    expect(app).to receive(:realtime).and_yield.and_return(0.3)
 
     get '/foo/42/bars'
 
@@ -82,7 +82,7 @@ describe Prometheus::Middleware::Collector do
   end
 
   it 'normalizes paths containing UUIDs by default' do
-    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.3)
+    expect(app).to receive(:realtime).and_yield.and_return(0.3)
 
     get '/foo/5180349d-a491-4d73-af30-4194a46bdff3/bars'
 
@@ -96,7 +96,7 @@ describe Prometheus::Middleware::Collector do
   end
 
   it 'handles consecutive path segments containing IDs' do
-    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.3)
+    expect(app).to receive(:realtime).and_yield.and_return(0.3)
 
     get '/foo/42/24'
 
@@ -110,7 +110,7 @@ describe Prometheus::Middleware::Collector do
   end
 
   it 'handles consecutive path segments containing UUIDs' do
-    expect(Benchmark).to receive(:realtime).and_yield.and_return(0.3)
+    expect(app).to receive(:realtime).and_yield.and_return(0.3)
 
     get '/foo/5180349d-a491-4d73-af30-4194a46bdff3/5180349d-a491-4d73-af30-4194a46bdff2'
 

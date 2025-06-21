@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'base64'
 
+  s.add_development_dependency 'benchmark'
   s.add_development_dependency 'benchmark-ips'
   s.add_development_dependency 'concurrent-ruby'
   s.add_development_dependency 'timecop'

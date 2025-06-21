@@ -1,6 +1,5 @@
 # encoding: UTF-8
 
-require 'benchmark'
 require 'prometheus/client'
 
 module Prometheus
@@ -34,6 +33,12 @@ module Prometheus
 
       protected
 
+      def realtime
+        start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        yield
+        Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+      end
+
       def init_request_metrics
         @requests = @registry.counter(
           :"#{@metrics_prefix}_requests_total",
@@ -58,7 +63,7 @@ module Prometheus
 
       def trace(env)
         response = nil
-        duration = Benchmark.realtime { response = yield }
+        duration = realtime { response = yield }
         record(env, response.first.to_s, duration)
         return response
       rescue => exception
