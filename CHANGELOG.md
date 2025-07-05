@@ -4,6 +4,19 @@
 
 _None outstanding_
 
+# 4.2.5 / 2025-07-05
+
+_**Codename:** Surprise dependency_
+
+## Small improvements
+
+- [#324](https://github.com/prometheus/client_ruby/pull/324) Do not use benchmark gem
+    in production:
+    Ruby 3.5 is moving `Benchmark` out of default gems, so we need to explicitly install
+    it from Rubygems in dev. It turned out we were also using it in prod code, so this PR
+    replaced that usage with a small method that makes calls to
+    `Process.clock_gettime(Process::CLOCK_MONOTONIC)`.
+
 # 4.2.4 / 2025-02-02
 
 _**Codename:** FOSDEM 25th Anniversary Edition_

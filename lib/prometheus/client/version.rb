@@ -2,6 +2,6 @@
 
 module Prometheus
   module Client
-    VERSION = '4.2.4'
+    VERSION = '4.2.5'
   end
 end
