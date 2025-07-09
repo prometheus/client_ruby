@@ -4,16 +4,16 @@ require "cgi"
 module Prometheus
   module Client
     module DataStores
-      # Stores data in binary files, one file per process and per metric.
+      # Stores data in binary files, one file per process.
       # This is generally the recommended store to use to deal with pre-fork servers and
       # other "multi-process" scenarios.
       #
-      # Each process will get a file for a metric, and it will manage its contents by
+      # Each process will get a file for all its metrics, and it will manage its contents by
       # storing keys next to binary-encoded Floats, and keeping track of the offsets of
       # those Floats, to be able to update them directly as they increase.
       #
       # When exporting metrics, the process that gets scraped by Prometheus  will find
-      # all the files that apply to a metric, read their contents, and aggregate them
+      # all the files for all processes, read their contents, and aggregate them
       # (generally that means SUMming the values for each labelset).
       #
       # In order to do this, each Metric needs an `:aggregation` setting, specifying how
@@ -35,6 +35,9 @@ module Prometheus
 
         def initialize(dir:)
           @store_settings = { dir: dir }
+          @store_opened_by_pid = nil
+          @lock = Monitor.new
+
           FileUtils.mkdir_p(dir)
         end
 
@@ -48,8 +51,81 @@ module Prometheus
           validate_metric_settings(metric_type, settings)
 
           MetricStore.new(metric_name: metric_name,
-                          store_settings: @store_settings,
-                          metric_settings: settings)
+                          metric_settings: settings,
+                          store: self)
+        end
+
+        # Synchronize is used to do a multi-process Mutex, when incrementing multiple
+        # values at once, so that the other process, reading the file for export, doesn't
+        # get incomplete increments.
+        #
+        # `in_process_sync`, instead, is just used so that two threads don't increment
+        # the same value and get a context switch between read and write leading to an
+        # inconsistency
+        def synchronize
+          in_process_sync do
+            internal_store.with_file_lock do
+              yield
+            end
+          end
+        end
+
+        def in_process_sync
+          @lock.synchronize { yield }
+        end
+
+        def internal_store
+          if @store_opened_by_pid != process_id
+            @store_opened_by_pid = process_id
+            @internal_store = FileMappedDict.new(filemap_filename)
+          else
+            @internal_store
+          end
+        end
+
+        def process_id
+          Process.pid
+        end
+
+        # Filename for this metric's PStore (one per process)
+        def filemap_filename
+          filename = "metrics___#{ process_id }.bin"
+          File.join(@store_settings[:dir], filename)
+        end
+
+        def all_store_files
+          Dir.glob(File.join(@store_settings[:dir], "metrics___*"))
+        end
+
+        # Returns all the values for all metrics in all stored files, without any aggregation
+        # Optionally filtered down to only one metric name
+        # TODO: Document the returned "shape"
+        def all_raw_metrics_values(only_metric_name: nil)
+          stores_data = Hash.new{ |hash, key| hash[key] = [] }
+
+          # There's no need to call `synchronize` here. We're opening a second handle to
+          # the file, and `flock`ing it, which prevents inconsistent reads
+          all_store_files.each do |file_path|
+            begin
+              store = FileMappedDict.new(file_path, true)
+              store.all_values.each do |(labelset_qs, v, ts)|
+                # Labels come as a query string, and CGI::parse returns arrays for each key
+                # "foo=bar&x=y" => { "foo" => ["bar"], "x" => ["y"] }
+                # Turn the keys back into symbols, and remove the arrays
+                label_set = CGI::parse(labelset_qs).map do |k, vs|
+                  [k.to_sym, vs.first]
+                end.to_h
+
+                unless only_metric_name && only_metric_name != label_set[:___metric_name]
+                  stores_data[label_set] << [v, ts]
+                end
+              end
+            ensure
+              store.close if store
+            end
+          end
+
+          stores_data
         end
 
         private
@@ -73,35 +149,22 @@ module Prometheus
         end
 
         class MetricStore
-          attr_reader :metric_name, :store_settings
+          attr_reader :metric_name, :store
 
-          def initialize(metric_name:, store_settings:, metric_settings:)
+          def initialize(metric_name:, metric_settings:, store:)
             @metric_name = metric_name
-            @store_settings = store_settings
             @values_aggregation_mode = metric_settings[:aggregation]
-            @store_opened_by_pid = nil
-
-            @lock = Monitor.new
+            @store = store
           end
 
-          # Synchronize is used to do a multi-process Mutex, when incrementing multiple
-          # values at once, so that the other process, reading the file for export, doesn't
-          # get incomplete increments.
-          #
-          # `in_process_sync`, instead, is just used so that two threads don't increment
-          # the same value and get a context switch between read and write leading to an
-          # inconsistency
-          def synchronize
-            in_process_sync do
-              internal_store.with_file_lock do
-                yield
-              end
-            end
+          # see DirectFileStore#synchronize for when to use this method
+          def synchronize(&block)
+            store.synchronize(&block)
           end
 
           def set(labels:, val:)
-            in_process_sync do
-              internal_store.write_value(store_key(labels), val.to_f)
+            store.in_process_sync do
+              store.internal_store.write_value(store_key(labels), val.to_f)
             end
           end
 
@@ -113,82 +176,47 @@ module Prometheus
             end
 
             key = store_key(labels)
-            in_process_sync do
-              internal_store.increment_value(key, by.to_f)
+            store.in_process_sync do
+              store.internal_store.increment_value(key, by.to_f)
             end
           end
 
           def get(labels:)
-            in_process_sync do
-              internal_store.read_value(store_key(labels))
+            store.in_process_sync do
+              store.internal_store.read_value(store_key(labels))
             end
           end
 
           def all_values
-            stores_data = Hash.new{ |hash, key| hash[key] = [] }
-
-            # There's no need to call `synchronize` here. We're opening a second handle to
-            # the file, and `flock`ing it, which prevents inconsistent reads
-            stores_for_metric.each do |file_path|
-              begin
-                store = FileMappedDict.new(file_path, true)
-                store.all_values.each do |(labelset_qs, v, ts)|
-                  # Labels come as a query string, and CGI::parse returns arrays for each key
-                  # "foo=bar&x=y" => { "foo" => ["bar"], "x" => ["y"] }
-                  # Turn the keys back into symbols, and remove the arrays
-                  label_set = CGI::parse(labelset_qs).map do |k, vs|
-                    [k.to_sym, vs.first]
-                  end.to_h
-
-                  stores_data[label_set] << [v, ts]
-                end
-              ensure
-                store.close if store
-              end
-            end
+            all_metrics_values = store.all_raw_metrics_values(only_metric_name: metric_name.to_s)
 
             # Aggregate all the different values for each label_set
             aggregate_hash = Hash.new { |hash, key| hash[key] = 0.0 }
-            stores_data.each_with_object(aggregate_hash) do |(label_set, values), acc|
-              acc[label_set] = aggregate_values(values)
+            all_metrics_values.each_with_object(aggregate_hash) do |(label_set, values), acc|
+              acc[label_set.except(:___metric_name)] = aggregate_values(values)
             end
           end
 
           private
 
-          def in_process_sync
-            @lock.synchronize { yield }
-          end
-
           def store_key(labels)
+            # Maybe we don't need to do this, but it seems like we would?
+            # Why have we been getting away with not doing this?
+            # Maybe remove this and hammer test for corruption?
+            # I think `stringify_values` in `metric.rb` does the dup'ing we need, but it seems to me
+            # that if @all_labels_preset, then we are modifying those preset labels...
+            # maybe we should `return preset_labels.dup` in `metric.rb#label_set_for`, which would
+            # hurt performance for those presets, but would make it better for the rest, which is the
+            # majority.
+            labels = labels.dup
+
+            labels[:___metric_name] = metric_name
+
             if @values_aggregation_mode == ALL
-              labels[:pid] = process_id
+              labels[:pid] = store.process_id
             end
 
             labels.to_a.sort.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join('&')
-          end
-
-          def internal_store
-            if @store_opened_by_pid != process_id
-              @store_opened_by_pid = process_id
-              @internal_store = FileMappedDict.new(filemap_filename)
-            else
-              @internal_store
-            end
-          end
-
-          # Filename for this metric's PStore (one per process)
-          def filemap_filename
-            filename = "metric_#{ metric_name }___#{ process_id }.bin"
-            File.join(@store_settings[:dir], filename)
-          end
-
-          def stores_for_metric
-            Dir.glob(File.join(@store_settings[:dir], "metric_#{ metric_name }___*"))
-          end
-
-          def process_id
-            Process.pid
           end
 
           def aggregate_values(values)
