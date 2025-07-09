@@ -7,7 +7,7 @@ module Prometheus
   module Client
     # Metric
     class Metric
-      attr_reader :name, :docstring, :labels, :preset_labels
+      attr_reader :name, :docstring, :labels, :preset_labels, :store
 
       def initialize(name,
                      docstring:,
@@ -76,8 +76,8 @@ module Prometheus
       end
 
       # Returns all label sets with their values
-      def values
-        @store.all_values
+      def values(stored_values = nil)
+        stored_values || @store.all_values
       end
 
       private

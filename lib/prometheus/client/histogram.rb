@@ -100,8 +100,8 @@ module Prometheus
       end
 
       # Returns all label sets with their values expressed as hashes with their buckets
-      def values
-        values = @store.all_values
+      def values(stored_values = nil)
+        values = stored_values || @store.all_values
 
         result = values.each_with_object({}) do |(label_set, v), acc|
           actual_label_set = label_set.reject{|l| l == :le }

@@ -149,7 +149,7 @@ module Prometheus
         end
 
         class MetricStore
-          attr_reader :metric_name, :store
+          attr_reader :metric_name, :store, :values_aggregation_mode
 
           def initialize(metric_name:, metric_settings:, store:)
             @metric_name = metric_name
@@ -220,32 +220,38 @@ module Prometheus
           end
 
           def aggregate_values(values)
+            ValuesAggregator.aggregate_values(values, @values_aggregation_mode)
+          end
+        end
+
+        private_constant :MetricStore
+
+        class ValuesAggregator
+          def self.aggregate_values(values, aggregation_mode)
             # Each entry in the `values` array is a tuple of `value` and `timestamp`,
             # so for all aggregations except `MOST_RECENT`, we need to only take the
             # first value in each entry and ignore the second.
-            if @values_aggregation_mode == MOST_RECENT
+            if aggregation_mode == MOST_RECENT
               latest_tuple = values.max { |a,b| a[1] <=> b[1] }
               latest_tuple.first # return the value without the timestamp
             else
               values = values.map(&:first) # Discard timestamps
 
-              if @values_aggregation_mode == SUM
+              if aggregation_mode == SUM
                 values.inject { |sum, element| sum + element }
-              elsif @values_aggregation_mode == MAX
+              elsif aggregation_mode == MAX
                 values.max
-              elsif @values_aggregation_mode == MIN
+              elsif aggregation_mode == MIN
                 values.min
-              elsif @values_aggregation_mode == ALL
+              elsif aggregation_mode == ALL
                 values.first
               else
                 raise InvalidStoreSettingsError,
-                      "Invalid Aggregation Mode: #{ @values_aggregation_mode }"
+                      "Invalid Aggregation Mode: #{ aggregation_mode }"
               end
             end
           end
         end
-
-        private_constant :MetricStore
 
         # A dict of doubles, backed by an file we access directly as a byte array.
         #
