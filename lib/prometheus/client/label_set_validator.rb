@@ -46,6 +46,21 @@ module Prometheus
                                     " keys expected: #{expected_labels}"
       end
 
+      def validate_labelset_new!(labelset)
+        begin
+          # keys already allocated new array, so it's safe to modify it in place with sort!
+          return labelset if labelset.keys.sort! == expected_labels
+        rescue ArgumentError
+          # If labelset contains keys that are a mixture of strings and symbols, this will
+          # raise when trying to sort them, but the error should be the same:
+          # InvalidLabelSetError
+        end
+
+        raise InvalidLabelSetError, "labels must have the same signature " \
+                                    "(keys given: #{labelset.keys} vs." \
+                                    " keys expected: #{expected_labels}"
+      end
+
       private
 
       def keys_match?(labelset)
