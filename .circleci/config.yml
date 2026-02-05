@@ -12,26 +12,7 @@ jobs:
 
     steps:
     - checkout
-    # We need to limit the version of Rubygems that we update to for some of the older
-    # JRuby versions. Specifically:
-    #
-    #   - JRuby 9.2.x targets Ruby 2.5, and Rubygems 3.3.26 was the last version to
-    #     support that
-    #   - JRuby 9.3.x targets Ruby 2.6, and version 3.4.22 was the last version to
-    #     support that
-    #
-    # For now, we'll pin to the last supported version. We can drop this check once we
-    # drop all those versions of JRuby.
-    - run: |
-        running_very_old_ruby=$(ruby -e 'puts Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.6.0")')
-        running_moderately_old_ruby=$(ruby -e 'puts Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.0.0")')
-        if [[ "${running_very_old_ruby}" == "true" ]]; then
-          gem update --system 3.3.26
-        elif [[ "${running_moderately_old_ruby}" == "true" ]]; then
-          gem update --system 3.4.22
-        else
-          gem update --system
-        fi
+    - run: gem update --system
     - run: bundle install
     - run: bundle exec rake
 
@@ -43,21 +24,7 @@ workflows:
         matrix:
           parameters:
             ruby_image:
-            - cimg/ruby:2.6
-            - cimg/ruby:2.7
-            - cimg/ruby:3.0
-            - cimg/ruby:3.1
             - cimg/ruby:3.2
             - cimg/ruby:3.3
             - cimg/ruby:3.4
-            # We've switched to JRuby's own Docker image as CircleCI decided to
-            # stop supporting it when they deprecated their legacy images. For
-            # some reason, the official JRuby image for 9.1 fails with an
-            # inscrutable error message that isn't worth debugging.
-            #
-            # We'll drop this version on our next major release anyway, as it's
-            # out of security support.
-            - circleci/jruby:9.1
-            - jruby:9.2
-            - jruby:9.3
             - jruby:9.4
