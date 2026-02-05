@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.require_paths     = ['lib']
 
   s.add_dependency 'base64'
+  s.add_dependency 'cgi'
 
   s.add_development_dependency 'benchmark'
   s.add_development_dependency 'benchmark-ips'
