@@ -1,5 +1,5 @@
 require 'fileutils'
-require "cgi"
+require "uri"
 
 module Prometheus
   module Client
@@ -133,12 +133,9 @@ module Prometheus
               begin
                 store = FileMappedDict.new(file_path, true)
                 store.all_values.each do |(labelset_qs, v, ts)|
-                  # Labels come as a query string, and CGI::parse returns arrays for each key
-                  # "foo=bar&x=y" => { "foo" => ["bar"], "x" => ["y"] }
-                  # Turn the keys back into symbols, and remove the arrays
-                  label_set = CGI::parse(labelset_qs).map do |k, vs|
-                    [k.to_sym, vs.first]
-                  end.to_h
+                  # Labels come as a query string
+                  # "foo=bar&x=y" => { foo: "bar", x: "y" }
+                  label_set = URI.decode_www_form(labelset_qs).to_h.transform_keys(&:to_sym)
 
                   stores_data[label_set] << [v, ts]
                 end
@@ -165,7 +162,7 @@ module Prometheus
               labels[:pid] = process_id
             end
 
-            labels.to_a.sort.map{|k,v| "#{CGI::escape(k.to_s)}=#{CGI::escape(v.to_s)}"}.join('&')
+            URI.encode_www_form(labels.to_a.sort)
           end
 
           def internal_store
