@@ -45,11 +45,17 @@ module Prometheus
                              store_settings: store_settings))
       end
 
-      def summary(name, docstring:, labels: [], preset_labels: {}, store_settings: {})
+      def summary(name, docstring:, labels: [], preset_labels: {},
+                  objectives: {}, max_age: Summary::DEFAULT_MAX_AGE,
+                  age_buckets: Summary::DEFAULT_AGE_BUCKETS,
+                  store_settings: {})
         register(Summary.new(name,
                              docstring: docstring,
                              labels: labels,
                              preset_labels: preset_labels,
+                             objectives: objectives,
+                             max_age: max_age,
+                             age_buckets: age_buckets,
                              store_settings: store_settings))
       end
 

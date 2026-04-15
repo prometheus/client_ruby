@@ -41,6 +41,13 @@ describe Prometheus::Client::Formats::Text do
     92.times { qux.observe(0) }
     qux.observe(1243.21)
 
+    quux = registry.summary(:quux,
+                            docstring: 'quux description',
+                            labels: [:for],
+                            preset_labels: { for: 'test' },
+                            objectives: { 0.5 => 0.05, 0.9 => 0.01 })
+    1000.times { |i| quux.observe(i) }
+
 
     xuq = registry.histogram(:xuq,
                              docstring: 'xuq description',
@@ -69,6 +76,12 @@ baz{text="with \"quotes\", \\escape \n and newline"} 15.0
 # HELP qux qux description
 qux_sum{for="sake",code="1"} 1243.21
 qux_count{for="sake",code="1"} 93.0
+# TYPE quux summary
+# HELP quux quux description
+quux{for="test",quantile="0.5"} 507
+quux{for="test",quantile="0.9"} 920
+quux_sum{for="test"} 499500.0
+quux_count{for="test"} 1000.0
 # TYPE xuq histogram
 # HELP xuq xuq description
 xuq_bucket{code="ah",le="10"} 1.0

@@ -86,6 +86,65 @@ describe Prometheus::Client::Summary do
     end
   end
 
+  describe 'with quantile objectives' do
+    let(:objectives) { { 0.5 => 0.05, 0.9 => 0.01, 0.99 => 0.001 } }
+
+    let(:summary_with_objectives) do
+      Prometheus::Client::Summary.new(:bar_quantile,
+                                      docstring: 'bar description',
+                                      labels: expected_labels,
+                                      objectives: objectives)
+    end
+
+    describe '#observe' do
+      it 'records the given value with quantiles' do
+        1000.times { |i| summary_with_objectives.observe(i) }
+        result = summary_with_objectives.get
+        expect(result["count"]).to eq(1000.0)
+        expect(result["sum"]).to eq(499500.0)
+        expect(result["0.5"]).to be_within(1000 * 0.05 * 2).of(500)
+        expect(result["0.9"]).to be_within(1000 * 0.01 * 2).of(900)
+        expect(result["0.99"]).to be_within(1000 * 0.001 * 2).of(990)
+      end
+    end
+
+    describe '#get' do
+      it 'returns NaN for quantiles with no observations' do
+        result = summary_with_objectives.get
+        expect(result["count"]).to eq(0.0)
+        expect(result["sum"]).to eq(0.0)
+        expect(result["0.5"]).to be_nan
+        expect(result["0.9"]).to be_nan
+        expect(result["0.99"]).to be_nan
+      end
+    end
+
+    describe '#values' do
+      it 'includes quantile values' do
+        100.times { |i| summary_with_objectives.observe(i) }
+        vals = summary_with_objectives.values
+        label_set_values = vals[{}]
+        expect(label_set_values).to have_key("0.5")
+        expect(label_set_values).to have_key("0.9")
+        expect(label_set_values).to have_key("0.99")
+        expect(label_set_values).to have_key("count")
+        expect(label_set_values).to have_key("sum")
+      end
+    end
+
+    describe '#with_labels' do
+      let(:expected_labels) { [:foo] }
+
+      it 'passes through quantile settings' do
+        with_labels = summary_with_objectives.with_labels(foo: 'bar')
+        100.times { |i| with_labels.observe(i) }
+        result = with_labels.get(labels: { foo: 'bar' })
+        expect(result).to have_key("0.5")
+        expect(result["count"]).to eq(100.0)
+      end
+    end
+  end
+
   describe '#init_label_set' do
     context "with labels" do
       let(:expected_labels) { [:status] }
