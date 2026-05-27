@@ -5,7 +5,7 @@ through a HTTP interface. Intended to be used together with a
 [Prometheus server][1].
 
 [![Gem Version][4]](http://badge.fury.io/rb/prometheus-client)
-[![Build Status][3]](https://circleci.com/gh/prometheus/client_ruby/tree/main.svg?style=svg)
+[![Build Status][3]](https://github.com/prometheus/client_ruby/actions/workflows/ci.yml)
 
 ## Usage
 
@@ -504,7 +504,7 @@ rake
 
 [1]: https://github.com/prometheus/prometheus
 [2]: http://rack.github.io/
-[3]: https://circleci.com/gh/prometheus/client_ruby/tree/main.svg?style=svg
+[3]: https://github.com/prometheus/client_ruby/actions/workflows/ci.yml/badge.svg
 [4]: https://badge.fury.io/rb/prometheus-client.svg
 [8]: https://github.com/prometheus/pushgateway
 [9]: lib/prometheus/middleware/exporter.rb
