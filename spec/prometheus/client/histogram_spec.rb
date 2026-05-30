@@ -1,10 +1,11 @@
 # encoding: UTF-8
 
 require 'prometheus/client'
-require 'prometheus/client/histogram'
+require 'prometheus/client/histogram_fixed'
+require 'prometheus/client/data_stores/direct_file_store'
 require 'examples/metric_example'
 
-describe Prometheus::Client::Histogram do
+describe Prometheus::Client::HistogramFixed do
   # Reset the data store
   before do
     Prometheus::Client.config.data_store = Prometheus::Client::DataStores::Synchronized.new
@@ -71,6 +72,12 @@ describe Prometheus::Client::Histogram do
             histogram.observe(5, labels: { test: 'value' })
           end.to change { histogram.get(labels: { test: 'value' }) }
         end.to_not change { histogram.get(labels: { test: 'other' }) }
+      end
+
+      it 'raise error for empty labels' do
+        expect do
+          histogram.observe(5)
+        end.to raise_error Prometheus::Client::LabelSetValidator::InvalidLabelSetError
       end
     end
   end
