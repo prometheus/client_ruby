@@ -80,6 +80,7 @@ module Prometheus
             @store_settings = store_settings
             @values_aggregation_mode = metric_settings[:aggregation]
             @store_opened_by_pid = nil
+            @store_keys = {}
 
             @lock = Monitor.new
           end
@@ -162,8 +163,17 @@ module Prometheus
           def store_key(labels)
             if @values_aggregation_mode == ALL
               labels[:pid] = process_id
+              return encode_labelset(labels)
             end
 
+            # The same label sets get written over and over, so remember their keys.
+            # We key the cache on a frozen copy, as callers may mutate their hash later.
+            in_process_sync do
+              @store_keys[labels] || (@store_keys[labels.dup.freeze] = encode_labelset(labels))
+            end
+          end
+
+          def encode_labelset(labels)
             URI.encode_www_form(labels.to_a.sort)
           end
 
