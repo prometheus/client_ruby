@@ -127,6 +127,22 @@ describe Prometheus::Client::Push do
       expect(push.path).to eql('/metrics/job/test-job/foo@base64/YmFyL2Jheg==')
     end
 
+    it 'encodes the job name in url-safe base64 if it is a dot segment' do
+      expect(Prometheus::Client::Push.new(job: '.').path)
+        .to eql('/metrics/job@base64/Lg==')
+      expect(Prometheus::Client::Push.new(job: '..').path)
+        .to eql('/metrics/job@base64/Li4=')
+    end
+
+    it 'encodes grouping key label values that are dot segments in url-safe base64' do
+      push = Prometheus::Client::Push.new(
+        job: 'test-job',
+        grouping_key: { foo: ".", bar: "..", baz: "..." },
+      )
+
+      expect(push.path).to eql('/metrics/job/test-job/foo@base64/Lg==/bar@base64/Li4=/baz/...')
+    end
+
     it 'encodes empty grouping key label values as a single base64 padding character' do
       push = Prometheus::Client::Push.new(
         job: 'test-job',

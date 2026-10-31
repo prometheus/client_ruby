@@ -89,9 +89,9 @@ module Prometheus
       def build_path(job, grouping_key)
         job = job.to_s
 
-        # Job can't be empty, but it can contain `/`, so we need to base64
-        # encode it in that case
-        if job.include?('/')
+        # Job can't be empty, but it can contain `/` or be a dot segment (`.`
+        # or `..`), so we need to base64 encode it in that case
+        if needs_base64?(job)
           encoded_job = Base64.urlsafe_encode64(job)
           path = "#{PATH}/job@base64/#{encoded_job}"
         else
@@ -101,7 +101,7 @@ module Prometheus
         grouping_key.each do |label, value|
           value = value.to_s
 
-          if value.include?('/')
+          if needs_base64?(value)
             encoded_value = Base64.urlsafe_encode64(value)
             path += "/#{label}@base64/#{encoded_value}"
           # While it's valid for the urlsafe_encode64 function to return an
@@ -124,6 +124,14 @@ module Prometheus
         end
 
         path
+      end
+
+      # A `/` would split the value into several path segments, and `.` or
+      # `..` are dot segments that HTTP libraries, proxies and the
+      # Pushgateway itself normalise away (so the request would end up at a
+      # different path). The Pushgateway docs ask for base64 in both cases.
+      def needs_base64?(value)
+        value.include?('/') || value == '.' || value == '..'
       end
 
       def request(req_class, registry = nil)
