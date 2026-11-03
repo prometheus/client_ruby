@@ -115,6 +115,46 @@ describe Prometheus::Client::DataStores::DirectFileStore do
                                           )
   end
 
+  it "decodes each label set once per export, however many processes wrote it" do
+    [12345, 23456, 34567].each do |pid|
+      allow(Process).to receive(:pid).and_return(pid)
+      metric_store.increment(labels: { foo: "bar" }, by: 1)
+      metric_store.increment(labels: { foo: "baz" }, by: 1)
+    end
+
+    expect(metric_store).to receive(:parse_labelset).twice.and_call_original
+    expect(metric_store.all_values).to eq(
+      { foo: "bar" } => 3.0,
+      { foo: "baz" } => 3.0,
+    )
+  end
+
+  it "encodes each label set once, however many times it's written" do
+    expect(metric_store).to receive(:encode_labelset).twice.and_call_original
+
+    3.times do
+      metric_store.increment(labels: { foo: "bar" }, by: 1)
+      metric_store.increment(labels: { foo: "baz" }, by: 1)
+    end
+
+    expect(metric_store.all_values).to eq(
+      { foo: "bar" } => 3.0,
+      { foo: "baz" } => 3.0,
+    )
+  end
+
+  it "isn't affected by callers mutating a label set after writing it" do
+    labels = { foo: "bar" }
+    metric_store.increment(labels: labels, by: 1)
+    labels[:foo] = "baz"
+    metric_store.increment(labels: labels, by: 2)
+
+    expect(metric_store.all_values).to eq(
+      { foo: "bar" } => 1.0,
+      { foo: "baz" } => 2.0,
+    )
+  end
+
   context "for a non-gauge metric" do
     it "sums values from different processes by default" do
       allow(Process).to receive(:pid).and_return(12345)

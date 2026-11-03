@@ -80,6 +80,7 @@ module Prometheus
             @store_settings = store_settings
             @values_aggregation_mode = metric_settings[:aggregation]
             @store_opened_by_pid = nil
+            @store_keys = {}
 
             @lock = Monitor.new
           end
@@ -127,17 +128,19 @@ module Prometheus
           def all_values
             stores_data = Hash.new{ |hash, key| hash[key] = [] }
 
+            # Every process's file tends to hold the same keys, so we decode each
+            # key only once, rather than once per file.
+            label_sets = Hash.new do |hash, labelset_qs|
+              hash[labelset_qs] = parse_labelset(labelset_qs)
+            end
+
             # There's no need to call `synchronize` here. We're opening a second handle to
             # the file, and `flock`ing it, which prevents inconsistent reads
             stores_for_metric.each do |file_path|
               begin
                 store = FileMappedDict.new(file_path, true)
                 store.all_values.each do |(labelset_qs, v, ts)|
-                  # Labels come as a query string
-                  # "foo=bar&x=y" => { foo: "bar", x: "y" }
-                  label_set = URI.decode_www_form(labelset_qs).to_h.transform_keys(&:to_sym)
-
-                  stores_data[label_set] << [v, ts]
+                  stores_data[label_sets[labelset_qs]] << [v, ts]
                 end
               ensure
                 store.close if store
@@ -160,9 +163,24 @@ module Prometheus
           def store_key(labels)
             if @values_aggregation_mode == ALL
               labels[:pid] = process_id
+              return encode_labelset(labels)
             end
 
+            # The same label sets get written over and over, so remember their keys.
+            # We key the cache on a frozen copy, as callers may mutate their hash later.
+            in_process_sync do
+              @store_keys[labels] || (@store_keys[labels.dup.freeze] = encode_labelset(labels))
+            end
+          end
+
+          def encode_labelset(labels)
             URI.encode_www_form(labels.to_a.sort)
+          end
+
+          # Labels come as a query string
+          # "foo=bar&x=y" => { foo: "bar", x: "y" }
+          def parse_labelset(labelset_qs)
+            URI.decode_www_form(labelset_qs).to_h.transform_keys(&:to_sym)
           end
 
           def internal_store
